@@ -5,7 +5,7 @@ Intelligently detects recurring bills from transaction history
 
 from datetime import datetime, timedelta
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import statistics
 
 from database import db

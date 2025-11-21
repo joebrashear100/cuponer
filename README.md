@@ -4,6 +4,37 @@
 
 FURG is a financial AI that learns everything about you through conversation. No sliders, no dropdowns, no checkboxes—just chat. It roasts your bad spending decisions to keep you motivated and always protects your bills.
 
+## 🚀 Get It On Your Phone TONIGHT! (30 minutes)
+
+**Want the fastest path from zero to app on your iPhone?**
+
+### Option 1: Automated Setup with Claude CLI (Recommended)
+Open Claude Code CLI and paste the entire contents of:
+```
+CLAUDE_CLI_SETUP_PROMPT.txt
+```
+
+Claude will automatically:
+- ✅ Install all backend dependencies
+- ✅ Configure your database
+- ✅ Set up environment with your API keys (you'll provide when asked)
+- ✅ Start the backend server
+- ✅ Guide you step-by-step through Xcode
+- ✅ Help you install on your iPhone
+- ✅ Troubleshoot any issues
+
+**Timeline**: 35-50 minutes, fully guided
+
+### Option 2: Manual Setup
+Follow the step-by-step guide:
+```
+GET_IT_ON_YOUR_PHONE_TONIGHT.md
+```
+
+**Timeline**: 30-40 minutes, self-guided
+
+---
+
 ## Features
 
 - 💬 **Chat-First Configuration**: Everything configured through natural conversation

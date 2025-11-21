@@ -1,0 +1,188 @@
+# Claude Code CLI Setup Prompt for FURG
+
+Copy and paste this entire prompt into Claude Code CLI:
+
+---
+
+I need to set up and deploy the FURG app on my iPhone tonight. I have the complete codebase already built in `/home/user/cuponer`. Please help me:
+
+## 1. Backend Setup & Dependencies
+
+**Install and configure everything for the backend:**
+- Install all Python dependencies from `backend/requirements.txt`
+- Set up PostgreSQL database using Docker Compose
+- Create and configure the `.env` file with my API keys (I'll provide them when asked)
+- Initialize the database with the schema from `database/schema.sql`
+- Start the backend server and verify it's running
+- Test all API endpoints to ensure they work
+
+**I'll provide when you ask:**
+- My Anthropic API key
+- My Plaid credentials (Client ID and Secret)
+- Any other required API keys
+
+**Verify:**
+- Backend runs on `http://localhost:8000`
+- `/health` endpoint returns healthy status
+- Database is initialized and accessible
+- All environment variables are set correctly
+
+## 2. Get My Mac's Network IP
+
+**Find and document:**
+- My Mac's local network IP address (for iPhone to connect)
+- Update the iOS app's `Config.swift` with this IP automatically
+- Verify the IP is reachable from the network
+
+## 3. iOS App Preparation
+
+**Prepare the iOS app for Xcode:**
+- Verify all 17 Swift files are present in correct locations
+- Update `App/Config.swift` with my Mac's IP address
+- Create a clear file checklist showing what goes where
+- Generate exact instructions for what I need to do in Xcode
+
+**Create a step-by-step Xcode guide that tells me:**
+- Exactly what to click in Xcode (with screenshots descriptions)
+- What settings to configure
+- How to add the files
+- How to enable Sign in with Apple
+- How to configure code signing
+
+## 4. Testing & Verification
+
+**Set up testing:**
+- Create a test script to verify backend is accessible from network
+- Test all API endpoints work correctly
+- Provide curl commands I can run to verify everything
+- Create a troubleshooting checklist
+
+## 5. Xcode Setup Instructions
+
+**PAUSE HERE FOR MY INPUT**
+
+**Generate a detailed guide for me to:**
+1. Create the Xcode project (exact steps)
+2. Add all Swift files in correct structure
+3. Configure app signing with my Apple ID
+4. Enable required capabilities (Sign in with Apple)
+5. Update any Xcode-specific settings
+6. Build and run on my iPhone
+
+**I will do the Xcode parts manually while you:**
+- Watch for errors I report
+- Help troubleshoot any build issues
+- Guide me through code signing problems
+- Verify the app connects to the backend correctly
+
+## 6. First Launch Testing
+
+**After I get the app running, help me:**
+- Test Sign in with Apple authentication
+- Verify backend connectivity
+- Test each feature (chat, balance, transactions)
+- Troubleshoot any connection or API issues
+- Confirm all features work end-to-end
+
+## 7. Final Verification Checklist
+
+**Create a comprehensive checklist showing:**
+- ✅ Backend is running and accessible
+- ✅ Database is initialized with schema
+- ✅ iOS app is built in Xcode
+- ✅ App is installed on my iPhone
+- ✅ Sign in with Apple works
+- ✅ Chat functionality works
+- ✅ All API endpoints respond correctly
+- ✅ Ready for daily use
+
+## How I Want You to Proceed
+
+**Phase 1: Automated Backend Setup (You do this)**
+- Install dependencies
+- Configure environment
+- Start services
+- Verify everything works
+- THEN pause and show me status
+
+**Phase 2: Xcode Setup (I do this with your guidance)**
+- You generate detailed instructions
+- I follow them in Xcode
+- I report back any errors
+- You help me troubleshoot
+- We iterate until it builds
+
+**Phase 3: iPhone Installation (I do this with your guidance)**
+- I build and run in Xcode
+- I install on my iPhone
+- I test basic functionality
+- You help me verify everything works
+
+**Phase 4: End-to-End Testing (We do together)**
+- I test each feature
+- You monitor backend logs
+- We troubleshoot together
+- We verify complete functionality
+
+## Important Notes
+
+- **Stop and ask me** when you need:
+  - API keys or credentials
+  - Me to do something in Xcode
+  - Me to test something on my iPhone
+  - Confirmation before changing important settings
+
+- **Show me exactly** what you're doing:
+  - Display all commands before running them
+  - Explain why each step is needed
+  - Show me the output/results
+  - Wait for my confirmation on critical steps
+
+- **For Xcode parts** (which you can't do):
+  - Generate crystal-clear instructions with exact button names
+  - Show me what the UI should look like (descriptions)
+  - Give me the exact text to type
+  - Provide screenshots descriptions or mockups if possible
+
+- **Troubleshooting**:
+  - If something fails, stop and explain the error
+  - Give me options for how to fix it
+  - Don't retry automatically without asking
+
+## My Context
+
+- I'm on macOS (the repo is at `/home/user/cuponer`)
+- I have Xcode installed (or will install it)
+- I have an iPhone I can connect via USB
+- I have an Apple ID for code signing
+- I'm on the same WiFi network with my iPhone
+- I want this working TONIGHT
+
+## Expected Timeline
+
+- Backend setup: 10-15 minutes
+- Xcode project creation: 10 minutes (with your guidance)
+- First build and install: 5-10 minutes
+- Testing and troubleshooting: 10-15 minutes
+- **Total: 35-50 minutes**
+
+## Start Here
+
+Begin with Phase 1 (Automated Backend Setup). Ask me for any API keys you need, then set up and start the backend. Once that's verified working, we'll move to Phase 2 (Xcode).
+
+Let's get FURG on my phone tonight! 🚀
+
+---
+
+**After pasting this prompt, Claude will:**
+1. Ask you for your API keys
+2. Set up the entire backend automatically
+3. Configure everything needed
+4. Then guide you step-by-step through Xcode
+5. Help you troubleshoot until it's working on your phone
+
+**You'll need to have ready:**
+- Anthropic API key (from console.anthropic.com)
+- Plaid Client ID and Secret (from dashboard.plaid.com - use sandbox)
+- Your Apple ID for Xcode code signing
+- Your iPhone connected via USB

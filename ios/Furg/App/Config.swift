@@ -11,7 +11,7 @@ struct Config {
     // MARK: - Backend Configuration
 
     #if DEBUG
-    static let baseURL = "http://localhost:8000"
+    static let baseURL = "http://10.0.0.126:8000"  // Your Mac's IP address
     #else
     static let baseURL = "https://api.furg.app" // Update with your production URL
     #endif

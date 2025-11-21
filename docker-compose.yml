@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: furg_postgres
+    environment:
+      POSTGRES_USER: frugal
+      POSTGRES_PASSWORD: warfare_ai_2024
+      POSTGRES_DB: frugal_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frugal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for rate limiting in production)
+  redis:
+    image: redis:7-alpine
+    container_name: furg_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # FURG Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: furg_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://frugal:warfare_ai_2024@postgres:5432/frugal_ai
+      - REDIS_URL=redis://redis:6379
+      - PORT=8000
+      - DEBUG=true
+    env_file:
+      - ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: furg_network

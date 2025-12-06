@@ -12,7 +12,10 @@ class APIClient: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let authManager = AuthManager()
+    // Shared token storage - set by AuthManager
+    static var authToken: String? {
+        get { UserDefaults.standard.string(forKey: Config.Keys.jwtToken) }
+    }
 
     // MARK: - Helper Methods
 
@@ -24,8 +27,9 @@ class APIClient: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
 
-        if let token = authManager.getToken() {
+        if let token = APIClient.authToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
@@ -41,6 +45,11 @@ class APIClient: ObservableObject {
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw NSError(domain: "APIError", code: 401,
+                        userInfo: [NSLocalizedDescriptionKey: "Authentication required. Please sign in again."])
         }
 
         if httpResponse.statusCode != 200 {
@@ -81,6 +90,16 @@ class APIClient: ObservableObject {
         let requestBody = HideMoneyRequest(amount: amount, purpose: purpose)
         let body = try JSONEncoder().encode(requestBody)
         let request = try createRequest(endpoint: Config.API.hideMoney, method: "POST", body: body)
+        return try await performRequest(request)
+    }
+
+    func revealMoney(amount: Double? = nil) async throws -> HideMoneyResponse {
+        var requestBody: [String: Any] = [:]
+        if let amount = amount {
+            requestBody["amount"] = amount
+        }
+        let body = try JSONSerialization.data(withJSONObject: requestBody)
+        let request = try createRequest(endpoint: Config.API.revealMoney, method: "POST", body: body)
         return try await performRequest(request)
     }
 

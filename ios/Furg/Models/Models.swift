@@ -91,19 +91,31 @@ struct HistoryMessage: Codable {
 
 struct BalanceSummary: Codable {
     let totalBalance: Double
-    let visibleBalance: Double
+    let availableBalance: Double
     let hiddenBalance: Double
+    let pendingBalance: Double
     let safetyBuffer: Double
-    let trulyAvailable: Double
-    let hiddenAccounts: [ShadowAccount]
+    let lastUpdated: String?
+    let hiddenAccounts: [ShadowAccount]?
 
     enum CodingKeys: String, CodingKey {
         case totalBalance = "total_balance"
-        case visibleBalance = "visible_balance"
+        case availableBalance = "available_balance"
         case hiddenBalance = "hidden_balance"
+        case pendingBalance = "pending_balance"
         case safetyBuffer = "safety_buffer"
-        case trulyAvailable = "truly_available"
+        case lastUpdated = "last_updated"
         case hiddenAccounts = "hidden_accounts"
+    }
+
+    init(totalBalance: Double, availableBalance: Double, hiddenBalance: Double, pendingBalance: Double, safetyBuffer: Double, lastUpdated: String?, hiddenAccounts: [ShadowAccount]? = nil) {
+        self.totalBalance = totalBalance
+        self.availableBalance = availableBalance
+        self.hiddenBalance = hiddenBalance
+        self.pendingBalance = pendingBalance
+        self.safetyBuffer = safetyBuffer
+        self.lastUpdated = lastUpdated
+        self.hiddenAccounts = hiddenAccounts
     }
 }
 
@@ -205,7 +217,8 @@ struct Bill: Codable, Identifiable {
     let id: String?
     let merchant: String
     let amount: Double
-    let frequencyDays: Int
+    let frequency: String?
+    let frequencyDays: Int?
     let nextDue: String
     let confidence: Double
     let category: String?
@@ -214,10 +227,22 @@ struct Bill: Codable, Identifiable {
         case id
         case merchant
         case amount
+        case frequency
         case frequencyDays = "frequency_days"
         case nextDue = "next_due"
         case confidence
         case category
+    }
+
+    init(id: String?, merchant: String, amount: Double, frequency: String? = nil, frequencyDays: Int? = nil, nextDue: String, category: String?, confidence: Double) {
+        self.id = id
+        self.merchant = merchant
+        self.amount = amount
+        self.frequency = frequency
+        self.frequencyDays = frequencyDays
+        self.nextDue = nextDue
+        self.category = category
+        self.confidence = confidence
     }
 
     var formattedAmount: String {
@@ -225,13 +250,17 @@ struct Bill: Codable, Identifiable {
     }
 
     var frequencyText: String {
-        switch frequencyDays {
+        if let frequency = frequency {
+            return frequency.capitalized
+        }
+        guard let days = frequencyDays else { return "Unknown" }
+        switch days {
         case 7: return "Weekly"
         case 14: return "Bi-weekly"
         case 28...31: return "Monthly"
         case 84...97: return "Quarterly"
         case 350...380: return "Yearly"
-        default: return "\(frequencyDays) days"
+        default: return "\(days) days"
         }
     }
 }
@@ -241,16 +270,33 @@ struct BillsResponse: Codable {
 }
 
 struct UpcomingBillsResponse: Codable {
-    let total: Double
-    let count: Int
-    let byCategory: [String: Double]
+    let total: Double?
+    let totalDue: Double?
+    let count: Int?
+    let daysAhead: Int?
+    let byCategory: [String: Double]?
     let bills: [Bill]
 
     enum CodingKeys: String, CodingKey {
         case total
+        case totalDue = "total_due"
         case count
+        case daysAhead = "days_ahead"
         case byCategory = "by_category"
         case bills
+    }
+
+    init(bills: [Bill], totalDue: Double, daysAhead: Int) {
+        self.bills = bills
+        self.totalDue = totalDue
+        self.total = totalDue
+        self.daysAhead = daysAhead
+        self.count = bills.count
+        self.byCategory = nil
+    }
+
+    var totalAmount: Double {
+        return totalDue ?? total ?? bills.reduce(0) { $0 + $1.amount }
     }
 }
 

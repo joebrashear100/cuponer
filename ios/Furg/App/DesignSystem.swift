@@ -156,6 +156,10 @@ extension View {
         modifier(GlassButton(isAccent: isAccent))
     }
 
+    func primaryButton() -> some View {
+        modifier(GlassButton(isAccent: true))
+    }
+
     func furgBackground() -> some View {
         self.background(FurgGradients.mainBackground.ignoresSafeArea())
     }

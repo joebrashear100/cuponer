@@ -633,9 +633,13 @@ struct CreateGoalSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
                         .background(
-                            name.isEmpty || targetAmount.isEmpty
-                                ? Color.white.opacity(0.2)
-                                : FurgGradients.mintGradient
+                            Group {
+                                if name.isEmpty || targetAmount.isEmpty {
+                                    Color.white.opacity(0.2)
+                                } else {
+                                    FurgGradients.mintGradient
+                                }
+                            }
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
@@ -805,9 +809,13 @@ struct ContributeSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
                     .background(
-                        amount.isEmpty
-                            ? Color.white.opacity(0.2)
-                            : FurgGradients.mintGradient
+                        Group {
+                            if amount.isEmpty {
+                                Color.white.opacity(0.2)
+                            } else {
+                                FurgGradients.mintGradient
+                            }
+                        }
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
@@ -1024,7 +1032,7 @@ struct GoalDetailSheet: View {
         .alert("Delete Goal", isPresented: $showDeleteConfirm) {
             Button("Delete", role: .destructive) {
                 Task {
-                    await goalsManager.deleteGoal(goal.id)
+                    _ = await goalsManager.deleteGoal(goal.id)
                     dismiss()
                 }
             }

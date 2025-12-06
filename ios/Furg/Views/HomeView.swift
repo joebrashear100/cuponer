@@ -72,7 +72,7 @@ struct HomeView: View {
 
                 // Subscription Alert (if unused subscriptions)
                 if !subscriptionManager.unusedSubscriptions.isEmpty {
-                    SubscriptionAlertCard(unusedCount: subscriptionManager.unusedSubscriptions.count, monthlyCost: subscriptionManager.unusedMonthlyCost)
+                    SubscriptionAlertCard(unusedCount: subscriptionManager.unusedSubscriptions.count, monthlyCost: subscriptionManager.potentialSavings)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
                         .animation(.easeOut(duration: 0.5).delay(0.6), value: animate)
@@ -402,7 +402,7 @@ struct GoalProgressCard: View {
 
                     Capsule()
                         .fill(LinearGradient(colors: [.furgMint, .furgSeafoam], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: geo.size.width * min(1, goal.percentComplete / 100), height: 6)
+                        .frame(width: geo.size.width * CGFloat(min(1, goal.percentComplete / 100)), height: 6)
                 }
             }
             .frame(height: 6)

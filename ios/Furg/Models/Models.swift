@@ -163,8 +163,9 @@ struct Transaction: Codable, Identifiable {
     let date: String
     let amount: Double
     let merchant: String
-    let category: String?
+    let category: String
     let isBill: Bool
+    let isPending: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -173,6 +174,18 @@ struct Transaction: Codable, Identifiable {
         case merchant
         case category
         case isBill = "is_bill"
+        case isPending = "is_pending"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        date = try container.decode(String.self, forKey: .date)
+        amount = try container.decode(Double.self, forKey: .amount)
+        merchant = try container.decode(String.self, forKey: .merchant)
+        category = try container.decodeIfPresent(String.self, forKey: .category) ?? "Other"
+        isBill = try container.decodeIfPresent(Bool.self, forKey: .isBill) ?? false
+        isPending = try container.decodeIfPresent(Bool.self, forKey: .isPending) ?? false
     }
 
     var formattedDate: String {

@@ -144,6 +144,21 @@ enum GoalCategory: String, Codable, CaseIterable {
         case .custom: return "mint"
         }
     }
+
+    var color: Color {
+        switch self {
+        case .emergencyFund: return .furgDanger
+        case .homeDownPayment: return .furgInfo
+        case .vacation: return .furgWarning
+        case .car: return .purple
+        case .wedding: return .pink
+        case .retirement: return .furgSuccess
+        case .education: return .furgInfo
+        case .debtPayoff: return .furgSuccess
+        case .investment: return .furgMint
+        case .custom: return .furgMint
+        }
+    }
 }
 
 // MARK: - Goal Progress

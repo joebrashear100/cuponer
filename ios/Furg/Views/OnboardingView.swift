@@ -142,12 +142,24 @@ struct OnboardingView: View {
                 ]
 
                 // Create the goal in goals manager
-                await goalsManager.createGoal(
+                let newGoal = FurgSavingsGoal(
+                    id: UUID().uuidString,
                     name: goalPurpose,
                     targetAmount: Decimal(goalValue),
+                    currentAmount: 0,
                     deadline: goalDeadline,
-                    isPrimary: true
+                    priority: 1,
+                    category: .custom,
+                    icon: "flag.fill",
+                    color: "mint",
+                    linkedAccountIds: [],
+                    autoContribute: false,
+                    autoContributeAmount: nil,
+                    autoContributeFrequency: nil,
+                    createdAt: Date(),
+                    achievedAt: nil
                 )
+                _ = await goalsManager.createGoal(newGoal)
             }
 
             // Mark onboarding complete
@@ -595,7 +607,9 @@ struct ConnectBankStep: View {
                     }
 
                     Button {
-                        plaidManager.openPlaidLink()
+                        Task {
+                            await plaidManager.presentPlaidLink()
+                        }
                     } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")

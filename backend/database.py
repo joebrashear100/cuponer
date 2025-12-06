@@ -611,6 +611,586 @@ class Database:
             )
             return [row["token"] for row in rows]
 
+    # ==================== GOALS OPERATIONS ====================
+
+    async def create_goal(self, user_id: str, goal: Dict[str, Any]) -> str:
+        """Create a savings goal"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO goals (
+                    user_id, name, target_amount, current_amount, deadline,
+                    icon, color, priority, is_primary
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id
+                """,
+                user_id,
+                goal["name"],
+                goal["target_amount"],
+                goal.get("current_amount", 0),
+                goal.get("deadline"),
+                goal.get("icon", "flag.fill"),
+                goal.get("color", "#4ECDC4"),
+                goal.get("priority", 1),
+                goal.get("is_primary", False)
+            )
+            return str(result["id"])
+
+    async def get_goals(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all goals for user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM goals
+                WHERE user_id = $1 AND is_active = TRUE
+                ORDER BY is_primary DESC, priority, deadline
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def get_goal(self, goal_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific goal"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM goals WHERE id = $1",
+                goal_id
+            )
+            return dict(row) if row else None
+
+    async def update_goal(self, goal_id: str, updates: Dict[str, Any]) -> bool:
+        """Update a goal"""
+        async with self.acquire() as conn:
+            set_clauses = []
+            values = [goal_id]
+            param_count = 2
+
+            for key, value in updates.items():
+                set_clauses.append(f"{key} = ${param_count}")
+                values.append(value)
+                param_count += 1
+
+            if not set_clauses:
+                return False
+
+            query = f"""
+                UPDATE goals
+                SET {', '.join(set_clauses)}, updated_at = NOW()
+                WHERE id = $1
+            """
+            result = await conn.execute(query, *values)
+            return result != "UPDATE 0"
+
+    async def add_to_goal(self, goal_id: str, amount: float) -> float:
+        """Add amount to a goal and return new total"""
+        async with self.acquire() as conn:
+            result = await conn.fetchval(
+                """
+                UPDATE goals
+                SET current_amount = current_amount + $1, updated_at = NOW()
+                WHERE id = $2
+                RETURNING current_amount
+                """,
+                amount,
+                goal_id
+            )
+            return float(result) if result else 0.0
+
+    async def delete_goal(self, goal_id: str) -> bool:
+        """Soft delete a goal"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                "UPDATE goals SET is_active = FALSE WHERE id = $1",
+                goal_id
+            )
+            return result != "UPDATE 0"
+
+    # ==================== SUBSCRIPTION OPERATIONS ====================
+
+    async def create_subscription(self, user_id: str, sub: Dict[str, Any]) -> str:
+        """Create a tracked subscription"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO subscriptions (
+                    user_id, name, amount, billing_cycle, next_billing_date,
+                    category, icon, color, importance, auto_detected
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING id
+                """,
+                user_id,
+                sub["name"],
+                sub["amount"],
+                sub.get("billing_cycle", "monthly"),
+                sub.get("next_billing_date"),
+                sub.get("category", "entertainment"),
+                sub.get("icon", "creditcard.fill"),
+                sub.get("color", "#9B59B6"),
+                sub.get("importance", "nice_to_have"),
+                sub.get("auto_detected", False)
+            )
+            return str(result["id"])
+
+    async def get_subscriptions(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all active subscriptions for user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM subscriptions
+                WHERE user_id = $1 AND is_active = TRUE
+                ORDER BY next_billing_date
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def update_subscription(self, sub_id: str, updates: Dict[str, Any]) -> bool:
+        """Update a subscription"""
+        async with self.acquire() as conn:
+            set_clauses = []
+            values = [sub_id]
+            param_count = 2
+
+            for key, value in updates.items():
+                set_clauses.append(f"{key} = ${param_count}")
+                values.append(value)
+                param_count += 1
+
+            if not set_clauses:
+                return False
+
+            query = f"""
+                UPDATE subscriptions
+                SET {', '.join(set_clauses)}, updated_at = NOW()
+                WHERE id = $1
+            """
+            result = await conn.execute(query, *values)
+            return result != "UPDATE 0"
+
+    async def cancel_subscription(self, sub_id: str) -> bool:
+        """Cancel/deactivate a subscription"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE subscriptions
+                SET is_active = FALSE, cancelled_at = NOW()
+                WHERE id = $1
+                """,
+                sub_id
+            )
+            return result != "UPDATE 0"
+
+    async def get_subscription_total(self, user_id: str) -> Dict[str, float]:
+        """Get total subscription costs by period"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT billing_cycle, SUM(amount) as total
+                FROM subscriptions
+                WHERE user_id = $1 AND is_active = TRUE
+                GROUP BY billing_cycle
+                """,
+                user_id
+            )
+
+            result = {"monthly": 0.0, "yearly": 0.0, "weekly": 0.0}
+            for row in rows:
+                result[row["billing_cycle"]] = float(row["total"])
+
+            # Calculate monthly equivalent
+            result["monthly_equivalent"] = (
+                result["monthly"] +
+                (result["yearly"] / 12) +
+                (result["weekly"] * 4.33)
+            )
+            return result
+
+    # ==================== ROUND-UP OPERATIONS ====================
+
+    async def get_roundup_config(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get round-up configuration for user"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM roundup_config WHERE user_id = $1",
+                user_id
+            )
+            return dict(row) if row else None
+
+    async def upsert_roundup_config(self, user_id: str, config: Dict[str, Any]) -> bool:
+        """Create or update round-up config"""
+        async with self.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO roundup_config (
+                    user_id, is_enabled, round_up_amount, multiplier,
+                    linked_goal_id, transfer_frequency, min_transfer_amount
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (user_id) DO UPDATE
+                SET is_enabled = EXCLUDED.is_enabled,
+                    round_up_amount = EXCLUDED.round_up_amount,
+                    multiplier = EXCLUDED.multiplier,
+                    linked_goal_id = EXCLUDED.linked_goal_id,
+                    transfer_frequency = EXCLUDED.transfer_frequency,
+                    min_transfer_amount = EXCLUDED.min_transfer_amount,
+                    updated_at = NOW()
+                """,
+                user_id,
+                config.get("is_enabled", False),
+                config.get("round_up_amount", "nearest_dollar"),
+                config.get("multiplier", 1),
+                config.get("linked_goal_id"),
+                config.get("transfer_frequency", "weekly"),
+                config.get("min_transfer_amount", 5.0)
+            )
+            return True
+
+    async def save_roundup_transaction(self, user_id: str, txn: Dict[str, Any]) -> str:
+        """Save a round-up transaction"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO roundup_transactions (
+                    user_id, original_transaction_id, original_amount,
+                    roundup_amount, multiplied_amount, goal_id
+                )
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id
+                """,
+                user_id,
+                txn.get("original_transaction_id"),
+                txn["original_amount"],
+                txn["roundup_amount"],
+                txn.get("multiplied_amount", txn["roundup_amount"]),
+                txn.get("goal_id")
+            )
+            return str(result["id"])
+
+    async def get_pending_roundups(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get pending round-up transactions"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM roundup_transactions
+                WHERE user_id = $1 AND status = 'pending'
+                ORDER BY created_at
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def get_roundup_summary(self, user_id: str) -> Dict[str, Any]:
+        """Get round-up summary statistics"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) FILTER (WHERE status = 'pending') as pending_count,
+                    COALESCE(SUM(multiplied_amount) FILTER (WHERE status = 'pending'), 0) as pending_total,
+                    COALESCE(SUM(multiplied_amount) FILTER (WHERE status = 'transferred'), 0) as total_transferred,
+                    COUNT(*) FILTER (WHERE status = 'transferred') as transfer_count
+                FROM roundup_transactions
+                WHERE user_id = $1
+                """,
+                user_id
+            )
+            return {
+                "pending_count": row["pending_count"],
+                "pending_total": float(row["pending_total"]),
+                "total_transferred": float(row["total_transferred"]),
+                "transfer_count": row["transfer_count"]
+            }
+
+    async def transfer_roundups(self, user_id: str, goal_id: str) -> float:
+        """Transfer pending round-ups to a goal"""
+        async with self.acquire() as conn:
+            async with conn.transaction():
+                # Get pending total
+                total = await conn.fetchval(
+                    """
+                    SELECT COALESCE(SUM(multiplied_amount), 0)
+                    FROM roundup_transactions
+                    WHERE user_id = $1 AND status = 'pending'
+                    """,
+                    user_id
+                )
+
+                if float(total) > 0:
+                    # Update round-ups to transferred
+                    await conn.execute(
+                        """
+                        UPDATE roundup_transactions
+                        SET status = 'transferred', transferred_at = NOW()
+                        WHERE user_id = $1 AND status = 'pending'
+                        """,
+                        user_id
+                    )
+
+                    # Add to goal
+                    await conn.execute(
+                        """
+                        UPDATE goals
+                        SET current_amount = current_amount + $1, updated_at = NOW()
+                        WHERE id = $2
+                        """,
+                        float(total),
+                        goal_id
+                    )
+
+                return float(total)
+
+    # ==================== SPENDING LIMITS OPERATIONS ====================
+
+    async def create_spending_limit(self, user_id: str, limit: Dict[str, Any]) -> str:
+        """Create a spending limit"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO spending_limits (
+                    user_id, category, limit_amount, period, warning_threshold
+                )
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id
+                """,
+                user_id,
+                limit["category"],
+                limit["limit_amount"],
+                limit.get("period", "monthly"),
+                limit.get("warning_threshold", 0.8)
+            )
+            return str(result["id"])
+
+    async def get_spending_limits(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all spending limits for user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM spending_limits
+                WHERE user_id = $1 AND is_active = TRUE
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def check_spending_limit(
+        self,
+        user_id: str,
+        category: str,
+        period_start: datetime
+    ) -> Optional[Dict[str, Any]]:
+        """Check spending against limit for a category"""
+        async with self.acquire() as conn:
+            # Get the limit
+            limit = await conn.fetchrow(
+                """
+                SELECT * FROM spending_limits
+                WHERE user_id = $1 AND category = $2 AND is_active = TRUE
+                """,
+                user_id,
+                category
+            )
+
+            if not limit:
+                return None
+
+            # Get current spending
+            spent = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(ABS(amount)), 0)
+                FROM transactions
+                WHERE user_id = $1 AND category = $2 AND date >= $3 AND amount < 0
+                """,
+                user_id,
+                category,
+                period_start
+            )
+
+            limit_dict = dict(limit)
+            limit_dict["current_spent"] = float(spent)
+            limit_dict["remaining"] = float(limit["limit_amount"]) - float(spent)
+            limit_dict["percentage_used"] = float(spent) / float(limit["limit_amount"]) if float(limit["limit_amount"]) > 0 else 0
+
+            return limit_dict
+
+    async def update_spending_limit(self, limit_id: str, updates: Dict[str, Any]) -> bool:
+        """Update a spending limit"""
+        async with self.acquire() as conn:
+            set_clauses = []
+            values = [limit_id]
+            param_count = 2
+
+            for key, value in updates.items():
+                set_clauses.append(f"{key} = ${param_count}")
+                values.append(value)
+                param_count += 1
+
+            if not set_clauses:
+                return False
+
+            query = f"""
+                UPDATE spending_limits
+                SET {', '.join(set_clauses)}
+                WHERE id = $1
+            """
+            result = await conn.execute(query, *values)
+            return result != "UPDATE 0"
+
+    async def delete_spending_limit(self, limit_id: str) -> bool:
+        """Delete a spending limit"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                "UPDATE spending_limits SET is_active = FALSE WHERE id = $1",
+                limit_id
+            )
+            return result != "UPDATE 0"
+
+    # ==================== WISHLIST OPERATIONS ====================
+
+    async def create_wishlist_item(self, user_id: str, item: Dict[str, Any]) -> str:
+        """Create a wishlist item"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO wishlist (
+                    user_id, name, price, url, image_url, priority,
+                    category, notes, linked_goal_id
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id
+                """,
+                user_id,
+                item["name"],
+                item["price"],
+                item.get("url"),
+                item.get("image_url"),
+                item.get("priority", 1),
+                item.get("category"),
+                item.get("notes"),
+                item.get("linked_goal_id")
+            )
+            return str(result["id"])
+
+    async def get_wishlist(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all wishlist items for user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT w.*, g.name as goal_name, g.current_amount as goal_progress
+                FROM wishlist w
+                LEFT JOIN goals g ON w.linked_goal_id = g.id
+                WHERE w.user_id = $1 AND w.is_active = TRUE
+                ORDER BY w.priority, w.created_at
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def update_wishlist_item(self, item_id: str, updates: Dict[str, Any]) -> bool:
+        """Update a wishlist item"""
+        async with self.acquire() as conn:
+            set_clauses = []
+            values = [item_id]
+            param_count = 2
+
+            for key, value in updates.items():
+                set_clauses.append(f"{key} = ${param_count}")
+                values.append(value)
+                param_count += 1
+
+            if not set_clauses:
+                return False
+
+            query = f"""
+                UPDATE wishlist
+                SET {', '.join(set_clauses)}, updated_at = NOW()
+                WHERE id = $1
+            """
+            result = await conn.execute(query, *values)
+            return result != "UPDATE 0"
+
+    async def delete_wishlist_item(self, item_id: str) -> bool:
+        """Delete a wishlist item"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                "UPDATE wishlist SET is_active = FALSE WHERE id = $1",
+                item_id
+            )
+            return result != "UPDATE 0"
+
+    async def mark_wishlist_purchased(self, item_id: str) -> bool:
+        """Mark a wishlist item as purchased"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE wishlist
+                SET is_purchased = TRUE, purchased_at = NOW()
+                WHERE id = $1
+                """,
+                item_id
+            )
+            return result != "UPDATE 0"
+
+    # ==================== ALERTS/NOTIFICATIONS OPERATIONS ====================
+
+    async def create_alert(self, user_id: str, alert: Dict[str, Any]) -> str:
+        """Create an alert/notification"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO alerts (
+                    user_id, alert_type, title, message, data, priority
+                )
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id
+                """,
+                user_id,
+                alert["alert_type"],
+                alert["title"],
+                alert["message"],
+                json.dumps(alert.get("data", {})),
+                alert.get("priority", "normal")
+            )
+            return str(result["id"])
+
+    async def get_alerts(self, user_id: str, unread_only: bool = False) -> List[Dict[str, Any]]:
+        """Get alerts for user"""
+        async with self.acquire() as conn:
+            query = """
+                SELECT * FROM alerts
+                WHERE user_id = $1
+            """
+            if unread_only:
+                query += " AND is_read = FALSE"
+            query += " ORDER BY created_at DESC LIMIT 50"
+
+            rows = await conn.fetch(query, user_id)
+            return [dict(row) for row in rows]
+
+    async def mark_alert_read(self, alert_id: str) -> bool:
+        """Mark an alert as read"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                "UPDATE alerts SET is_read = TRUE, read_at = NOW() WHERE id = $1",
+                alert_id
+            )
+            return result != "UPDATE 0"
+
+    async def mark_all_alerts_read(self, user_id: str) -> int:
+        """Mark all alerts as read for user"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE alerts
+                SET is_read = TRUE, read_at = NOW()
+                WHERE user_id = $1 AND is_read = FALSE
+                """,
+                user_id
+            )
+            # Extract count from "UPDATE N"
+            return int(result.split()[-1]) if result else 0
+
 
 # Global database instance
 db = Database()

@@ -11,9 +11,12 @@ import AuthenticationServices
 @MainActor
 class AuthManager: NSObject, ObservableObject {
     @Published var isAuthenticated = false
+    @Published var hasCompletedOnboarding = false
     @Published var userID: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
+
+    private let onboardingKey = "hasCompletedOnboarding"
 
     private var token: String? {
         get { UserDefaults.standard.string(forKey: Config.Keys.jwtToken) }
@@ -35,7 +38,18 @@ class AuthManager: NSObject, ObservableObject {
         if token != nil, let userId = UserDefaults.standard.string(forKey: Config.Keys.userId) {
             self.isAuthenticated = true
             self.userID = userId
+            self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: onboardingKey)
         }
+    }
+
+    func completeOnboarding() {
+        UserDefaults.standard.set(true, forKey: onboardingKey)
+        hasCompletedOnboarding = true
+    }
+
+    func resetOnboarding() {
+        UserDefaults.standard.set(false, forKey: onboardingKey)
+        hasCompletedOnboarding = false
     }
 
     func signInWithApple() {
@@ -57,7 +71,7 @@ class AuthManager: NSObject, ObservableObject {
     }
 
     #if DEBUG
-    func debugBypassLogin() {
+    func debugBypassLogin(skipOnboarding: Bool = true) {
         // Debug-only function to bypass authentication for testing
         // This token is properly signed with the backend's JWT_SECRET and expires in 30 days from Dec 6, 2025
         let debugUserId = "debug-user-12345"
@@ -69,6 +83,12 @@ class AuthManager: NSObject, ObservableObject {
         self.userID = debugUserId
         self.isAuthenticated = true
         self.errorMessage = nil
+
+        // Skip onboarding for debug users by default
+        if skipOnboarding {
+            UserDefaults.standard.set(true, forKey: onboardingKey)
+            self.hasCompletedOnboarding = true
+        }
     }
     #endif
 

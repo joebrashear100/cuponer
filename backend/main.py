@@ -107,6 +107,25 @@ class SavingsGoalRequest(BaseModel):
     frequency: Optional[str] = "weekly"
 
 
+class CreateGoalRequest(BaseModel):
+    name: str
+    target_amount: float
+    deadline: Optional[str] = None  # YYYY-MM-DD
+    category: str = "general"
+    auto_contribute: bool = False
+    monthly_contribution: Optional[float] = None
+
+
+class ContributeToGoalRequest(BaseModel):
+    goal_id: str
+    amount: float
+
+
+class SubscriptionAction(BaseModel):
+    subscription_id: str
+    action: str  # "cancel", "pause", "negotiate"
+
+
 # ==================== HEALTH & INFO ENDPOINTS ====================
 
 @app.get("/")
@@ -494,6 +513,227 @@ async def get_usage_stats(user_id: str = Depends(get_current_user)):
     return budget
 
 
+# ==================== SUBSCRIPTION ENDPOINTS ====================
+
+@app.get("/api/v1/subscriptions")
+async def get_subscriptions(user_id: str = Depends(get_current_user)):
+    """Get detected subscriptions"""
+    subscriptions = await db.get_subscriptions(user_id)
+
+    return {
+        "subscriptions": subscriptions,
+        "total_monthly": sum(s.get("monthly_cost", 0) for s in subscriptions),
+        "unused_count": sum(1 for s in subscriptions if s.get("is_unused", False))
+    }
+
+
+@app.post("/api/v1/subscriptions/detect")
+async def detect_subscriptions(
+    days_lookback: int = 180,
+    user_id: str = Depends(get_current_user)
+):
+    """Detect subscriptions from transaction history"""
+    # Get transactions
+    start_date = datetime.now() - timedelta(days=days_lookback)
+    transactions = await db.get_transactions(user_id, start_date=start_date, limit=500)
+
+    # Detect recurring patterns
+    subscriptions = await _detect_subscription_patterns(transactions)
+
+    # Save to database
+    for sub in subscriptions:
+        await db.save_subscription(user_id, sub)
+
+    return {
+        "detected": len(subscriptions),
+        "subscriptions": subscriptions,
+        "total_monthly": sum(s.get("monthly_cost", 0) for s in subscriptions)
+    }
+
+
+@app.get("/api/v1/subscriptions/{subscription_id}/cancellation-guide")
+async def get_cancellation_guide(
+    subscription_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Get cancellation guide for a subscription"""
+    subscription = await db.get_subscription(user_id, subscription_id)
+    if not subscription:
+        raise HTTPException(404, "Subscription not found")
+
+    # Generate cancellation guide based on merchant
+    guide = await _get_cancellation_guide(subscription["merchant"])
+
+    return guide
+
+
+@app.post("/api/v1/subscriptions/{subscription_id}/mark-cancelled")
+async def mark_subscription_cancelled(
+    subscription_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Mark a subscription as cancelled"""
+    success = await db.update_subscription(
+        user_id,
+        subscription_id,
+        {"status": "cancelled", "cancelled_at": datetime.now().isoformat()}
+    )
+
+    if not success:
+        raise HTTPException(400, "Failed to update subscription")
+
+    return {"message": "Subscription marked as cancelled", "id": subscription_id}
+
+
+@app.get("/api/v1/subscriptions/{subscription_id}/negotiation-script")
+async def get_negotiation_script(
+    subscription_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Get negotiation script for a subscription"""
+    subscription = await db.get_subscription(user_id, subscription_id)
+    if not subscription:
+        raise HTTPException(404, "Subscription not found")
+
+    script = await _get_negotiation_script(subscription)
+    return script
+
+
+# ==================== GOALS ENDPOINTS ====================
+
+@app.get("/api/v1/goals")
+async def get_goals(user_id: str = Depends(get_current_user)):
+    """Get all savings goals"""
+    goals = await db.get_goals(user_id)
+
+    total_target = sum(g.get("target_amount", 0) for g in goals)
+    total_saved = sum(g.get("current_amount", 0) for g in goals)
+
+    return {
+        "goals": goals,
+        "total_target": round(total_target, 2),
+        "total_saved": round(total_saved, 2),
+        "overall_progress": round((total_saved / total_target * 100) if total_target > 0 else 0, 1)
+    }
+
+
+@app.post("/api/v1/goals")
+async def create_goal(
+    request: CreateGoalRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Create a new savings goal"""
+    goal = {
+        "name": request.name,
+        "target_amount": request.target_amount,
+        "current_amount": 0,
+        "deadline": request.deadline,
+        "category": request.category,
+        "auto_contribute": request.auto_contribute,
+        "monthly_contribution": request.monthly_contribution,
+        "created_at": datetime.now().isoformat()
+    }
+
+    goal_id = await db.create_goal(user_id, goal)
+
+    return {
+        "message": "Goal created successfully",
+        "goal_id": goal_id,
+        "goal": goal
+    }
+
+
+@app.get("/api/v1/goals/{goal_id}")
+async def get_goal(goal_id: str, user_id: str = Depends(get_current_user)):
+    """Get a specific goal"""
+    goal = await db.get_goal(user_id, goal_id)
+    if not goal:
+        raise HTTPException(404, "Goal not found")
+
+    # Calculate progress
+    progress = round((goal.get("current_amount", 0) / goal.get("target_amount", 1)) * 100, 1)
+
+    return {
+        **goal,
+        "progress_percent": progress
+    }
+
+
+@app.patch("/api/v1/goals/{goal_id}")
+async def update_goal(
+    goal_id: str,
+    updates: Dict[str, Any],
+    user_id: str = Depends(get_current_user)
+):
+    """Update a goal"""
+    success = await db.update_goal(user_id, goal_id, updates)
+    if not success:
+        raise HTTPException(400, "Failed to update goal")
+
+    return {"message": "Goal updated successfully"}
+
+
+@app.delete("/api/v1/goals/{goal_id}")
+async def delete_goal(goal_id: str, user_id: str = Depends(get_current_user)):
+    """Delete a goal"""
+    success = await db.delete_goal(user_id, goal_id)
+    if not success:
+        raise HTTPException(400, "Failed to delete goal")
+
+    return {"message": "Goal deleted successfully"}
+
+
+@app.post("/api/v1/goals/{goal_id}/contribute")
+async def contribute_to_goal(
+    goal_id: str,
+    request: ContributeToGoalRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Contribute to a savings goal"""
+    goal = await db.get_goal(user_id, goal_id)
+    if not goal:
+        raise HTTPException(404, "Goal not found")
+
+    new_amount = goal.get("current_amount", 0) + request.amount
+
+    # Update goal
+    await db.update_goal(user_id, goal_id, {"current_amount": new_amount})
+
+    # Log contribution
+    await db.log_goal_contribution(user_id, goal_id, request.amount)
+
+    # Check for milestone
+    progress = (new_amount / goal.get("target_amount", 1)) * 100
+    milestone_message = None
+
+    if progress >= 100:
+        milestone_message = f"Congratulations! You've reached your '{goal['name']}' goal!"
+    elif progress >= 75 and (goal.get("current_amount", 0) / goal.get("target_amount", 1) * 100) < 75:
+        milestone_message = f"Amazing! You're 75% of the way to your '{goal['name']}' goal!"
+    elif progress >= 50 and (goal.get("current_amount", 0) / goal.get("target_amount", 1) * 100) < 50:
+        milestone_message = f"Halfway there! 50% of your '{goal['name']}' goal reached!"
+    elif progress >= 25 and (goal.get("current_amount", 0) / goal.get("target_amount", 1) * 100) < 25:
+        milestone_message = f"Great start! 25% of your '{goal['name']}' goal achieved!"
+
+    return {
+        "message": "Contribution recorded",
+        "new_amount": round(new_amount, 2),
+        "progress_percent": round(progress, 1),
+        "milestone": milestone_message
+    }
+
+
+@app.get("/api/v1/goals/{goal_id}/history")
+async def get_goal_history(goal_id: str, user_id: str = Depends(get_current_user)):
+    """Get contribution history for a goal"""
+    history = await db.get_goal_contributions(user_id, goal_id)
+
+    return {
+        "contributions": history,
+        "total_contributed": sum(c.get("amount", 0) for c in history)
+    }
+
+
 # ==================== HELPER FUNCTIONS ====================
 
 async def _build_chat_context(user_id: str) -> Dict[str, Any]:
@@ -530,6 +770,221 @@ async def _build_chat_context(user_id: str) -> Dict[str, Any]:
             for txn in recent_txns
         ],
         "spending_by_category": {k: round(v, 2) for k, v in spending.items()}
+    }
+
+
+async def _detect_subscription_patterns(transactions: list) -> list:
+    """Detect recurring subscription patterns from transactions"""
+    from collections import defaultdict
+
+    # Group transactions by merchant
+    merchant_txns = defaultdict(list)
+    for txn in transactions:
+        if txn.get("amount", 0) < 0:  # Only expenses
+            merchant_txns[txn.get("merchant", "").lower()].append(txn)
+
+    subscriptions = []
+    known_subscription_merchants = [
+        "netflix", "spotify", "hulu", "disney", "hbo", "amazon prime",
+        "apple music", "youtube premium", "adobe", "microsoft 365",
+        "dropbox", "icloud", "google one", "nordvpn", "expressvpn",
+        "gym", "fitness", "peloton", "crunchyroll", "paramount",
+        "audible", "kindle", "instacart", "doordash", "uber one"
+    ]
+
+    for merchant, txns in merchant_txns.items():
+        if len(txns) < 2:
+            continue
+
+        # Check if known subscription merchant
+        is_known = any(known in merchant for known in known_subscription_merchants)
+
+        # Check for consistent amounts
+        amounts = [abs(t.get("amount", 0)) for t in txns]
+        avg_amount = sum(amounts) / len(amounts)
+        is_consistent = all(abs(a - avg_amount) < avg_amount * 0.1 for a in amounts)
+
+        # Check frequency (monthly = ~30 days between charges)
+        if len(txns) >= 2 and (is_known or is_consistent):
+            # Calculate average days between transactions
+            dates = sorted([t.get("date") for t in txns if t.get("date")])
+
+            # Estimate monthly cost
+            monthly_cost = avg_amount
+
+            # Determine if unused (no transactions in last 30 days of activity)
+            is_unused = len(txns) >= 3 and is_consistent
+
+            subscriptions.append({
+                "merchant": txns[0].get("merchant", merchant.title()),
+                "amount": round(avg_amount, 2),
+                "monthly_cost": round(monthly_cost, 2),
+                "annual_cost": round(monthly_cost * 12, 2),
+                "frequency": "monthly",
+                "is_unused": is_unused,
+                "confidence": 0.9 if is_known else 0.7,
+                "category": _categorize_subscription(merchant)
+            })
+
+    return subscriptions
+
+
+def _categorize_subscription(merchant: str) -> str:
+    """Categorize a subscription based on merchant name"""
+    merchant = merchant.lower()
+
+    streaming = ["netflix", "hulu", "disney", "hbo", "paramount", "peacock", "crunchyroll", "youtube"]
+    music = ["spotify", "apple music", "tidal", "pandora", "amazon music"]
+    software = ["adobe", "microsoft", "dropbox", "google", "icloud", "notion"]
+    fitness = ["gym", "fitness", "peloton", "planet fitness", "orange theory"]
+    delivery = ["doordash", "uber eats", "grubhub", "instacart", "uber one"]
+    gaming = ["xbox", "playstation", "nintendo", "steam", "ea play"]
+
+    if any(s in merchant for s in streaming):
+        return "Streaming"
+    elif any(s in merchant for s in music):
+        return "Music"
+    elif any(s in merchant for s in software):
+        return "Software"
+    elif any(s in merchant for s in fitness):
+        return "Fitness"
+    elif any(s in merchant for s in delivery):
+        return "Delivery"
+    elif any(s in merchant for s in gaming):
+        return "Gaming"
+    else:
+        return "Other"
+
+
+async def _get_cancellation_guide(merchant: str) -> dict:
+    """Get cancellation guide for a specific merchant"""
+    merchant_lower = merchant.lower()
+
+    # Cancellation difficulty ratings and guides
+    cancellation_guides = {
+        "netflix": {
+            "difficulty": "easy",
+            "steps": [
+                "Log into your Netflix account",
+                "Go to Account settings",
+                "Click 'Cancel Membership'",
+                "Confirm cancellation"
+            ],
+            "method": "web",
+            "estimated_time": "2 minutes",
+            "tips": ["You can reactivate anytime", "Access continues until billing period ends"],
+            "warnings": []
+        },
+        "spotify": {
+            "difficulty": "easy",
+            "steps": [
+                "Log into Spotify.com (not the app)",
+                "Go to Account > Subscription",
+                "Click 'Cancel Premium'",
+                "Confirm"
+            ],
+            "method": "web",
+            "estimated_time": "2 minutes",
+            "tips": ["Can't cancel through mobile app", "You keep free tier access"],
+            "warnings": []
+        },
+        "gym": {
+            "difficulty": "hard",
+            "steps": [
+                "Review your contract for cancellation terms",
+                "Visit gym in person (often required)",
+                "Fill out cancellation form",
+                "Get written confirmation",
+                "Monitor for continued charges"
+            ],
+            "method": "in_person",
+            "estimated_time": "30+ minutes",
+            "tips": ["Bring ID", "Ask for confirmation number", "Take photos of all paperwork"],
+            "warnings": ["May require 30-day notice", "Could have cancellation fee", "Some require certified mail"]
+        },
+        "adobe": {
+            "difficulty": "medium",
+            "steps": [
+                "Log into Adobe.com",
+                "Go to Plans & Products",
+                "Click 'Manage plan' then 'Cancel plan'",
+                "Go through retention offers",
+                "Confirm cancellation"
+            ],
+            "method": "web",
+            "estimated_time": "10 minutes",
+            "tips": ["They will offer discounts - be firm if you want to cancel"],
+            "warnings": ["Annual plans may have early termination fee (50% of remaining)"]
+        }
+    }
+
+    # Find matching guide
+    for key, guide in cancellation_guides.items():
+        if key in merchant_lower:
+            return {
+                "merchant": merchant,
+                **guide
+            }
+
+    # Default guide
+    return {
+        "merchant": merchant,
+        "difficulty": "medium",
+        "steps": [
+            "Log into your account on their website",
+            "Find Account or Settings section",
+            "Look for Subscription or Billing options",
+            "Select Cancel or Downgrade",
+            "Confirm cancellation",
+            "Save confirmation email/number"
+        ],
+        "method": "web",
+        "estimated_time": "5-10 minutes",
+        "tips": [
+            "Check your email for account credentials",
+            "Screenshot all confirmation pages",
+            "Monitor bank statements for continued charges"
+        ],
+        "warnings": [
+            "Some services require phone call to cancel",
+            "Watch for 'pause' vs actual 'cancel' options"
+        ]
+    }
+
+
+async def _get_negotiation_script(subscription: dict) -> dict:
+    """Generate negotiation script for subscription discount"""
+    merchant = subscription.get("merchant", "")
+    amount = subscription.get("amount", 0)
+
+    return {
+        "merchant": merchant,
+        "current_price": amount,
+        "potential_savings": round(amount * 0.2, 2),  # Assume 20% possible
+        "opening_line": f"Hi, I've been a loyal {merchant} customer and I'm considering canceling due to the cost. Before I do, I wanted to see if there are any retention offers or discounts available.",
+        "key_points": [
+            "Mention how long you've been a customer",
+            "Reference competitor pricing if lower",
+            "Be polite but firm about needing a discount",
+            "Ask for supervisor if initial rep says no"
+        ],
+        "phrases_to_use": [
+            "I'm comparing options and your competitors offer...",
+            "What retention offers do you have available?",
+            "I'd prefer to stay but I need a better rate",
+            "Can I speak to someone in the retention department?"
+        ],
+        "fallback_options": [
+            "Ask about downgrading to cheaper plan",
+            "Request pause/freeze instead of cancel",
+            "Ask about annual vs monthly pricing",
+            "Inquire about student/military discounts"
+        ],
+        "success_tips": [
+            "Call during business hours for better agents",
+            "Be prepared to actually cancel if needed",
+            "Many services have unpublished retention offers"
+        ]
     }
 
 

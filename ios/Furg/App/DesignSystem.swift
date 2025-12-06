@@ -34,6 +34,9 @@ extension Color {
     static let glassWhite = Color.white.opacity(0.15)
     static let glassBorder = Color.white.opacity(0.25)
     static let glassDark = Color.black.opacity(0.2)
+
+    // Background aliases
+    static let furgDarkBg = Color.furgCharcoal
 }
 
 // MARK: - Gradients
@@ -81,7 +84,7 @@ struct FurgGradients {
 
 // MARK: - Glass Card Modifier
 
-struct GlassCard: ViewModifier {
+struct GlassCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 24
     var opacity: Double = 0.12
 
@@ -146,7 +149,7 @@ struct GlassButton: ViewModifier {
 
 extension View {
     func glassCard(cornerRadius: CGFloat = 24, opacity: Double = 0.12) -> some View {
-        modifier(GlassCard(cornerRadius: cornerRadius, opacity: opacity))
+        modifier(GlassCardModifier(cornerRadius: cornerRadius, opacity: opacity))
     }
 
     func glassButton(isAccent: Bool = false) -> some View {
@@ -197,6 +200,48 @@ struct FloatingCard<Content: View>: View {
             .padding(padding)
             .glassCard()
             .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+    }
+}
+
+// GlassCard as a container view (not just modifier)
+struct GlassCard<Content: View>: View {
+    let content: Content
+    var cornerRadius: CGFloat = 16
+    var padding: CGFloat = 16
+
+    init(cornerRadius: CGFloat = 16, padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
+        self.content = content()
+        self.cornerRadius = cornerRadius
+        self.padding = padding
+    }
+
+    var body: some View {
+        content
+            .padding(padding)
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(Color.white.opacity(0.12))
+                    .background(
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(.ultraThinMaterial)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.3),
+                                Color.white.opacity(0.1),
+                                Color.white.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
 

@@ -163,14 +163,14 @@ struct SpendingLimitsView: View {
                         .font(.furgHeadline)
                         .foregroundColor(.white)
 
-                    Text("$\(limit.currentSpent as NSDecimalNumber, specifier: "%.0f") of $\(limit.limitAmount as NSDecimalNumber, specifier: "%.0f")")
+                    Text("$\(NSDecimalNumber(decimal: limit.currentSpent).intValue) of $\(NSDecimalNumber(decimal: limit.limitAmount).intValue)")
                         .font(.furgCaption)
                         .foregroundColor(.furgDanger)
                 }
 
                 Spacer()
 
-                Text("+$\(abs(limit.remaining) as NSDecimalNumber, specifier: "%.0f")")
+                Text("+$\(NSDecimalNumber(decimal: abs(limit.remaining)).intValue)")
                     .font(.furgHeadline)
                     .foregroundColor(.furgDanger)
             }
@@ -218,7 +218,7 @@ struct SpendingLimitsView: View {
 
                                 Spacer()
 
-                                Text("$\(limit.remaining as NSDecimalNumber, specifier: "%.0f") left")
+                                Text("$\(NSDecimalNumber(decimal: limit.remaining).intValue) left")
                                     .font(.furgCaption)
                                     .foregroundColor(limit.isNearLimit ? .furgWarning : .white.opacity(0.6))
                             }
@@ -230,7 +230,7 @@ struct SpendingLimitsView: View {
 
                                 Spacer()
 
-                                Text("$\(limit.currentSpent as NSDecimalNumber, specifier: "%.0f") / $\(limit.limitAmount as NSDecimalNumber, specifier: "%.0f")")
+                                Text("$\(NSDecimalNumber(decimal: limit.currentSpent).intValue) / $\(NSDecimalNumber(decimal: limit.limitAmount).intValue)")
                                     .font(.furgCaption)
                                     .foregroundColor(.white.opacity(0.5))
                             }
@@ -526,7 +526,7 @@ struct EditSpendingLimitSheet: View {
                                 .font(.furgCaption)
                                 .foregroundColor(.white.opacity(0.5))
 
-                            Text("$\(limit.currentSpent as NSDecimalNumber, specifier: "%.2f")")
+                            Text(String(format: "$%.2f", NSDecimalNumber(decimal: limit.currentSpent).doubleValue))
                                 .font(.furgLargeTitle)
                                 .foregroundColor(limit.isOverLimit ? .furgDanger : .white)
                         }

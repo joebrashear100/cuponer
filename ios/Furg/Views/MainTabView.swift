@@ -24,17 +24,23 @@ struct MainTabView: View {
                 }
                 .tag(1)
 
-            TransactionsView()
+            WishlistView()
                 .tabItem {
-                    Label("Activity", systemImage: "list.bullet")
+                    Label("Wishlist", systemImage: "heart.fill")
                 }
                 .tag(2)
+
+            PurchasePlanView()
+                .tabItem {
+                    Label("Plan", systemImage: "calendar")
+                }
+                .tag(3)
 
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(3)
+                .tag(4)
         }
         .tint(.orange)
     }
@@ -47,4 +53,5 @@ struct MainTabView: View {
         .environmentObject(ChatManager())
         .environmentObject(FinanceManager())
         .environmentObject(PlaidManager())
+        .environmentObject(WishlistManager())
 }

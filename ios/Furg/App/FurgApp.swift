@@ -14,6 +14,7 @@ struct FurgApp: App {
     @StateObject private var chatManager = ChatManager()
     @StateObject private var financeManager = FinanceManager()
     @StateObject private var plaidManager = PlaidManager()
+    @StateObject private var wishlistManager = WishlistManager()
 
     var body: some Scene {
         WindowGroup {
@@ -24,6 +25,7 @@ struct FurgApp: App {
                     .environmentObject(chatManager)
                     .environmentObject(financeManager)
                     .environmentObject(plaidManager)
+                    .environmentObject(wishlistManager)
             } else {
                 WelcomeView()
                     .environmentObject(authManager)

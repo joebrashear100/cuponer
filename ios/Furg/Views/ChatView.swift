@@ -56,7 +56,10 @@ struct ChatView: View {
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         if chatManager.messages.isEmpty {
-                            GlassEmptyChatView()
+                            GlassEmptyChatView(onSuggestionTap: { suggestion in
+                                messageText = suggestion
+                                sendMessage()
+                            })
                                 .padding(.top, 60)
                                 .offset(y: animate ? 0 : 20)
                                 .opacity(animate ? 1 : 0)
@@ -73,6 +76,21 @@ struct ChatView: View {
 
                         if chatManager.isLoading {
                             GlassTypingIndicator()
+                        }
+
+                        // Error message
+                        if let error = chatManager.errorMessage {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.furgWarning)
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.furgCharcoal.opacity(0.7))
+                            }
+                            .padding()
+                            .background(Color.furgWarning.opacity(0.1))
+                            .cornerRadius(12)
+                            .padding(.horizontal)
                         }
                     }
                     .padding()
@@ -121,6 +139,15 @@ struct ChatView: View {
 // MARK: - Glass Empty Chat View
 
 struct GlassEmptyChatView: View {
+    var onSuggestionTap: (String) -> Void
+
+    let suggestions = [
+        "How am I doing?",
+        "Give me spending tips",
+        "Can I afford $500?",
+        "Show my bill summary"
+    ]
+
     var body: some View {
         VStack(spacing: 24) {
             // Animated FURG icon
@@ -165,10 +192,11 @@ struct GlassEmptyChatView: View {
                     .foregroundColor(.furgCharcoal.opacity(0.5))
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    SuggestionChip(text: "How am I doing?")
-                    SuggestionChip(text: "Spending tips")
-                    SuggestionChip(text: "Can I afford...?")
-                    SuggestionChip(text: "Bill summary")
+                    ForEach(suggestions, id: \.self) { suggestion in
+                        SuggestionChip(text: suggestion) {
+                            onSuggestionTap(suggestion)
+                        }
+                    }
                 }
             }
         }
@@ -180,15 +208,20 @@ struct GlassEmptyChatView: View {
 
 struct SuggestionChip: View {
     let text: String
+    var onTap: () -> Void = {}
 
     var body: some View {
-        Text(text)
-            .font(.caption)
-            .foregroundColor(.furgMint)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.furgMint.opacity(0.15))
-            .cornerRadius(16)
+        Button(action: onTap) {
+            Text(text)
+                .font(.caption)
+                .foregroundColor(.furgMint)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(Color.furgMint.opacity(0.15))
+                .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -244,7 +277,6 @@ struct GlassMessageBubble: View {
                     )
                     .foregroundColor(message.role == .user ? .white : .furgCharcoal)
                     .cornerRadius(20)
-                    .cornerRadius(message.role == .user ? 20 : 20, corners: message.role == .user ? [.topLeft, .topRight, .bottomLeft] : [.topLeft, .topRight, .bottomRight])
 
                 Text(message.timestamp, style: .time)
                     .font(.caption2)
@@ -262,6 +294,8 @@ struct GlassMessageBubble: View {
 
 struct GlassTypingIndicator: View {
     @State private var animationPhase = 0
+
+    let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HStack {
@@ -281,12 +315,13 @@ struct GlassTypingIndicator: View {
                 }
 
                 HStack(spacing: 6) {
-                    ForEach(0..<3) { index in
+                    ForEach(0..<3, id: \.self) { index in
                         Circle()
                             .fill(Color.furgMint)
                             .frame(width: 8, height: 8)
                             .scaleEffect(animationPhase == index ? 1.2 : 0.8)
                             .opacity(animationPhase == index ? 1 : 0.5)
+                            .animation(.easeInOut(duration: 0.3), value: animationPhase)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -297,10 +332,8 @@ struct GlassTypingIndicator: View {
 
             Spacer()
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.4).repeatForever()) {
-                animationPhase = (animationPhase + 1) % 3
-            }
+        .onReceive(timer) { _ in
+            animationPhase = (animationPhase + 1) % 3
         }
     }
 }
@@ -348,28 +381,6 @@ struct GlassChatInputBar: View {
                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
         )
-    }
-}
-
-// MARK: - Corner Radius Extension
-
-extension View {
-    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners))
-    }
-}
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(
-            roundedRect: rect,
-            byRoundingCorners: corners,
-            cornerRadii: CGSize(width: radius, height: radius)
-        )
-        return Path(path.cgPath)
     }
 }
 

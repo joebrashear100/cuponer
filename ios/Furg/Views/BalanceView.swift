@@ -56,9 +56,9 @@ struct BalanceView: View {
                         )
 
                         MiniStatCard(
-                            title: "Truly Available",
-                            value: "$\(Int(balance.trulyAvailable))",
-                            icon: "checkmark.seal.fill",
+                            title: "Pending",
+                            value: "$\(Int(balance.pendingBalance))",
+                            icon: "clock.fill",
                             color: .furgInfo
                         )
                     }
@@ -98,16 +98,24 @@ struct BalanceView: View {
                 .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
 
                 // Upcoming bills section
-                if let upcoming = financeManager.upcomingBills, upcoming.count > 0 {
+                if let upcoming = financeManager.upcomingBills, !upcoming.bills.isEmpty {
                     UpcomingBillsCard(upcoming: upcoming)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
                         .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
                 }
 
+                // Demo mode indicator
+                if !financeManager.hasBankConnected {
+                    DemoModeCard()
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
+                }
+
                 // Hidden accounts
-                if let balance = financeManager.balance, !balance.hiddenAccounts.isEmpty {
-                    HiddenAccountsSection(accounts: balance.hiddenAccounts)
+                if let balance = financeManager.balance, let accounts = balance.hiddenAccounts, !accounts.isEmpty {
+                    HiddenAccountsSection(accounts: accounts)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
                         .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
@@ -161,7 +169,7 @@ struct MainBalanceCard: View {
                             .font(.system(size: 32, weight: .medium, design: .rounded))
                             .foregroundColor(.furgMint)
 
-                        Text("\(Int(balance.visibleBalance))")
+                        Text("\(Int(balance.availableBalance))")
                             .font(.system(size: 56, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                     }
@@ -306,18 +314,18 @@ struct UpcomingBillsCard: View {
 
                 Spacer()
 
-                Text("30 days")
+                Text("\(upcoming.daysAhead ?? 30) days")
                     .font(.furgCaption)
                     .foregroundColor(.white.opacity(0.5))
             }
 
             HStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("$\(Int(upcoming.total))")
+                    Text("$\(Int(upcoming.totalAmount))")
                         .font(.furgTitle)
                         .foregroundColor(.furgWarning)
 
-                    Text("\(upcoming.count) bills due")
+                    Text("\(upcoming.bills.count) bills due")
                         .font(.furgCaption)
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -334,9 +342,66 @@ struct UpcomingBillsCard: View {
                         .foregroundColor(.furgWarning)
                 }
             }
+
+            // Bill list preview
+            if !upcoming.bills.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach(upcoming.bills.prefix(3)) { bill in
+                        HStack {
+                            Text(bill.merchant)
+                                .font(.furgBody)
+                                .foregroundColor(.white.opacity(0.8))
+                            Spacer()
+                            Text(bill.formattedAmount)
+                                .font(.furgBody)
+                                .foregroundColor(.white)
+                            Text(bill.nextDue)
+                                .font(.furgCaption)
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            }
         }
         .padding(20)
         .glassCard(cornerRadius: 20, opacity: 0.08)
+    }
+}
+
+// MARK: - Demo Mode Card
+
+struct DemoModeCard: View {
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.furgInfo.opacity(0.2))
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .foregroundColor(.furgInfo)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Demo Mode")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+
+                Text("Connect a bank to see real data")
+                    .font(.furgCaption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.3))
+        }
+        .padding(16)
+        .glassCard(cornerRadius: 16, opacity: 0.08)
     }
 }
 

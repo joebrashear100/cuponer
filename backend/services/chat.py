@@ -35,27 +35,68 @@ class ChatService:
             System prompt string
         """
         # Base personality
-        prompt = """You are FURG, a financial AI assistant with a roasting personality.
+        prompt = """You are FURG, a financial AI assistant with a roasting personality. Think of yourself as a brutally honest friend who genuinely cares about the user's financial future but isn't afraid to call out their BS.
 
-Your core traits:
-- BRUTALLY HONEST about bad spending decisions
-- Mock users to motivate them (but with love)
-- Celebrate good financial choices
-- Always protect bills and safety buffer
-- Chat-first: everything configured through conversation, NO UI controls
-- Use casual language, be witty and sharp
+## Your Core Identity
+- Name: FURG (Financial Utility & Roasting Guide)
+- Vibe: Tough love coach meets sarcastic best friend
+- Goal: Help users build wealth through accountability and brutal honesty
+- Voice: Casual, witty, specific, and data-driven
 
-Examples of your personality:
-- Bad spending: "Joe, $47 Uber at 2am? You couldn't wait 4 hours for the train? That's rent money."
-- Good decision: "14 days no takeout. Holy shit Joe, who are you? Keep this up."
-- Pattern detection: "Every Sunday you drop $200+. Brunch crew bankrupting you?"
+## Communication Style
+- Use first person when referring to yourself ("I see you spent...")
+- Use user's name when you know it
+- Be specific with numbers and dates (never vague)
+- Keep responses punchy (2-3 sentences usually, unless explaining something complex)
+- Use dark humor about financial mistakes
+- Celebrate wins genuinely (but briefly, then back to business)
 
-Core rules:
+## Roasting Examples by Situation
+
+### Late Night Spending:
+- "2am Amazon order? What could you possibly need that badly? Impulse control called, it's on life support."
+- "$47 Uber at midnight? Walk next time. Or better yet, stay home."
+
+### Food & Dining:
+- "$18 on lunch? Your kitchen is collecting dust and your wallet is collecting L's."
+- "Third DoorDash this week? At this rate, you're paying their driver's rent, not building your own fund."
+- "14 days no takeout? Holy shit, who are you? This is growth."
+
+### Coffee & Small Purchases:
+- "$7 latte? That's $2,555/year if you do this daily. You're financing Starbucks' new store."
+- "Death by 1,000 cuts. These small purchases are your silent financial killer."
+
+### Subscriptions:
+- "You're paying for 4 streaming services. Pick 2 or accept you enjoy wasting money."
+- "That gym membership you haven't used in 47 days? That's not an investment, it's a donation."
+
+### Big Purchases:
+- "Before you drop $500, remember: that's 1.7% of your down payment goal. Still worth it?"
+- "This purchase would delay your goal by 3 weeks. Your call, but don't say I didn't warn you."
+
+### Pattern Detection:
+- "Every Sunday you drop $200+. Is brunch with friends worth being broke by 27?"
+- "You spend 40% more on weekends. Friday-you is sabotaging Monday-you."
+
+### Celebrations:
+- "Goal progress: 34%. Actually impressive. Keep this energy."
+- "$500 saved this month. That's the most adult thing you've done all year."
+
+## Core Rules
 1. NEVER let users spend bill money - always keep 2× upcoming bills + emergency buffer safe
-2. Be specific with numbers and dates when discussing money
+2. Be specific with numbers, dates, and percentages when discussing money
 3. Learn from every conversation to improve future advice
 4. Roast proportionally - bigger mistakes get bigger roasts
-5. Keep responses short and punchy (2-3 sentences max usually)
+5. Reference their goals when they're about to make a questionable decision
+6. Track patterns and call them out before they become problems
+7. Give actionable advice, not just roasts (roast + solution combo)
+8. Use their actual financial data to make points hit harder
+
+## The Shadow Banking Philosophy
+- Help users "hide money from themselves" to enforce savings
+- The visible balance is what they can spend; hidden balance is untouchable
+- Make the hidden balance feel like it doesn't exist
+- Celebrate when hidden balance grows
 
 """
 
@@ -221,37 +262,99 @@ Remember: Your goal is to help users save money through tough love and smart pro
         Returns:
             Roast string
         """
+        import random
+
         amount = abs(float(transaction.get("amount", 0)))
         merchant = transaction.get("merchant", "Unknown")
         date = transaction.get("date", datetime.now())
-        category = transaction.get("category", "")
+        category = transaction.get("category", "").lower()
+        name = user_profile.get("name", "friend") if user_profile else "friend"
+
+        # Roast templates by category
+        roast_templates = {
+            "late_night": [
+                f"${amount:.2f} at {merchant} at night? Tomorrow you will regret this.",
+                f"Late night ${amount:.2f}? Impulse control has left the chat.",
+                f"{name}, {merchant} at this hour? Your wallet is begging for sleep.",
+            ],
+            "uber_lyft": [
+                f"${amount:.2f} on a ride? That's {int(amount/3)} coffees. Or, you know, walking money.",
+                f"${amount:.2f} Uber? Your legs work, {name}. Use them.",
+                f"At ${amount:.2f} per ride, you're basically their best customer. Congrats?",
+            ],
+            "food_delivery": [
+                f"${amount:.2f} delivered? The walk to pick it up burns calories AND saves money.",
+                f"DoorDash again? That's ${amount:.2f} for cold food and regret.",
+                f"${amount:.2f} for delivery. Your kitchen is getting dusty and your wallet is getting light.",
+            ],
+            "coffee": [
+                f"${amount:.2f} on coffee? That's ${amount * 365:.0f}/year if you do this daily. Insane.",
+                f"At this rate, Starbucks should name a drink after you. The ${amount:.2f} Regret Latte.",
+                f"Coffee for ${amount:.2f}? Your home has a coffee maker that's feeling very neglected.",
+            ],
+            "entertainment": [
+                f"${amount:.2f} on entertainment? Hope the memories last because that money won't.",
+                f"Entertainment budget: ${amount:.2f}. Entertainment value: questionable.",
+                f"${amount:.2f} for fun. Remember this when you say you 'can't afford' your goals.",
+            ],
+            "shopping": [
+                f"${amount:.2f} shopping trip? Did you need it or just want it? Be honest.",
+                f"Another ${amount:.2f} gone. Your closet is full; your savings account isn't.",
+                f"${amount:.2f} at {merchant}. Retail therapy only treats the symptoms, not the cause.",
+            ],
+            "subscriptions": [
+                f"${amount:.2f}/month you'll forget about in 2 weeks. Classic.",
+                f"Another subscription? You're collecting these like Pokemon. Gotta catch 'em all (except your savings goals).",
+            ],
+            "reasonable": [
+                "Reasonable purchase. I'm genuinely surprised.",
+                "Under budget? Who are you and what did you do with the real you?",
+                "Acceptable spending. The bar is low but you cleared it.",
+                "This one gets a pass. Don't let it go to your head.",
+            ],
+            "default": [
+                f"${amount:.2f} at {merchant}. Not my worst nightmare, but not great either.",
+                f"${amount:.2f} spent. Could've been worse. Could've been better.",
+                f"{merchant} got ${amount:.2f} from you. Hope it was worth it.",
+            ],
+        }
 
         # Time-based roasts
         if isinstance(date, datetime):
             hour = date.hour
-
             if hour >= 22 or hour <= 4:
-                return f"${amount:.2f} at {merchant} at {hour}:00? Drunk shopping or just bad decisions?"
+                return random.choice(roast_templates["late_night"])
 
-            if hour >= 11 and hour <= 13 and "restaurant" in category.lower():
-                return f"${amount:.2f} lunch? Your kitchen must be decorative."
+        # Merchant-specific roasts
+        merchant_lower = merchant.lower()
 
-        # Amount-based roasts
-        if "uber" in merchant.lower() or "lyft" in merchant.lower():
-            if amount > 30:
-                return f"${amount:.2f} Uber? That's like a week of groceries for a 15min ride, genius."
+        if "uber" in merchant_lower or "lyft" in merchant_lower:
+            if amount > 25:
+                return random.choice(roast_templates["uber_lyft"])
 
-        if "coffee" in merchant.lower() or "starbucks" in merchant.lower():
-            return f"${amount:.2f} on coffee? Your retirement fund called, it's jealous."
+        if any(x in merchant_lower for x in ["doordash", "grubhub", "ubereats", "postmates"]):
+            return random.choice(roast_templates["food_delivery"])
 
-        if amount > 100 and category == "Entertainment":
-            return f"${amount:.2f} on entertainment? At least you're entertaining your bank account... by emptying it."
+        if any(x in merchant_lower for x in ["starbucks", "coffee", "dunkin", "peet"]):
+            return random.choice(roast_templates["coffee"])
 
-        # Default praise for reasonable spending
-        if amount < 20:
-            return "Reasonable purchase. Shocking."
+        # Category-specific roasts
+        if "entertainment" in category or "streaming" in category:
+            if amount > 50:
+                return random.choice(roast_templates["entertainment"])
 
-        return f"${amount:.2f} at {merchant}. Could be worse, I guess."
+        if "shopping" in category or "retail" in category:
+            if amount > 50:
+                return random.choice(roast_templates["shopping"])
+
+        if "subscription" in category:
+            return random.choice(roast_templates["subscriptions"])
+
+        # Amount-based fallbacks
+        if amount < 15:
+            return random.choice(roast_templates["reasonable"])
+
+        return random.choice(roast_templates["default"])
 
     @staticmethod
     async def handle_command(user_id: str, message: str) -> Optional[str]:

@@ -2,47 +2,144 @@
 //  MainTabView.swift
 //  Furg
 //
-//  Main tab bar container
+//  Modern glassmorphism tab navigation
 //
 
 import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @Namespace private var tabAnimation
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ChatView()
-                .tabItem {
-                    Label("Chat", systemImage: "message.fill")
-                }
-                .tag(0)
+        ZStack(alignment: .bottom) {
+            // Background
+            AnimatedMeshBackground()
 
-            BalanceView()
-                .tabItem {
-                    Label("Balance", systemImage: "dollarsign.circle.fill")
+            // Content
+            Group {
+                switch selectedTab {
+                case 0:
+                    BalanceView()
+                case 1:
+                    ChatView()
+                case 2:
+                    WishlistView()
+                case 3:
+                    PurchasePlanView()
+                case 4:
+                    SettingsView()
+                default:
+                    BalanceView()
                 }
-                .tag(1)
+            }
 
-            WishlistView()
-                .tabItem {
-                    Label("Wishlist", systemImage: "heart.fill")
-                }
-                .tag(2)
-
-            PurchasePlanView()
-                .tabItem {
-                    Label("Plan", systemImage: "calendar")
-                }
-                .tag(3)
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-                .tag(4)
+            // Custom Tab Bar
+            CustomTabBar(selectedTab: $selectedTab, namespace: tabAnimation)
         }
-        .tint(.orange)
+        .ignoresSafeArea(.keyboard)
+    }
+}
+
+struct CustomTabBar: View {
+    @Binding var selectedTab: Int
+    var namespace: Namespace.ID
+
+    let tabs: [(icon: String, label: String)] = [
+        ("chart.pie.fill", "Home"),
+        ("message.fill", "Chat"),
+        ("heart.fill", "Wishlist"),
+        ("calendar", "Plan"),
+        ("gearshape.fill", "Settings")
+    ]
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(tabs.indices, id: \.self) { index in
+                TabBarButton(
+                    icon: tabs[index].icon,
+                    label: tabs[index].label,
+                    isSelected: selectedTab == index,
+                    namespace: namespace
+                ) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedTab = index
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 28)
+        .background(
+            ZStack {
+                // Blur background
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+
+                // Gradient overlay
+                LinearGradient(
+                    colors: [
+                        Color.furgCharcoal.opacity(0.8),
+                        Color.furgCharcoal.opacity(0.95)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // Top border glow
+                VStack {
+                    LinearGradient(
+                        colors: [Color.furgMint.opacity(0.3), Color.furgMint.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 1)
+                    Spacer()
+                }
+            }
+        )
+        .clipShape(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+        )
+        .shadow(color: Color.black.opacity(0.3), radius: 20, y: -5)
+        .padding(.horizontal, 12)
+        .padding(.bottom, -20)
+    }
+}
+
+struct TabBarButton: View {
+    let icon: String
+    let label: String
+    let isSelected: Bool
+    var namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    if isSelected {
+                        Circle()
+                            .fill(Color.furgMint.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                            .matchedGeometryEffect(id: "tabBackground", in: namespace)
+                    }
+
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                        .foregroundColor(isSelected ? .furgMint : .white.opacity(0.4))
+                        .scaleEffect(isSelected ? 1.1 : 1.0)
+                }
+                .frame(width: 48, height: 48)
+
+                Text(label)
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .furgMint : .white.opacity(0.4))
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
     }
 }
 

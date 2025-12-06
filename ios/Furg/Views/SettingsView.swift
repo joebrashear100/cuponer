@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  Furg
 //
-//  Settings and profile management
+//  Modern glassmorphism settings view
 //
 
 import SwiftUI
@@ -12,119 +12,219 @@ struct SettingsView: View {
     @EnvironmentObject var plaidManager: PlaidManager
     @State private var profile: UserProfile?
     @State private var showSignOutAlert = false
+    @State private var animate = false
 
     private let apiClient = APIClient()
 
     var body: some View {
-        NavigationView {
-            List {
-                // Profile section
-                Section("Profile") {
-                    if let profile = profile {
-                        if let name = profile.name {
-                            LabeledContent("Name", value: name)
-                        }
-                        if let location = profile.location {
-                            LabeledContent("Location", value: location)
-                        }
-                        if let employer = profile.employer {
-                            LabeledContent("Employer", value: employer)
-                        }
-                        if let salary = profile.salary {
-                            LabeledContent("Salary", value: "$\(Int(salary))/year")
-                        }
-
-                        NavigationLink("Edit Profile") {
-                            ProfileEditView(profile: $profile)
-                        }
-                    } else {
-                        Text("Loading profile...")
-                            .foregroundColor(.gray)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("App")
+                            .font(.furgBody)
+                            .foregroundColor(.white.opacity(0.6))
+                        Text("Settings")
+                            .font(.furgLargeTitle)
+                            .foregroundColor(.white)
                     }
+                    Spacer()
                 }
+                .padding(.top, 60)
 
-                // Intensity mode
-                Section("FURG Settings") {
-                    if let intensityMode = profile?.intensityMode {
-                        HStack {
-                            Text("Intensity Mode")
-                            Spacer()
-                            Text(intensityMode.capitalized)
-                                .foregroundColor(.gray)
-                        }
+                // Profile card
+                ProfileCard(profile: profile)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
+
+                // Settings sections
+                VStack(spacing: 16) {
+                    SettingsSection(title: "FURG SETTINGS") {
+                        SettingsRow(
+                            icon: "flame.fill",
+                            title: "Intensity Mode",
+                            value: profile?.intensityMode?.capitalized ?? "Moderate",
+                            color: .furgWarning
+                        )
+
+                        SettingsRow(
+                            icon: "target",
+                            title: "Savings Goal",
+                            value: "Configure",
+                            color: .furgMint
+                        )
+
+                        SettingsRow(
+                            icon: "shield.fill",
+                            title: "Emergency Buffer",
+                            value: profile?.emergencyBuffer != nil ? "$\(Int(profile!.emergencyBuffer!))" : "$500",
+                            color: .furgSuccess
+                        )
                     }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
 
-                    NavigationLink("Savings Goal") {
-                        SavingsGoalView()
-                    }
+                    // Connected banks
+                    SettingsSection(title: "CONNECTED BANKS") {
+                        if plaidManager.linkedBanks.isEmpty {
+                            Button {
+                                Task { await plaidManager.presentPlaidLink() }
+                            } label: {
+                                HStack {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.furgMint.opacity(0.15))
+                                            .frame(width: 40, height: 40)
+                                        Image(systemName: "plus")
+                                            .foregroundColor(.furgMint)
+                                    }
 
-                    if let buffer = profile?.emergencyBuffer {
-                        LabeledContent("Emergency Buffer", value: "$\(Int(buffer))")
-                    }
-                }
+                                    Text("Connect Your Bank")
+                                        .font(.furgBody)
+                                        .foregroundColor(.white)
 
-                // Connected banks
-                Section("Connected Banks") {
-                    if plaidManager.linkedBanks.isEmpty {
-                        Button("Connect Bank") {
-                            Task {
-                                await plaidManager.presentPlaidLink()
-                            }
-                        }
-                    } else {
-                        ForEach(plaidManager.linkedBanks) { bank in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(bank.name)
-                                    Text("Last synced: \(bank.lastSynced, style: .relative) ago")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.white.opacity(0.3))
                                 }
-                                Spacer()
+                                .padding(16)
                             }
-                        }
+                            .buttonStyle(.plain)
+                        } else {
+                            ForEach(plaidManager.linkedBanks) { bank in
+                                HStack {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.furgSeafoam.opacity(0.15))
+                                            .frame(width: 40, height: 40)
+                                        Image(systemName: "building.columns.fill")
+                                            .foregroundColor(.furgSeafoam)
+                                    }
 
-                        Button("Add Another Bank") {
-                            Task {
-                                await plaidManager.presentPlaidLink()
-                            }
-                        }
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(bank.name)
+                                            .font(.furgBody)
+                                            .foregroundColor(.white)
+                                        Text("Synced \(bank.lastSynced, style: .relative) ago")
+                                            .font(.furgCaption)
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
 
-                        Button("Sync All Banks") {
-                            Task {
-                                await plaidManager.syncBanks()
+                                    Spacer()
+
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.furgSuccess)
+                                }
+                                .padding(16)
                             }
+
+                            HStack(spacing: 12) {
+                                Button {
+                                    Task { await plaidManager.presentPlaidLink() }
+                                } label: {
+                                    Text("Add Bank")
+                                        .font(.furgCaption)
+                                        .foregroundColor(.white.opacity(0.7))
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        .background(Color.white.opacity(0.1))
+                                        .clipShape(Capsule())
+                                }
+
+                                Button {
+                                    Task { await plaidManager.syncBanks() }
+                                } label: {
+                                    Text("Sync All")
+                                        .font(.furgCaption)
+                                        .foregroundColor(.furgCharcoal)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        .background(Color.furgMint)
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 16)
                         }
                     }
-                }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
 
-                // App info
-                Section("About") {
-                    LabeledContent("Version", value: "1.0.0")
-                    Link("Privacy Policy", destination: URL(string: "https://furg.app/privacy")!)
-                    Link("Terms of Service", destination: URL(string: "https://furg.app/terms")!)
-                }
+                    // About section
+                    SettingsSection(title: "ABOUT") {
+                        SettingsRow(
+                            icon: "info.circle.fill",
+                            title: "Version",
+                            value: "1.0.0",
+                            color: .furgInfo
+                        )
 
-                // Sign out
-                Section {
-                    Button(role: .destructive, action: { showSignOutAlert = true }) {
-                        Text("Sign Out")
-                            .frame(maxWidth: .infinity, alignment: .center)
+                        SettingsRow(
+                            icon: "lock.shield.fill",
+                            title: "Privacy Policy",
+                            value: "",
+                            color: .white.opacity(0.5),
+                            showChevron: true
+                        )
+
+                        SettingsRow(
+                            icon: "doc.text.fill",
+                            title: "Terms of Service",
+                            value: "",
+                            color: .white.opacity(0.5),
+                            showChevron: true
+                        )
                     }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
+
+                    // Sign out button
+                    Button {
+                        showSignOutAlert = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Sign Out")
+                        }
+                        .font(.furgHeadline)
+                        .foregroundColor(.furgDanger)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.furgDanger.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.furgDanger.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
                 }
+
+                Spacer(minLength: 120)
             }
-            .navigationTitle("Settings")
-            .task {
-                await loadProfile()
+            .padding(.horizontal, 20)
+        }
+        .task {
+            await loadProfile()
+        }
+        .onAppear {
+            withAnimation { animate = true }
+        }
+        .alert("Sign Out", isPresented: $showSignOutAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Sign Out", role: .destructive) {
+                authManager.signOut()
             }
-            .alert("Sign Out", isPresented: $showSignOutAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Sign Out", role: .destructive) {
-                    authManager.signOut()
-                }
-            } message: {
-                Text("Are you sure you want to sign out?")
-            }
+        } message: {
+            Text("Are you sure you want to sign out?")
         }
     }
 
@@ -137,159 +237,142 @@ struct SettingsView: View {
     }
 }
 
-struct ProfileEditView: View {
-    @Environment(\.dismiss) var dismiss
-    @Binding var profile: UserProfile?
-    @State private var name = ""
-    @State private var location = ""
-    @State private var employer = ""
-    @State private var salary = ""
+// MARK: - Profile Card
 
-    private let apiClient = APIClient()
+struct ProfileCard: View {
+    let profile: UserProfile?
 
     var body: some View {
-        Form {
-            Section("Personal Info") {
-                TextField("Name", text: $name)
-                TextField("Location", text: $location)
+        HStack(spacing: 16) {
+            // Avatar
+            ZStack {
+                Circle()
+                    .fill(FurgGradients.mintGradient)
+                    .frame(width: 60, height: 60)
+
+                Text(initials)
+                    .font(.furgTitle2)
+                    .foregroundColor(.furgCharcoal)
             }
 
-            Section("Employment") {
-                TextField("Employer", text: $employer)
-                TextField("Annual Salary", text: $salary)
-                    .keyboardType(.numberPad)
-            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(profile?.name ?? "User")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
 
-            Section {
-                Button("Save") {
-                    Task {
-                        await saveProfile()
+                if let location = profile?.location {
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                        Text(location)
+                            .font(.furgCaption)
                     }
+                    .foregroundColor(.white.opacity(0.5))
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-            }
-        }
-        .navigationTitle("Edit Profile")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            if let profile = profile {
-                name = profile.name ?? ""
-                location = profile.location ?? ""
-                employer = profile.employer ?? ""
-                if let salaryValue = profile.salary {
-                    salary = "\(Int(salaryValue))"
+
+                if let employer = profile?.employer {
+                    HStack(spacing: 4) {
+                        Image(systemName: "building.2.fill")
+                            .font(.caption2)
+                        Text(employer)
+                            .font(.furgCaption)
+                    }
+                    .foregroundColor(.white.opacity(0.5))
                 }
             }
+
+            Spacer()
+
+            Image(systemName: "pencil")
+                .foregroundColor(.furgMint)
+                .padding(10)
+                .background(Color.furgMint.opacity(0.15))
+                .clipShape(Circle())
         }
+        .padding(20)
+        .glassCard()
     }
 
-    private func saveProfile() async {
-        var updates: [String: Any] = [:]
+    var initials: String {
+        guard let name = profile?.name else { return "?" }
+        let parts = name.split(separator: " ")
+        let first = parts.first?.first.map(String.init) ?? ""
+        let last = parts.count > 1 ? parts.last?.first.map(String.init) ?? "" : ""
+        return (first + last).uppercased()
+    }
+}
 
-        if !name.isEmpty {
-            updates["name"] = name
-        }
-        if !location.isEmpty {
-            updates["location"] = location
-        }
-        if !employer.isEmpty {
-            updates["employer"] = employer
-        }
-        if let salaryValue = Double(salary) {
-            updates["salary"] = salaryValue
-        }
+// MARK: - Settings Section
 
-        do {
-            try await apiClient.updateProfile(updates)
-            dismiss()
-        } catch {
-            print("Failed to save profile: \(error)")
+struct SettingsSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.furgCaption)
+                .foregroundColor(.white.opacity(0.4))
+                .tracking(1)
+                .padding(.horizontal, 4)
+                .padding(.bottom, 12)
+
+            VStack(spacing: 0) {
+                content
+            }
+            .glassCard(cornerRadius: 20, opacity: 0.08)
         }
     }
 }
 
-struct SavingsGoalView: View {
-    @Environment(\.dismiss) var dismiss
-    @State private var amount = ""
-    @State private var deadline = Date()
-    @State private var purpose = ""
-    @State private var frequency = "weekly"
+// MARK: - Settings Row
 
-    private let apiClient = APIClient()
+struct SettingsRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    var showChevron: Bool = false
 
     var body: some View {
-        Form {
-            Section("Goal") {
-                TextField("Amount", text: $amount)
-                    .keyboardType(.numberPad)
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 36, height: 36)
 
-                DatePicker("Deadline", selection: $deadline, displayedComponents: .date)
-
-                TextField("Purpose", text: $purpose)
-                    .placeholder(when: purpose.isEmpty) {
-                        Text("e.g., house down payment")
-                    }
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(color)
             }
 
-            Section("Frequency") {
-                Picker("Auto-save", selection: $frequency) {
-                    Text("Weekly").tag("weekly")
-                    Text("Bi-weekly").tag("biweekly")
-                    Text("Monthly").tag("monthly")
-                }
-                .pickerStyle(.segmented)
+            Text(title)
+                .font(.furgBody)
+                .foregroundColor(.white)
+
+            Spacer()
+
+            if !value.isEmpty {
+                Text(value)
+                    .font(.furgBody)
+                    .foregroundColor(.white.opacity(0.4))
             }
 
-            Section {
-                Button("Set Goal") {
-                    Task {
-                        await setGoal()
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
+            if showChevron {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.3))
             }
         }
-        .navigationTitle("Savings Goal")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func setGoal() async {
-        guard let amountValue = Double(amount), amountValue > 0 else { return }
-        guard !purpose.isEmpty else { return }
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let deadlineString = formatter.string(from: deadline)
-
-        do {
-            try await apiClient.setSavingsGoal(
-                amount: amountValue,
-                deadline: deadlineString,
-                purpose: purpose,
-                frequency: frequency
-            )
-            dismiss()
-        } catch {
-            print("Failed to set goal: \(error)")
-        }
-    }
-}
-
-extension View {
-    func placeholder<Content: View>(
-        when shouldShow: Bool,
-        alignment: Alignment = .leading,
-        @ViewBuilder placeholder: () -> Content) -> some View {
-
-        ZStack(alignment: alignment) {
-            placeholder().opacity(shouldShow ? 1 : 0)
-            self
-        }
+        .padding(16)
     }
 }
 
 #Preview {
-    SettingsView()
-        .environmentObject(AuthManager())
-        .environmentObject(PlaidManager())
+    ZStack {
+        AnimatedMeshBackground()
+        SettingsView()
+    }
+    .environmentObject(AuthManager())
+    .environmentObject(PlaidManager())
 }

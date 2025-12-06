@@ -2,7 +2,7 @@
 //  BalanceView.swift
 //  Furg
 //
-//  Balance dashboard with hide/reveal functionality
+//  Modern glassmorphism balance dashboard
 //
 
 import SwiftUI
@@ -11,184 +11,380 @@ struct BalanceView: View {
     @EnvironmentObject var financeManager: FinanceManager
     @State private var showHideSheet = false
     @State private var hideAmount = ""
+    @State private var animate = false
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    if let balance = financeManager.balance {
-                        // Main balance card
-                        VStack(spacing: 16) {
-                            Text("Available")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-
-                            Text("$\(Int(balance.visibleBalance))")
-                                .font(.system(size: 48, weight: .bold))
-                                .foregroundColor(.primary)
-
-                            if balance.hiddenBalance > 0 {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "eye.slash.fill")
-                                        .font(.caption)
-                                    Text("$\(Int(balance.hiddenBalance)) hidden")
-                                        .font(.caption)
-                                }
-                                .foregroundColor(.orange)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .cornerRadius(16)
-
-                        // Stats grid
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            StatCard(
-                                title: "Total Balance",
-                                value: "$\(Int(balance.totalBalance))",
-                                icon: "dollarsign.circle.fill",
-                                color: .blue
-                            )
-
-                            StatCard(
-                                title: "Safety Buffer",
-                                value: "$\(Int(balance.safetyBuffer))",
-                                icon: "shield.fill",
-                                color: .green
-                            )
-
-                            StatCard(
-                                title: "Truly Available",
-                                value: "$\(Int(balance.trulyAvailable))",
-                                icon: "checkmark.circle.fill",
-                                color: .purple
-                            )
-
-                            StatCard(
-                                title: "Hidden",
-                                value: "$\(Int(balance.hiddenBalance))",
-                                icon: "eye.slash.fill",
-                                color: .orange
-                            )
-                        }
-
-                        // Actions
-                        VStack(spacing: 12) {
-                            Button(action: { showHideSheet = true }) {
-                                HStack {
-                                    Image(systemName: "eye.slash.fill")
-                                    Text("Hide Money")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.orange)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                            }
-
-                            Button(action: { /* Reveal money */ }) {
-                                HStack {
-                                    Image(systemName: "eye.fill")
-                                    Text("Reveal Hidden Money")
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color(uiColor: .secondarySystemBackground))
-                                .foregroundColor(.primary)
-                                .cornerRadius(12)
-                            }
-                        }
-
-                        // Upcoming bills
-                        if let upcoming = financeManager.upcomingBills {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Upcoming Bills (30 days)")
-                                    .font(.headline)
-
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text("$\(Int(upcoming.total))")
-                                            .font(.title2)
-                                            .bold()
-                                        Text("\(upcoming.count) bills")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "calendar")
-                                        .font(.title)
-                                        .foregroundColor(.orange)
-                                }
-                                .padding()
-                                .background(Color(uiColor: .secondarySystemBackground))
-                                .cornerRadius(12)
-                            }
-                        }
-
-                    } else {
-                        // Loading or error state
-                        VStack(spacing: 16) {
-                            if financeManager.isLoading {
-                                ProgressView()
-                                Text("Loading balance...")
-                                    .foregroundColor(.gray)
-                            } else {
-                                Text("Connect a bank to see your balance")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 200)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Good \(greeting)")
+                            .font(.furgBody)
+                            .foregroundColor(.white.opacity(0.6))
+                        Text("Your Balance")
+                            .font(.furgLargeTitle)
+                            .foregroundColor(.white)
                     }
-                }
-                .padding()
-            }
-            .navigationTitle("Balance")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { Task { await financeManager.refreshAll() } }) {
+                    Spacer()
+                    Button {
+                        Task { await financeManager.refreshAll() }
+                    } label: {
                         Image(systemName: "arrow.clockwise")
+                            .font(.title3)
+                            .foregroundColor(.furgMint)
+                            .padding(12)
+                            .glassCard(cornerRadius: 14, opacity: 0.1)
                     }
                 }
+                .padding(.top, 60)
+
+                // Main balance card
+                MainBalanceCard(balance: financeManager.balance, animate: animate)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
+
+                // Quick stats
+                if let balance = financeManager.balance {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        MiniStatCard(
+                            title: "Safety Buffer",
+                            value: "$\(Int(balance.safetyBuffer))",
+                            icon: "shield.lefthalf.filled",
+                            color: .furgSuccess
+                        )
+
+                        MiniStatCard(
+                            title: "Truly Available",
+                            value: "$\(Int(balance.trulyAvailable))",
+                            icon: "checkmark.seal.fill",
+                            color: .furgInfo
+                        )
+                    }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+                }
+
+                // Action buttons
+                HStack(spacing: 16) {
+                    ActionButton(
+                        icon: "eye.slash.fill",
+                        label: "Hide",
+                        color: .furgMint
+                    ) {
+                        showHideSheet = true
+                    }
+
+                    ActionButton(
+                        icon: "eye.fill",
+                        label: "Reveal",
+                        color: .furgSeafoam
+                    ) {
+                        // Reveal action
+                    }
+
+                    ActionButton(
+                        icon: "plus",
+                        label: "Add",
+                        color: .furgPistachio
+                    ) {
+                        // Add bank action
+                    }
+                }
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+
+                // Upcoming bills section
+                if let upcoming = financeManager.upcomingBills, upcoming.count > 0 {
+                    UpcomingBillsCard(upcoming: upcoming)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
+                }
+
+                // Hidden accounts
+                if let balance = financeManager.balance, !balance.hiddenAccounts.isEmpty {
+                    HiddenAccountsSection(accounts: balance.hiddenAccounts)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
+                }
+
+                Spacer(minLength: 120)
             }
-            .task {
-                await financeManager.loadBalance()
-                await financeManager.loadUpcomingBills()
-            }
-            .sheet(isPresented: $showHideSheet) {
-                HideMoneySheet(hideAmount: $hideAmount, financeManager: financeManager)
-            }
+            .padding(.horizontal, 20)
+        }
+        .task {
+            await financeManager.loadBalance()
+            await financeManager.loadUpcomingBills()
+        }
+        .onAppear {
+            withAnimation { animate = true }
+        }
+        .sheet(isPresented: $showHideSheet) {
+            HideMoneySheet(hideAmount: $hideAmount, financeManager: financeManager)
+        }
+    }
+
+    var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Morning"
+        case 12..<17: return "Afternoon"
+        case 17..<21: return "Evening"
+        default: return "Night"
         }
     }
 }
 
-struct StatCard: View {
+// MARK: - Main Balance Card
+
+struct MainBalanceCard: View {
+    let balance: BalanceSummary?
+    let animate: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            if let balance = balance {
+                // Balance amount
+                VStack(spacing: 8) {
+                    Text("AVAILABLE")
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.5))
+                        .tracking(2)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("$")
+                            .font(.system(size: 32, weight: .medium, design: .rounded))
+                            .foregroundColor(.furgMint)
+
+                        Text("\(Int(balance.visibleBalance))")
+                            .font(.system(size: 56, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+
+                    // Hidden indicator
+                    if balance.hiddenBalance > 0 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "eye.slash.fill")
+                                .font(.caption)
+                            Text("$\(Int(balance.hiddenBalance)) hidden from view")
+                                .font(.furgCaption)
+                        }
+                        .foregroundColor(.furgMint.opacity(0.8))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.furgMint.opacity(0.15))
+                        .clipShape(Capsule())
+                    }
+                }
+
+                // Divider
+                Rectangle()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(height: 1)
+                    .padding(.horizontal, 20)
+
+                // Total balance row
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Total Balance")
+                            .font(.furgCaption)
+                            .foregroundColor(.white.opacity(0.5))
+                        Text("$\(Int(balance.totalBalance))")
+                            .font(.furgTitle2)
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
+                    Image(systemName: "building.columns.fill")
+                        .font(.title2)
+                        .foregroundColor(.furgMint.opacity(0.6))
+                }
+                .padding(.horizontal, 8)
+
+            } else {
+                // Empty state
+                VStack(spacing: 16) {
+                    Image(systemName: "banknote")
+                        .font(.system(size: 40))
+                        .foregroundColor(.furgMint.opacity(0.5))
+
+                    Text("Connect a bank account")
+                        .font(.furgHeadline)
+                        .foregroundColor(.white.opacity(0.7))
+
+                    Text("Link your bank to see your balance and track spending")
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.4))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.vertical, 20)
+            }
+        }
+        .padding(24)
+        .glassCard()
+    }
+}
+
+// MARK: - Mini Stat Card
+
+struct MiniStatCard: View {
     let title: String
     let value: String
     let icon: String
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)
+                    .font(.title3)
                     .foregroundColor(color)
                 Spacer()
             }
 
             Text(value)
-                .font(.title3)
-                .bold()
+                .font(.furgTitle2)
+                .foregroundColor(.white)
 
             Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
+                .font(.furgCaption)
+                .foregroundColor(.white.opacity(0.5))
         }
-        .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .padding(16)
+        .glassCard(cornerRadius: 20, opacity: 0.08)
     }
 }
+
+// MARK: - Action Button
+
+struct ActionButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 56, height: 56)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(color)
+                }
+
+                Text(label)
+                    .font(.furgCaption)
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .glassCard(cornerRadius: 20, opacity: 0.08)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Upcoming Bills Card
+
+struct UpcomingBillsCard: View {
+    let upcoming: UpcomingBillsResponse
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Upcoming Bills")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Text("30 days")
+                    .font(.furgCaption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
+
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("$\(Int(upcoming.total))")
+                        .font(.furgTitle)
+                        .foregroundColor(.furgWarning)
+
+                    Text("\(upcoming.count) bills due")
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.5))
+                }
+
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .fill(Color.furgWarning.opacity(0.15))
+                        .frame(width: 50, height: 50)
+
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.title2)
+                        .foregroundColor(.furgWarning)
+                }
+            }
+        }
+        .padding(20)
+        .glassCard(cornerRadius: 20, opacity: 0.08)
+    }
+}
+
+// MARK: - Hidden Accounts Section
+
+struct HiddenAccountsSection: View {
+    let accounts: [ShadowAccount]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "eye.slash.fill")
+                    .foregroundColor(.furgMint)
+                Text("Hidden Savings")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+                Spacer()
+            }
+
+            ForEach(accounts) { account in
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(account.purpose.replacingOccurrences(of: "_", with: " ").capitalized)
+                            .font(.furgBody)
+                            .foregroundColor(.white.opacity(0.9))
+
+                        Text(account.createdAt)
+                            .font(.furgCaption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+
+                    Spacer()
+
+                    Text("$\(Int(account.balance))")
+                        .font(.furgTitle2)
+                        .foregroundColor(.furgMint)
+                }
+                .padding(16)
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding(20)
+        .glassCard(cornerRadius: 20, opacity: 0.08)
+    }
+}
+
+// MARK: - Hide Money Sheet
 
 struct HideMoneySheet: View {
     @Environment(\.dismiss) var dismiss
@@ -198,49 +394,131 @@ struct HideMoneySheet: View {
     @State private var showResult = false
     @State private var resultMessage = ""
 
+    let purposes = [
+        ("forced_savings", "Forced Savings", "piggybank.fill"),
+        ("savings_goal", "Savings Goal", "target"),
+        ("emergency", "Emergency Fund", "cross.case.fill")
+    ]
+
     var body: some View {
-        NavigationView {
-            Form {
-                Section("Amount") {
-                    TextField("Amount to hide", text: $hideAmount)
-                        .keyboardType(.decimalPad)
-                }
+        ZStack {
+            AnimatedMeshBackground()
 
-                Section("Purpose") {
-                    Picker("Purpose", selection: $purpose) {
-                        Text("Forced Savings").tag("forced_savings")
-                        Text("Savings Goal").tag("savings_goal")
-                        Text("Emergency Fund").tag("emergency")
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(12)
+                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                    }
+                    Spacer()
+                    Text("Hide Money")
+                        .font(.furgTitle2)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Color.clear.frame(width: 44)
+                }
+                .padding(.top, 20)
+
+                Spacer()
+
+                // Amount input
+                VStack(spacing: 12) {
+                    Text("AMOUNT")
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.5))
+                        .tracking(2)
+
+                    HStack(alignment: .center, spacing: 4) {
+                        Text("$")
+                            .font(.system(size: 40, weight: .medium, design: .rounded))
+                            .foregroundColor(.furgMint)
+
+                        TextField("0", text: $hideAmount)
+                            .font(.system(size: 56, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 200)
                     }
                 }
+                .padding(32)
+                .glassCard()
 
-                Section {
-                    Button("Hide Money") {
-                        Task {
-                            await hideMoneyAction()
+                // Purpose selection
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("PURPOSE")
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.5))
+                        .tracking(2)
+
+                    ForEach(purposes, id: \.0) { id, label, icon in
+                        Button {
+                            purpose = id
+                        } label: {
+                            HStack(spacing: 16) {
+                                Image(systemName: icon)
+                                    .font(.title3)
+                                    .foregroundColor(purpose == id ? .furgMint : .white.opacity(0.4))
+                                    .frame(width: 24)
+
+                                Text(label)
+                                    .font(.furgBody)
+                                    .foregroundColor(.white)
+
+                                Spacer()
+
+                                if purpose == id {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.furgMint)
+                                }
+                            }
+                            .padding(16)
+                            .background(purpose == id ? Color.furgMint.opacity(0.1) : Color.white.opacity(0.05))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(purpose == id ? Color.furgMint.opacity(0.3) : Color.clear, lineWidth: 1)
+                            )
                         }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-            .navigationTitle("Hide Money")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
+                        .buttonStyle(.plain)
                     }
                 }
-            }
-            .alert("Result", isPresented: $showResult) {
-                Button("OK") {
-                    if resultMessage.contains("Hidden") {
-                        dismiss()
+
+                Spacer()
+
+                // Hide button
+                Button {
+                    Task { await hideMoneyAction() }
+                } label: {
+                    HStack {
+                        Image(systemName: "eye.slash.fill")
+                        Text("Hide Money")
                     }
+                    .font(.furgHeadline)
+                    .foregroundColor(.furgCharcoal)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(FurgGradients.mintGradient)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
-            } message: {
-                Text(resultMessage)
+                .padding(.bottom, 20)
             }
+            .padding(.horizontal, 20)
+        }
+        .alert("Result", isPresented: $showResult) {
+            Button("OK") {
+                if resultMessage.contains("Successfully") {
+                    dismiss()
+                }
+            }
+        } message: {
+            Text(resultMessage)
         }
     }
 
@@ -264,6 +542,9 @@ struct HideMoneySheet: View {
 }
 
 #Preview {
-    BalanceView()
-        .environmentObject(FinanceManager())
+    ZStack {
+        AnimatedMeshBackground()
+        BalanceView()
+    }
+    .environmentObject(FinanceManager())
 }

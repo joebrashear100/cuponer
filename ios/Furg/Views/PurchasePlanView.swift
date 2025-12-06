@@ -11,137 +11,215 @@ struct PurchasePlanView: View {
     @EnvironmentObject var wishlistManager: WishlistManager
     @State private var showBudgetSheet = false
     @State private var showFinancingCalculator = false
+    @State private var animate = false
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Summary Cards
-                    SummarySection(wishlistManager: wishlistManager)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Purchase Plan")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.furgCharcoal)
 
-                    // Budget Quick View
-                    BudgetQuickView(
-                        budget: wishlistManager.budget,
-                        onEdit: { showBudgetSheet = true }
-                    )
-
-                    // Financing Calculator Button
-                    Button(action: { showFinancingCalculator = true }) {
-                        HStack {
-                            Image(systemName: "percent")
-                            Text("Compare Financing Options")
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                        }
-                        .padding()
-                        .background(Color(uiColor: .secondarySystemBackground))
-                        .cornerRadius(12)
+                        Text("Track your path to ownership")
+                            .font(.subheadline)
+                            .foregroundColor(.furgCharcoal.opacity(0.6))
                     }
-                    .buttonStyle(.plain)
 
-                    // Timeline
-                    if wishlistManager.purchasePlans.isEmpty {
-                        EmptyTimelineView()
-                    } else if wishlistManager.budget.monthlySavings <= 0 {
-                        NoBudgetWarningView(onSetup: { showBudgetSheet = true })
-                    } else {
-                        TimelineSection(plans: wishlistManager.purchasePlans)
-                        PurchaseOrderTable(plans: wishlistManager.purchasePlans)
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle("Purchase Plan")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                    Spacer()
+
                     Button(action: { showBudgetSheet = true }) {
-                        Image(systemName: "gearshape")
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.furgMint)
+                            .padding(12)
+                            .background(Circle().fill(Color.white.opacity(0.3)))
                     }
                 }
+                .padding(.horizontal)
+                .padding(.top)
+                .offset(y: animate ? 0 : -20)
+                .opacity(animate ? 1 : 0)
+
+                // Summary Cards
+                GlassSummarySection(wishlistManager: wishlistManager)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
+
+                // Budget Quick View
+                GlassBudgetQuickView(
+                    budget: wishlistManager.budget,
+                    onEdit: { showBudgetSheet = true }
+                )
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+
+                // Financing Calculator Button
+                Button(action: { showFinancingCalculator = true }) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient(
+                                    colors: [.furgMint, .furgSeafoam],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 40, height: 40)
+
+                            Image(systemName: "percent")
+                                .font(.body.bold())
+                                .foregroundColor(.white)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Financing Calculator")
+                                .font(.headline)
+                                .foregroundColor(.furgCharcoal)
+
+                            Text("Compare payment options")
+                                .font(.caption)
+                                .foregroundColor(.furgCharcoal.opacity(0.6))
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.furgMint)
+                    }
+                    .padding()
+                    .glassCard()
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal)
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+
+                // Timeline
+                if wishlistManager.purchasePlans.isEmpty {
+                    GlassEmptyTimelineView()
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
+                } else if wishlistManager.budget.monthlySavings <= 0 {
+                    GlassNoBudgetWarningView(onSetup: { showBudgetSheet = true })
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
+                } else {
+                    GlassTimelineSection(plans: wishlistManager.purchasePlans)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
+
+                    GlassPurchaseOrderTable(plans: wishlistManager.purchasePlans)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
+                }
+
+                Spacer(minLength: 100)
             }
-            .sheet(isPresented: $showBudgetSheet) {
-                BudgetSettingsSheet(wishlistManager: wishlistManager)
-            }
-            .sheet(isPresented: $showFinancingCalculator) {
-                FinancingCalculatorView()
-                    .environmentObject(wishlistManager)
-            }
+        }
+        .onAppear { animate = true }
+        .sheet(isPresented: $showBudgetSheet) {
+            GlassBudgetSettingsSheet(wishlistManager: wishlistManager)
+        }
+        .sheet(isPresented: $showFinancingCalculator) {
+            FinancingCalculatorView()
+                .environmentObject(wishlistManager)
         }
     }
 }
 
-// MARK: - Summary Section
+// MARK: - Glass Summary Section
 
-struct SummarySection: View {
+struct GlassSummarySection: View {
     @ObservedObject var wishlistManager: WishlistManager
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            SummaryCard(
+            GlassSummaryCard(
                 title: "Total Wishlist",
                 value: String(format: "$%.0f", wishlistManager.totalWishlistValue),
                 icon: "heart.fill",
-                color: .pink
+                gradient: [.furgPistachio, .furgMint]
             )
 
-            SummaryCard(
+            GlassSummaryCard(
                 title: "Monthly Savings",
                 value: String(format: "$%.0f", wishlistManager.budget.monthlySavings),
                 icon: "arrow.down.circle.fill",
-                color: .green
+                gradient: [.furgMint, .furgSeafoam]
             )
 
-            SummaryCard(
+            GlassSummaryCard(
                 title: "Items Remaining",
                 value: "\(wishlistManager.activeItems.count)",
                 icon: "list.bullet",
-                color: .blue
+                gradient: [.furgSeafoam, .furgSage]
             )
 
-            SummaryCard(
+            GlassSummaryCard(
                 title: "Months to Complete",
                 value: wishlistManager.totalMonthsToComplete == Int.max
                     ? "—"
                     : "\(wishlistManager.totalMonthsToComplete)",
                 icon: "calendar",
-                color: .orange
+                gradient: [.furgSage, .furgPistachio]
             )
         }
+        .padding(.horizontal)
     }
 }
 
-struct SummaryCard: View {
+struct GlassSummaryCard: View {
     let title: String
     let value: String
     let icon: String
-    let color: Color
+    let gradient: [Color]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: gradient,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: icon)
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                }
                 Spacer()
             }
 
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
+                .foregroundColor(.furgCharcoal)
 
             Text(title)
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
     }
 }
 
-// MARK: - Budget Quick View
+// MARK: - Glass Budget Quick View
 
-struct BudgetQuickView: View {
+struct GlassBudgetQuickView: View {
     let budget: PurchaseBudget
     let onEdit: () -> Void
 
@@ -150,42 +228,46 @@ struct BudgetQuickView: View {
             HStack {
                 Text("Budget Overview")
                     .font(.headline)
+                    .foregroundColor(.furgCharcoal)
 
                 Spacer()
 
-                Button("Edit", action: onEdit)
-                    .font(.subheadline)
+                Button(action: onEdit) {
+                    Text("Edit")
+                        .font(.subheadline)
+                        .foregroundColor(.furgMint)
+                }
             }
 
-            HStack(spacing: 16) {
-                BudgetMiniCard(
+            HStack(spacing: 12) {
+                GlassBudgetMiniCard(
                     label: "Income",
                     value: String(format: "$%.0f", budget.monthlyIncome)
                 )
 
-                BudgetMiniCard(
+                GlassBudgetMiniCard(
                     label: "Expenses",
                     value: String(format: "$%.0f", budget.monthlyExpenses)
                 )
 
-                BudgetMiniCard(
-                    label: "Savings Rate",
+                GlassBudgetMiniCard(
+                    label: "Savings %",
                     value: "\(Int(budget.savingsGoalPercent))%"
                 )
 
-                BudgetMiniCard(
-                    label: "Current Savings",
+                GlassBudgetMiniCard(
+                    label: "Saved",
                     value: String(format: "$%.0f", budget.currentSavings)
                 )
             }
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
+        .padding(.horizontal)
     }
 }
 
-struct BudgetMiniCard: View {
+struct GlassBudgetMiniCard: View {
     let label: String
     let value: String
 
@@ -194,55 +276,62 @@ struct BudgetMiniCard: View {
             Text(value)
                 .font(.subheadline)
                 .fontWeight(.semibold)
+                .foregroundColor(.furgCharcoal)
 
             Text(label)
                 .font(.caption2)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color.white.opacity(0.3))
+        .cornerRadius(8)
     }
 }
 
-// MARK: - Timeline Section
+// MARK: - Glass Timeline Section
 
-struct TimelineSection: View {
+struct GlassTimelineSection: View {
     let plans: [PurchasePlan]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Timeline")
                 .font(.headline)
+                .foregroundColor(.furgCharcoal)
+                .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(plans.enumerated()), id: \.element.id) { index, plan in
-                        TimelineNode(
+                        GlassTimelineNode(
                             index: index + 1,
                             plan: plan,
                             isLast: index == plans.count - 1
                         )
                     }
                 }
+                .padding(.horizontal)
                 .padding(.vertical, 8)
             }
         }
-        .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .padding(.vertical)
+        .glassCard()
+        .padding(.horizontal)
     }
 }
 
-struct TimelineNode: View {
+struct GlassTimelineNode: View {
     let index: Int
     let plan: PurchasePlan
     let isLast: Bool
 
-    var priorityColor: Color {
+    var priorityGradient: [Color] {
         switch plan.item.priority {
-        case .low: return .gray
-        case .medium: return .blue
-        case .high: return .orange
-        case .urgent: return .red
+        case .low: return [.gray, .gray.opacity(0.7)]
+        case .medium: return [.furgSeafoam, .furgMint]
+        case .high: return [.furgMint, .furgPistachio]
+        case .urgent: return [.furgWarning, .orange]
         }
     }
 
@@ -252,8 +341,13 @@ struct TimelineNode: View {
                 // Node circle
                 ZStack {
                     Circle()
-                        .fill(priorityColor)
-                        .frame(width: 32, height: 32)
+                        .fill(LinearGradient(
+                            colors: priorityGradient,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 36, height: 36)
+                        .shadow(color: priorityGradient[0].opacity(0.3), radius: 4, x: 0, y: 2)
 
                     Text("\(index)")
                         .font(.caption)
@@ -266,16 +360,18 @@ struct TimelineNode: View {
                     Text(plan.item.name)
                         .font(.caption)
                         .fontWeight(.medium)
+                        .foregroundColor(.furgCharcoal)
                         .lineLimit(1)
                         .frame(width: 80)
 
                     Text(plan.item.formattedPrice)
                         .font(.caption2)
-                        .foregroundColor(.orange)
+                        .foregroundColor(.furgMint)
+                        .fontWeight(.semibold)
 
                     Text(plan.estimatedPurchaseDate, format: .dateTime.month(.abbreviated).year())
                         .font(.caption2)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.furgCharcoal.opacity(0.5))
                 }
             }
             .frame(width: 100)
@@ -283,23 +379,29 @@ struct TimelineNode: View {
             // Connector line
             if !isLast {
                 Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 40, height: 2)
+                    .fill(LinearGradient(
+                        colors: [.furgMint.opacity(0.5), .furgSeafoam.opacity(0.5)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ))
+                    .frame(width: 40, height: 3)
+                    .cornerRadius(1.5)
                     .offset(y: -40)
             }
         }
     }
 }
 
-// MARK: - Purchase Order Table
+// MARK: - Glass Purchase Order Table
 
-struct PurchaseOrderTable: View {
+struct GlassPurchaseOrderTable: View {
     let plans: [PurchasePlan]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Purchase Order")
                 .font(.headline)
+                .foregroundColor(.furgCharcoal)
 
             VStack(spacing: 0) {
                 // Header
@@ -314,40 +416,45 @@ struct PurchaseOrderTable: View {
                         .frame(width: 80, alignment: .trailing)
                 }
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
                 .padding(.vertical, 8)
                 .padding(.horizontal)
 
-                Divider()
+                Rectangle()
+                    .fill(Color.furgMint.opacity(0.3))
+                    .frame(height: 1)
 
                 // Rows
                 ForEach(Array(plans.enumerated()), id: \.element.id) { index, plan in
-                    PurchaseOrderRow(index: index + 1, plan: plan)
+                    GlassPurchaseOrderRow(index: index + 1, plan: plan)
 
                     if index < plans.count - 1 {
-                        Divider()
+                        Rectangle()
+                            .fill(Color.white.opacity(0.3))
+                            .frame(height: 1)
+                            .padding(.horizontal)
                     }
                 }
             }
-            .background(Color(uiColor: .tertiarySystemBackground))
+            .background(Color.white.opacity(0.2))
             .cornerRadius(12)
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
+        .padding(.horizontal)
     }
 }
 
-struct PurchaseOrderRow: View {
+struct GlassPurchaseOrderRow: View {
     let index: Int
     let plan: PurchasePlan
 
-    var priorityColor: Color {
+    var priorityGradient: [Color] {
         switch plan.item.priority {
-        case .low: return .gray
-        case .medium: return .blue
-        case .high: return .orange
-        case .urgent: return .red
+        case .low: return [.gray, .gray.opacity(0.7)]
+        case .medium: return [.furgSeafoam, .furgMint]
+        case .high: return [.furgMint, .furgPistachio]
+        case .urgent: return [.furgWarning, .orange]
         }
     }
 
@@ -355,16 +462,21 @@ struct PurchaseOrderRow: View {
         HStack {
             Text("\(index)")
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.5))
                 .frame(width: 30, alignment: .leading)
 
             HStack(spacing: 8) {
                 Circle()
-                    .fill(priorityColor)
-                    .frame(width: 8, height: 8)
+                    .fill(LinearGradient(
+                        colors: priorityGradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 10, height: 10)
 
                 Text(plan.item.name)
                     .font(.subheadline)
+                    .foregroundColor(.furgCharcoal)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -372,11 +484,12 @@ struct PurchaseOrderRow: View {
             Text(plan.item.formattedPrice)
                 .font(.subheadline)
                 .fontWeight(.medium)
+                .foregroundColor(.furgCharcoal)
                 .frame(width: 70, alignment: .trailing)
 
             Text(plan.estimatedPurchaseDate, format: .dateTime.month(.abbreviated).day())
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
                 .frame(width: 80, alignment: .trailing)
         }
         .padding(.vertical, 10)
@@ -384,62 +497,93 @@ struct PurchaseOrderRow: View {
     }
 }
 
-// MARK: - Empty States
+// MARK: - Glass Empty States
 
-struct EmptyTimelineView: View {
+struct GlassEmptyTimelineView: View {
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 48))
-                .foregroundColor(.gray)
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(
+                        colors: [.furgMint.opacity(0.3), .furgSeafoam.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "calendar.badge.plus")
+                    .font(.system(size: 32))
+                    .foregroundColor(.furgMint)
+            }
 
             Text("No items to plan")
                 .font(.headline)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal)
 
             Text("Add items to your wishlist to see\nwhen you can purchase them")
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
+        .padding(.horizontal)
     }
 }
 
-struct NoBudgetWarningView: View {
+struct GlassNoBudgetWarningView: View {
     let onSetup: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundColor(.orange)
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(
+                        colors: [.furgWarning.opacity(0.3), .orange.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 32))
+                    .foregroundColor(.furgWarning)
+            }
 
             Text("Set up your budget")
                 .font(.headline)
+                .foregroundColor(.furgCharcoal)
 
             Text("Configure your income and savings rate\nto see when you can afford each item")
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
                 .multilineTextAlignment(.center)
 
-            Button("Set Up Budget", action: onSetup)
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
+            Button(action: onSetup) {
+                Text("Set Up Budget")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(LinearGradient(
+                        colors: [.furgMint, .furgSeafoam],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ))
+                    .cornerRadius(12)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
+        .padding(.horizontal)
     }
 }
 
-// MARK: - Budget Settings Sheet
+// MARK: - Glass Budget Settings Sheet
 
-struct BudgetSettingsSheet: View {
+struct GlassBudgetSettingsSheet: View {
     @Environment(\.dismiss) var dismiss
     let wishlistManager: WishlistManager
 
@@ -467,89 +611,121 @@ struct BudgetSettingsSheet: View {
     }
 
     var body: some View {
-        NavigationView {
-            Form {
-                Section("Monthly Income & Expenses") {
-                    HStack {
-                        Text("Monthly Income")
-                        Spacer()
-                        Text("$")
-                        TextField("0", text: $monthlyIncome)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
-                    }
+        ZStack {
+            AnimatedMeshBackground()
 
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
                     HStack {
-                        Text("Monthly Expenses")
-                        Spacer()
-                        Text("$")
-                        TextField("0", text: $monthlyExpenses)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
-                    }
-                }
+                        Button("Cancel") { dismiss() }
+                            .foregroundColor(.furgCharcoal.opacity(0.6))
 
-                Section("Savings") {
-                    HStack {
-                        Text("Savings Goal")
                         Spacer()
-                        TextField("20", text: $savingsGoalPercent)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        Text("% of disposable")
-                            .foregroundColor(.gray)
-                    }
 
-                    HStack {
-                        Text("Current Savings")
-                        Spacer()
-                        Text("$")
-                        TextField("0", text: $currentSavings)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
-                    }
-                }
+                        Text("Budget Settings")
+                            .font(.headline)
+                            .foregroundColor(.furgCharcoal)
 
-                Section("Preview") {
-                    HStack {
-                        Text("Disposable Income")
                         Spacer()
-                        Text(String(format: "$%.0f", previewBudget.disposableIncome))
-                            .foregroundColor(previewBudget.disposableIncome >= 0 ? .primary : .red)
-                    }
 
-                    HStack {
-                        Text("Monthly Savings")
-                        Spacer()
-                        Text(String(format: "$%.0f", previewBudget.monthlySavings))
-                            .foregroundColor(.green)
+                        Button("Save") { saveBudget() }
+                            .foregroundColor(.furgMint)
                             .fontWeight(.semibold)
                     }
+                    .padding()
 
-                    HStack {
-                        Text("Annual Savings")
-                        Spacer()
-                        Text(String(format: "$%.0f", previewBudget.monthlySavings * 12))
-                            .foregroundColor(.green)
-                    }
-                }
+                    // Income & Expenses Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("MONTHLY INCOME & EXPENSES")
+                            .font(.caption)
+                            .foregroundColor(.furgCharcoal.opacity(0.6))
+                            .padding(.horizontal)
 
-                Section {
-                    Button("Save Budget") {
-                        saveBudget()
+                        VStack(spacing: 0) {
+                            GlassInputRow(
+                                label: "Monthly Income",
+                                prefix: "$",
+                                text: $monthlyIncome
+                            )
+
+                            Rectangle()
+                                .fill(Color.white.opacity(0.3))
+                                .frame(height: 1)
+                                .padding(.horizontal)
+
+                            GlassInputRow(
+                                label: "Monthly Expenses",
+                                prefix: "$",
+                                text: $monthlyExpenses
+                            )
+                        }
+                        .glassCard()
+                        .padding(.horizontal)
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-            .navigationTitle("Budget Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+
+                    // Savings Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("SAVINGS")
+                            .font(.caption)
+                            .foregroundColor(.furgCharcoal.opacity(0.6))
+                            .padding(.horizontal)
+
+                        VStack(spacing: 0) {
+                            GlassInputRow(
+                                label: "Savings Goal",
+                                suffix: "% of disposable",
+                                text: $savingsGoalPercent
+                            )
+
+                            Rectangle()
+                                .fill(Color.white.opacity(0.3))
+                                .frame(height: 1)
+                                .padding(.horizontal)
+
+                            GlassInputRow(
+                                label: "Current Savings",
+                                prefix: "$",
+                                text: $currentSavings
+                            )
+                        }
+                        .glassCard()
+                        .padding(.horizontal)
+                    }
+
+                    // Preview Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("PREVIEW")
+                            .font(.caption)
+                            .foregroundColor(.furgCharcoal.opacity(0.6))
+                            .padding(.horizontal)
+
+                        VStack(spacing: 12) {
+                            GlassPreviewRow(
+                                label: "Disposable Income",
+                                value: String(format: "$%.0f", previewBudget.disposableIncome),
+                                valueColor: previewBudget.disposableIncome >= 0 ? .furgCharcoal : .furgDanger
+                            )
+
+                            GlassPreviewRow(
+                                label: "Monthly Savings",
+                                value: String(format: "$%.0f", previewBudget.monthlySavings),
+                                valueColor: .furgSuccess,
+                                isBold: true
+                            )
+
+                            GlassPreviewRow(
+                                label: "Annual Savings",
+                                value: String(format: "$%.0f", previewBudget.monthlySavings * 12),
+                                valueColor: .furgSuccess
+                            )
+                        }
+                        .padding()
+                        .glassCard()
+                        .padding(.horizontal)
+                    }
+
+                    Spacer(minLength: 40)
                 }
             }
         }
@@ -561,7 +737,77 @@ struct BudgetSettingsSheet: View {
     }
 }
 
+struct GlassInputRow: View {
+    let label: String
+    var prefix: String? = nil
+    var suffix: String? = nil
+    @Binding var text: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.furgCharcoal)
+
+            Spacer()
+
+            if let prefix = prefix {
+                Text(prefix)
+                    .foregroundColor(.furgCharcoal.opacity(0.5))
+            }
+
+            TextField("0", text: $text)
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: suffix != nil ? 60 : 100)
+                .foregroundColor(.furgCharcoal)
+
+            if let suffix = suffix {
+                Text(suffix)
+                    .font(.caption)
+                    .foregroundColor(.furgCharcoal.opacity(0.5))
+            }
+        }
+        .padding()
+    }
+}
+
+struct GlassPreviewRow: View {
+    let label: String
+    let value: String
+    var valueColor: Color = .furgCharcoal
+    var isBold: Bool = false
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundColor(.furgCharcoal)
+
+            Spacer()
+
+            Text(value)
+                .foregroundColor(valueColor)
+                .fontWeight(isBold ? .semibold : .regular)
+        }
+    }
+}
+
+// Keep old names for backward compatibility
+typealias SummarySection = GlassSummarySection
+typealias SummaryCard = GlassSummaryCard
+typealias BudgetQuickView = GlassBudgetQuickView
+typealias BudgetMiniCard = GlassBudgetMiniCard
+typealias TimelineSection = GlassTimelineSection
+typealias TimelineNode = GlassTimelineNode
+typealias PurchaseOrderTable = GlassPurchaseOrderTable
+typealias PurchaseOrderRow = GlassPurchaseOrderRow
+typealias EmptyTimelineView = GlassEmptyTimelineView
+typealias NoBudgetWarningView = GlassNoBudgetWarningView
+typealias BudgetSettingsSheet = GlassBudgetSettingsSheet
+
 #Preview {
-    PurchasePlanView()
-        .environmentObject(WishlistManager())
+    ZStack {
+        AnimatedMeshBackground()
+        PurchasePlanView()
+            .environmentObject(WishlistManager())
+    }
 }

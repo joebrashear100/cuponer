@@ -196,7 +196,7 @@ extension APIClient {
     }
 
     func updateRoundUpConfig(_ config: RoundUpConfig) async throws {
-        let _: EmptyResponse = try await post("/roundups/config", body: config)
+        try await postVoid("/roundups/config", body: config)
     }
 
     func getRoundUpSummary() async throws -> RoundUpSummary {
@@ -209,7 +209,7 @@ extension APIClient {
     }
 
     func transferRoundUps() async throws {
-        let _: EmptyResponse = try await post("/roundups/transfer", body: EmptyBody())
+        try await postVoid("/roundups/transfer", body: EmptyBody())
     }
 }
 
@@ -222,4 +222,3 @@ struct RoundUpsResponse: Codable {
 }
 
 struct EmptyBody: Codable {}
-struct EmptyResponse: Codable {}

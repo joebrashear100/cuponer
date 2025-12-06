@@ -17,23 +17,34 @@ struct FurgApp: App {
     @StateObject private var wishlistManager = WishlistManager()
     @StateObject private var goalsManager = GoalsManager()
     @StateObject private var subscriptionManager = SubscriptionManager()
+    @StateObject private var roundUpManager = RoundUpManager()
+    @StateObject private var forecastingManager = ForecastingManager()
+    @StateObject private var spendingLimitsManager = SpendingLimitsManager()
 
     var body: some Scene {
         WindowGroup {
-            if authManager.isAuthenticated {
-                MainTabView()
-                    .environmentObject(authManager)
-                    .environmentObject(apiClient)
-                    .environmentObject(chatManager)
-                    .environmentObject(financeManager)
-                    .environmentObject(plaidManager)
-                    .environmentObject(wishlistManager)
-                    .environmentObject(goalsManager)
-                    .environmentObject(subscriptionManager)
-            } else {
-                WelcomeView()
-                    .environmentObject(authManager)
+            Group {
+                if authManager.isAuthenticated {
+                    if authManager.hasCompletedOnboarding {
+                        MainTabView()
+                    } else {
+                        OnboardingView()
+                    }
+                } else {
+                    WelcomeView()
+                }
             }
+            .environmentObject(authManager)
+            .environmentObject(apiClient)
+            .environmentObject(chatManager)
+            .environmentObject(financeManager)
+            .environmentObject(plaidManager)
+            .environmentObject(wishlistManager)
+            .environmentObject(goalsManager)
+            .environmentObject(subscriptionManager)
+            .environmentObject(roundUpManager)
+            .environmentObject(forecastingManager)
+            .environmentObject(spendingLimitsManager)
         }
     }
 }

@@ -171,6 +171,132 @@ CREATE TABLE device_tokens (
 
 CREATE INDEX idx_device_tokens_user ON device_tokens(user_id, is_active);
 
+-- Goals (savings goals with progress tracking)
+CREATE TABLE goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    target_amount DECIMAL(12,2) NOT NULL,
+    current_amount DECIMAL(12,2) DEFAULT 0,
+    deadline DATE,
+    icon VARCHAR(100) DEFAULT 'flag.fill',
+    color VARCHAR(20) DEFAULT '#4ECDC4',
+    priority INTEGER DEFAULT 1,
+    is_primary BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_goals_user ON goals(user_id, is_active);
+CREATE INDEX idx_goals_primary ON goals(user_id, is_primary);
+
+-- Subscriptions (tracked recurring subscriptions)
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    billing_cycle VARCHAR(50) DEFAULT 'monthly', -- weekly, monthly, yearly
+    next_billing_date DATE,
+    category VARCHAR(50) DEFAULT 'entertainment',
+    icon VARCHAR(100) DEFAULT 'creditcard.fill',
+    color VARCHAR(20) DEFAULT '#9B59B6',
+    importance VARCHAR(50) DEFAULT 'nice_to_have', -- essential, important, nice_to_have
+    auto_detected BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    cancelled_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_subscriptions_user ON subscriptions(user_id, is_active);
+CREATE INDEX idx_subscriptions_billing ON subscriptions(user_id, next_billing_date);
+
+-- Round-up configuration
+CREATE TABLE roundup_config (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    is_enabled BOOLEAN DEFAULT FALSE,
+    round_up_amount VARCHAR(50) DEFAULT 'nearest_dollar', -- nearest_dollar, nearest_2, nearest_5
+    multiplier INTEGER DEFAULT 1, -- 1-10x multiplier
+    linked_goal_id UUID REFERENCES goals(id),
+    transfer_frequency VARCHAR(50) DEFAULT 'weekly', -- daily, weekly, monthly
+    min_transfer_amount DECIMAL(10,2) DEFAULT 5.00,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Round-up transactions
+CREATE TABLE roundup_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    original_transaction_id UUID,
+    original_amount DECIMAL(10,2) NOT NULL,
+    roundup_amount DECIMAL(10,2) NOT NULL,
+    multiplied_amount DECIMAL(10,2) NOT NULL,
+    goal_id UUID REFERENCES goals(id),
+    status VARCHAR(50) DEFAULT 'pending', -- pending, transferred, cancelled
+    transferred_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_roundup_transactions_user ON roundup_transactions(user_id, status);
+CREATE INDEX idx_roundup_transactions_pending ON roundup_transactions(user_id, status) WHERE status = 'pending';
+
+-- Spending limits
+CREATE TABLE spending_limits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL,
+    limit_amount DECIMAL(10,2) NOT NULL,
+    period VARCHAR(50) DEFAULT 'monthly', -- daily, weekly, monthly
+    warning_threshold DECIMAL(3,2) DEFAULT 0.80, -- Alert at 80% by default
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_spending_limits_user ON spending_limits(user_id, is_active);
+CREATE UNIQUE INDEX idx_spending_limits_unique ON spending_limits(user_id, category) WHERE is_active = TRUE;
+
+-- Wishlist (purchase planning)
+CREATE TABLE wishlist (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    url TEXT,
+    image_url TEXT,
+    priority INTEGER DEFAULT 1,
+    category VARCHAR(50),
+    notes TEXT,
+    linked_goal_id UUID REFERENCES goals(id),
+    is_active BOOLEAN DEFAULT TRUE,
+    is_purchased BOOLEAN DEFAULT FALSE,
+    purchased_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_wishlist_user ON wishlist(user_id, is_active);
+CREATE INDEX idx_wishlist_priority ON wishlist(user_id, priority) WHERE is_active = TRUE;
+
+-- Alerts/Notifications
+CREATE TABLE alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    alert_type VARCHAR(100) NOT NULL, -- spending_limit, bill_due, goal_milestone, unusual_spending, etc
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    data JSONB, -- Additional data like transaction_id, goal_id, etc
+    priority VARCHAR(50) DEFAULT 'normal', -- low, normal, high, urgent
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_alerts_user ON alerts(user_id, is_read, created_at DESC);
+CREATE INDEX idx_alerts_unread ON alerts(user_id) WHERE is_read = FALSE;
+
 -- Create views for common queries
 
 -- View: Recent transactions with bill status

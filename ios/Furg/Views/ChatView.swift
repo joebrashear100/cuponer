@@ -14,42 +14,44 @@ struct ChatView: View {
     @State private var animate = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("FURG")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.furgCharcoal)
+        ZStack {
+            AnimatedMeshBackground()
 
-                    Text("Your financial assistant")
-                        .font(.subheadline)
-                        .foregroundColor(.furgCharcoal.opacity(0.6))
-                }
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("FURG")
+                            .font(.furgLargeTitle)
+                            .foregroundColor(.furgMint)
 
-                Spacer()
-
-                Menu {
-                    Button(action: { Task { await chatManager.loadHistory() } }) {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Text("Your financial assistant")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.6))
                     }
-                    Button(role: .destructive, action: { chatManager.clearHistory() }) {
-                        Label("Clear Chat", systemImage: "trash")
+
+                    Spacer()
+
+                    Menu {
+                        Button(action: { Task { await chatManager.loadHistory() } }) {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                        Button(role: .destructive, action: { chatManager.clearHistory() }) {
+                            Label("Clear Chat", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.furgMint)
+                            .padding(8)
+                            .background(Circle().fill(Color.white.opacity(0.1)))
                     }
-                } label: {
-                    Image(systemName: "ellipsis.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.furgMint)
-                        .padding(8)
-                        .background(Circle().fill(Color.white.opacity(0.3)))
                 }
-            }
-            .padding(.horizontal)
-            .padding(.top)
-            .offset(y: animate ? 0 : -20)
-            .opacity(animate ? 1 : 0)
-            .animation(.easeOut(duration: 0.5), value: animate)
+                .padding(.horizontal, 20)
+                .padding(.top)
+                .offset(y: animate ? 0 : -20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5), value: animate)
 
             // Messages
             ScrollViewReader { proxy in
@@ -85,10 +87,10 @@ struct ChatView: View {
                                     .foregroundColor(.furgWarning)
                                 Text(error)
                                     .font(.caption)
-                                    .foregroundColor(.furgCharcoal.opacity(0.7))
+                                    .foregroundColor(.white.opacity(0.8))
                             }
                             .padding()
-                            .background(Color.furgWarning.opacity(0.1))
+                            .background(Color.furgWarning.opacity(0.2))
                             .cornerRadius(12)
                             .padding(.horizontal)
                         }
@@ -107,13 +109,14 @@ struct ChatView: View {
                 }
             }
 
-            // Input bar
-            GlassChatInputBar(
-                messageText: $messageText,
-                isLoading: chatManager.isLoading,
-                onSend: sendMessage
-            )
-            .padding(.bottom, 80) // Space for custom tab bar
+                // Input bar
+                GlassChatInputBar(
+                    messageText: $messageText,
+                    isLoading: chatManager.isLoading,
+                    onSend: sendMessage
+                )
+                .padding(.bottom, 80) // Space for custom tab bar
+            }
         }
         .onAppear { animate = true }
     }
@@ -176,13 +179,12 @@ struct GlassEmptyChatView: View {
 
             VStack(spacing: 8) {
                 Text("Chat with FURG")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.furgCharcoal)
+                    .font(.furgTitle2)
+                    .foregroundColor(.white)
 
                 Text("Ask me anything about your finances,\nspending habits, or savings goals")
                     .font(.subheadline)
-                    .foregroundColor(.furgCharcoal.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
 
@@ -190,7 +192,7 @@ struct GlassEmptyChatView: View {
             VStack(spacing: 12) {
                 Text("Try asking:")
                     .font(.caption)
-                    .foregroundColor(.furgCharcoal.opacity(0.5))
+                    .foregroundColor(.white.opacity(0.5))
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(suggestions, id: \.self) { suggestion in
@@ -257,7 +259,7 @@ struct GlassMessageBubble: View {
                         Text("FURG")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.furgCharcoal.opacity(0.6))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                 }
 
@@ -272,16 +274,16 @@ struct GlassMessageBubble: View {
                                     endPoint: .bottomTrailing
                                 )
                             } else {
-                                Color.white.opacity(0.6)
+                                Color.white.opacity(0.15)
                             }
                         }
                     )
-                    .foregroundColor(message.role == .user ? .white : .furgCharcoal)
+                    .foregroundColor(message.role == .user ? .furgCharcoal : .white)
                     .cornerRadius(20)
 
                 Text(message.timestamp, style: .time)
                     .font(.caption2)
-                    .foregroundColor(.furgCharcoal.opacity(0.4))
+                    .foregroundColor(.white.opacity(0.4))
             }
 
             if message.role == .assistant {
@@ -351,9 +353,9 @@ struct GlassChatInputBar: View {
             TextField("Message FURG...", text: $messageText, axis: .vertical)
                 .lineLimit(1...5)
                 .padding(12)
-                .background(Color.white.opacity(0.6))
+                .background(Color.white.opacity(0.1))
                 .cornerRadius(20)
-                .foregroundColor(.furgCharcoal)
+                .foregroundColor(.white)
 
             Button(action: onSend) {
                 ZStack {
@@ -361,7 +363,7 @@ struct GlassChatInputBar: View {
                         .fill(
                             LinearGradient(
                                 colors: messageText.isEmpty
-                                    ? [Color.gray.opacity(0.3), Color.gray.opacity(0.3)]
+                                    ? [Color.white.opacity(0.1), Color.white.opacity(0.1)]
                                     : [.furgMint, .furgSeafoam],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -371,7 +373,7 @@ struct GlassChatInputBar: View {
 
                     Image(systemName: "arrow.up")
                         .font(.body.bold())
-                        .foregroundColor(messageText.isEmpty ? .gray : .white)
+                        .foregroundColor(messageText.isEmpty ? .white.opacity(0.3) : .furgCharcoal)
                 }
             }
             .disabled(messageText.isEmpty || isLoading)
@@ -379,7 +381,8 @@ struct GlassChatInputBar: View {
         .padding()
         .background(
             Rectangle()
-                .fill(.ultraThinMaterial)
+                .fill(Color.black.opacity(0.3))
+                .background(.ultraThinMaterial)
                 .ignoresSafeArea()
         )
     }

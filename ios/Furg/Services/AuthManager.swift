@@ -59,8 +59,9 @@ class AuthManager: NSObject, ObservableObject {
     #if DEBUG
     func debugBypassLogin() {
         // Debug-only function to bypass authentication for testing
-        let debugUserId = "debug-user-\(UUID().uuidString.prefix(8))"
-        let debugToken = "debug-token-\(UUID().uuidString)"
+        // This token is properly signed with the backend's JWT_SECRET and expires in 30 days from Dec 6, 2025
+        let debugUserId = "debug-user-12345"
+        let debugToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGVidWctdXNlci0xMjM0NSIsImV4cCI6MTc2NzY0MjEwOCwiaWF0IjoxNzY1MDUwMTA4LCJ0eXBlIjoiYWNjZXNzIn0.3eQ5RsqGg_rgaeWzYzsYP1gJaAQms-6ikKg9lLF-ynM"
 
         UserDefaults.standard.set(debugToken, forKey: Config.Keys.jwtToken)
         UserDefaults.standard.set(debugUserId, forKey: Config.Keys.userId)

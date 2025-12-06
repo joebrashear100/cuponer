@@ -345,14 +345,14 @@ struct PlaidExchangeResponse: Codable {
 
 struct UserProfile: Codable {
     let userId: String?
-    let name: String?
-    let location: String?
-    let employer: String?
-    let salary: Double?
-    let savingsGoal: SavingsGoal?
-    let intensityMode: String?
-    let emergencyBuffer: Double?
-    let learnedInsights: [String]?
+    var name: String?
+    var location: String?
+    var employer: String?
+    var salary: Double?
+    var savingsGoal: SavingsGoal?
+    var intensityMode: String?
+    var emergencyBuffer: Double?
+    var learnedInsights: [String]?
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"

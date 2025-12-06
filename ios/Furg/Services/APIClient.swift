@@ -65,6 +65,19 @@ class APIClient: ObservableObject {
         return try decoder.decode(T.self, from: data)
     }
 
+    // MARK: - Generic Request Methods
+
+    func get<T: Decodable>(_ endpoint: String) async throws -> T {
+        let request = try createRequest(endpoint: "/api/v1\(endpoint)")
+        return try await performRequest(request)
+    }
+
+    func post<T: Decodable, B: Encodable>(_ endpoint: String, body: B) async throws -> T {
+        let bodyData = try JSONEncoder().encode(body)
+        let request = try createRequest(endpoint: "/api/v1\(endpoint)", method: "POST", body: bodyData)
+        return try await performRequest(request)
+    }
+
     // MARK: - Chat API
 
     func sendChatMessage(_ message: String) async throws -> ChatResponse {

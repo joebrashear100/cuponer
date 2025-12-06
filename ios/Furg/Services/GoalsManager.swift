@@ -308,15 +308,15 @@ extension APIClient {
         try await postVoid("/goals", body: goal)
     }
 
-    func updateGoalById(_ goalId: String, goal: FurgSavingsGoal) async throws {
-        try await postVoid("/goals/\(goalId)", body: goal)
+    func updateGoal(_ goal: FurgSavingsGoal) async throws {
+        try await postVoid("/goals/\(goal.id)", body: goal)
     }
 
     func deleteGoal(_ goalId: String) async throws {
         try await postVoid("/goals/\(goalId)/delete", body: EmptyBody())
     }
 
-    func contributeToGoal(_ goalId: String, contribution: ContributeToGoalRequest) async throws {
-        try await postVoid("/goals/\(goalId)/contribute", body: contribution)
+    func contributeToGoal(_ goalId: String, request: ContributeToGoalRequest) async throws {
+        try await postVoid("/goals/\(goalId)/contribute", body: request)
     }
 }

@@ -113,6 +113,7 @@ struct ChatView: View {
                 isLoading: chatManager.isLoading,
                 onSend: sendMessage
             )
+            .padding(.bottom, 80) // Space for custom tab bar
         }
         .onAppear { animate = true }
     }

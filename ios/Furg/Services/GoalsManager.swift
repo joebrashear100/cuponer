@@ -159,8 +159,7 @@ class GoalsManager: ObservableObject {
             return true
         } catch {
             // Add locally for demo
-            var newGoal = goal
-            goals.append(newGoal)
+            goals.append(goal)
             return true
         }
     }

@@ -26,6 +26,7 @@ extension Color {
     static let furgSuccess = Color(red: 0.4, green: 0.85, blue: 0.6)         // #66D999
     static let furgWarning = Color(red: 1.0, green: 0.8, blue: 0.4)          // #FFCC66
     static let furgDanger = Color(red: 1.0, green: 0.5, blue: 0.5)           // #FF8080
+    static let furgError = Color.furgDanger                                   // Alias for danger/error
     static let furgInfo = Color(red: 0.5, green: 0.8, blue: 1.0)             // #80CCFF
     static let furgAccent = Color.furgMint                                    // Alias for accent color
 

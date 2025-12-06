@@ -336,7 +336,10 @@ enum RoundUpAmount: String, Codable, CaseIterable {
         case .nearestFive: roundTo = 5
         }
 
-        let remainder = amount.truncatingRemainder(dividingBy: roundTo)
+        // Calculate remainder without using truncatingRemainder (not available on Decimal)
+        let divided = amount / roundTo
+        let wholePart = Decimal(Int(NSDecimalNumber(decimal: divided).intValue))
+        let remainder = amount - (wholePart * roundTo)
         if remainder == 0 { return 0 }
         return roundTo - remainder
     }

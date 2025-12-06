@@ -297,92 +297,26 @@ class GoalsManager: ObservableObject {
     }
 }
 
-// MARK: - APIClient Extensions
+// MARK: - APIClient Extensions for Goals
 
 extension APIClient {
     func getGoals() async throws -> GoalsResponse {
-        let request = try createGoalsRequest(endpoint: "/api/v1/goals")
-        return try await performGoalsRequest(request)
+        return try await get("/goals")
     }
 
     func createGoal(_ goal: CreateGoalRequest) async throws {
-        let body = try JSONEncoder().encode(goal)
-        let request = try createGoalsRequest(endpoint: "/api/v1/goals", method: "POST", body: body)
-        let _: [String: String] = try await performGoalsRequest(request)
+        try await postVoid("/goals", body: goal)
     }
 
-    func updateGoal(_ goal: FurgSavingsGoal) async throws {
-        let body = try JSONEncoder().encode(goal)
-        let request = try createGoalsRequest(endpoint: "/api/v1/goals/\(goal.id)", method: "PATCH", body: body)
-        let _: [String: String] = try await performGoalsRequest(request)
+    func updateGoalById(_ goalId: String, goal: FurgSavingsGoal) async throws {
+        try await postVoid("/goals/\(goalId)", body: goal)
     }
 
     func deleteGoal(_ goalId: String) async throws {
-        let request = try createGoalsRequest(endpoint: "/api/v1/goals/\(goalId)", method: "DELETE")
-        let _: [String: String] = try await performGoalsRequest(request)
+        try await postVoid("/goals/\(goalId)/delete", body: EmptyBody())
     }
 
-    func contributeToGoal(_ goalId: String, request: ContributeToGoalRequest) async throws {
-        let body = try JSONEncoder().encode(request)
-        let req = try createGoalsRequest(endpoint: "/api/v1/goals/\(goalId)/contribute", method: "POST", body: body)
-        let _: [String: String] = try await performGoalsRequest(req)
-    }
-
-    func getRoundUpConfig() async throws -> RoundUpConfig {
-        let request = try createGoalsRequest(endpoint: "/api/v1/round-ups/config")
-        return try await performGoalsRequest(request)
-    }
-
-    func updateRoundUpConfig(_ config: RoundUpConfig) async throws {
-        let body = try JSONEncoder().encode(config)
-        let request = try createGoalsRequest(endpoint: "/api/v1/round-ups/config", method: "PUT", body: body)
-        let _: [String: String] = try await performGoalsRequest(request)
-    }
-
-    func getRoundUpSummary() async throws -> RoundUpSummary {
-        let request = try createGoalsRequest(endpoint: "/api/v1/round-ups/summary")
-        return try await performGoalsRequest(request)
-    }
-
-    private func createGoalsRequest(endpoint: String, method: String = "GET", body: Data? = nil) throws -> URLRequest {
-        guard let url = URL(string: "\(Config.baseURL)\(endpoint)") else {
-            throw URLError(.badURL)
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
-
-        if let token = APIClient.authToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        if let body = body {
-            request.httpBody = body
-        }
-
-        return request
-    }
-
-    private func performGoalsRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-
-        if httpResponse.statusCode == 401 {
-            throw NSError(domain: "APIError", code: 401,
-                        userInfo: [NSLocalizedDescriptionKey: "Authentication required"])
-        }
-
-        if httpResponse.statusCode != 200 {
-            throw URLError(.badServerResponse)
-        }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(T.self, from: data)
+    func contributeToGoal(_ goalId: String, contribution: ContributeToGoalRequest) async throws {
+        try await postVoid("/goals/\(goalId)/contribute", body: contribution)
     }
 }

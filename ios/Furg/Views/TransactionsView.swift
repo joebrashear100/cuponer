@@ -101,7 +101,7 @@ struct TransactionsView: View {
                 await financeManager.loadSpendingSummary(days: selectedPeriod)
                 await financeManager.loadBills()
             }
-            .onChange(of: selectedPeriod) { newValue in
+            .onChange(of: selectedPeriod) { oldValue, newValue in
                 Task {
                     await financeManager.loadTransactions(days: newValue)
                     await financeManager.loadSpendingSummary(days: newValue)

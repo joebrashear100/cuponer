@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F10000010000000000000001 /* FurgApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000001 /* FurgApp.swift */; };
 		F10000010000000000000002 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000002 /* Config.swift */; };
+		F10000010000000000000021 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000021 /* DesignSystem.swift */; };
 		F10000010000000000000003 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000003 /* Models.swift */; };
 		F10000010000000000000004 /* WishlistModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000004 /* WishlistModels.swift */; };
 		F10000010000000000000005 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000005 /* APIClient.swift */; };
@@ -51,6 +52,7 @@
 		F20000010000000000000018 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		F20000010000000000000019 /* WishlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WishlistView.swift; sourceTree = "<group>"; };
 		F20000010000000000000020 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F20000010000000000000021 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,14 +74,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		F40000010000000000000099 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				F20000010000000000000000 /* Furg.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		F40000010000000000000001 /* Furg */ = {
 			isa = PBXGroup;
 			children = (
@@ -97,6 +91,7 @@
 			children = (
 				F20000010000000000000001 /* FurgApp.swift */,
 				F20000010000000000000002 /* Config.swift */,
+				F20000010000000000000021 /* DesignSystem.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -145,6 +140,14 @@
 				F20000010000000000000020 /* Assets.xcassets */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		F40000010000000000000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F20000010000000000000000 /* Furg.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -218,6 +221,7 @@
 			files = (
 				F10000010000000000000001 /* FurgApp.swift in Sources */,
 				F10000010000000000000002 /* Config.swift in Sources */,
+				F10000010000000000000021 /* DesignSystem.swift in Sources */,
 				F10000010000000000000003 /* Models.swift in Sources */,
 				F10000010000000000000004 /* WishlistModels.swift in Sources */,
 				F10000010000000000000005 /* APIClient.swift in Sources */,
@@ -367,9 +371,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 49L3FP3ZKR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -395,9 +400,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 49L3FP3ZKR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

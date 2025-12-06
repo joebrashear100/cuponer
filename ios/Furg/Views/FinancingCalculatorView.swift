@@ -9,9 +9,11 @@ import SwiftUI
 
 struct FinancingCalculatorView: View {
     @EnvironmentObject var wishlistManager: WishlistManager
+    @Environment(\.dismiss) var dismiss
     @State private var purchasePrice: String = "1000"
     @State private var selectedOptionId: String?
     @State private var showCustomCalculator = false
+    @State private var animate = false
 
     // Custom financing inputs
     @State private var customApr: String = "15"
@@ -45,132 +47,230 @@ struct FinancingCalculatorView: View {
     }
 
     var body: some View {
-        NavigationView {
+        ZStack {
+            AnimatedMeshBackground()
+
             ScrollView {
                 VStack(spacing: 20) {
+                    // Header
+                    HStack {
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "xmark")
+                                .font(.body.bold())
+                                .foregroundColor(.furgCharcoal.opacity(0.6))
+                                .padding(10)
+                                .background(Circle().fill(Color.white.opacity(0.3)))
+                        }
+
+                        Spacer()
+
+                        Text("Financing Calculator")
+                            .font(.headline)
+                            .foregroundColor(.furgCharcoal)
+
+                        Spacer()
+
+                        // Invisible spacer for centering
+                        Circle()
+                            .fill(Color.clear)
+                            .frame(width: 36, height: 36)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    .offset(y: animate ? 0 : -20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5), value: animate)
+
                     // Price Input
-                    PriceInputSection(purchasePrice: $purchasePrice)
+                    GlassPriceInputSection(purchasePrice: $purchasePrice)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
 
                     // Toggle between preset and custom
-                    Picker("Mode", selection: $showCustomCalculator) {
-                        Text("Preset Options").tag(false)
-                        Text("Custom Terms").tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
+                    GlassModeToggle(showCustomCalculator: $showCustomCalculator)
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.15), value: animate)
 
                     if showCustomCalculator {
-                        CustomFinancingSection(
+                        GlassCustomFinancingSection(
                             customApr: $customApr,
                             customTermMonths: $customTermMonths
                         )
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
                     } else {
-                        FinancingOptionsSection(
+                        GlassFinancingOptionsSection(
                             options: applicableOptions,
                             selectedOptionId: $selectedOptionId,
                             priceValue: priceValue,
                             wishlistManager: wishlistManager
                         )
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
                     }
 
                     // Calculation Result
                     if let calc = calculation {
-                        CalculationResultSection(
+                        GlassCalculationResultSection(
                             calculation: calc,
                             purchasePrice: priceValue,
                             option: showCustomCalculator ? nil : selectedOption
                         )
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
                     }
 
                     // Comparison Table
                     if priceValue > 0 && !showCustomCalculator && !applicableOptions.isEmpty {
-                        ComparisonTableSection(
+                        GlassComparisonTableSection(
                             options: applicableOptions,
                             purchasePrice: priceValue,
                             wishlistManager: wishlistManager,
                             selectedOptionId: selectedOptionId
                         )
+                        .offset(y: animate ? 0 : 20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
                     }
+
+                    Spacer(minLength: 40)
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Financing Calculator")
         }
+        .onAppear { animate = true }
     }
 }
 
-// MARK: - Price Input Section
+// MARK: - Glass Price Input Section
 
-struct PriceInputSection: View {
+struct GlassPriceInputSection: View {
     @Binding var purchasePrice: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Purchase Price")
                 .font(.headline)
+                .foregroundColor(.furgCharcoal)
 
             HStack {
                 Text("$")
-                    .font(.title2)
-                    .foregroundColor(.gray)
+                    .font(.title)
+                    .foregroundColor(.furgMint)
 
                 TextField("1000", text: $purchasePrice)
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(.system(size: 36, weight: .bold))
                     .keyboardType(.decimalPad)
+                    .foregroundColor(.furgCharcoal)
             }
             .padding()
-            .background(Color(uiColor: .secondarySystemBackground))
-            .cornerRadius(12)
+            .glassCard()
         }
         .padding(.horizontal)
     }
 }
 
-// MARK: - Custom Financing Section
+// MARK: - Glass Mode Toggle
 
-struct CustomFinancingSection: View {
+struct GlassModeToggle: View {
+    @Binding var showCustomCalculator: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: { showCustomCalculator = false }) {
+                Text("Preset Options")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(showCustomCalculator ? .furgCharcoal.opacity(0.6) : .white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: showCustomCalculator
+                                ? [Color.clear, Color.clear]
+                                : [.furgMint, .furgSeafoam],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+
+            Button(action: { showCustomCalculator = true }) {
+                Text("Custom Terms")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(showCustomCalculator ? .white : .furgCharcoal.opacity(0.6))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: showCustomCalculator
+                                ? [.furgMint, .furgSeafoam]
+                                : [Color.clear, Color.clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+        }
+        .background(Color.white.opacity(0.3))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Glass Custom Financing Section
+
+struct GlassCustomFinancingSection: View {
     @Binding var customApr: String
     @Binding var customTermMonths: String
 
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("APR (%)")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.furgCharcoal.opacity(0.6))
 
                     TextField("15", text: $customApr)
                         .keyboardType(.decimalPad)
+                        .font(.title3.bold())
+                        .foregroundColor(.furgCharcoal)
                         .padding()
-                        .background(Color(uiColor: .tertiarySystemBackground))
-                        .cornerRadius(8)
+                        .background(Color.white.opacity(0.3))
+                        .cornerRadius(12)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Term (months)")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.furgCharcoal.opacity(0.6))
 
                     TextField("12", text: $customTermMonths)
                         .keyboardType(.numberPad)
+                        .font(.title3.bold())
+                        .foregroundColor(.furgCharcoal)
                         .padding()
-                        .background(Color(uiColor: .tertiarySystemBackground))
-                        .cornerRadius(8)
+                        .background(Color.white.opacity(0.3))
+                        .cornerRadius(12)
                 }
             }
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
         .padding(.horizontal)
     }
 }
 
-// MARK: - Financing Options Section
+// MARK: - Glass Financing Options Section
 
-struct FinancingOptionsSection: View {
+struct GlassFinancingOptionsSection: View {
     let options: [FinancingOption]
     @Binding var selectedOptionId: String?
     let priceValue: Double
@@ -180,23 +280,29 @@ struct FinancingOptionsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Financing Options")
                 .font(.headline)
+                .foregroundColor(.furgCharcoal)
                 .padding(.horizontal)
 
             if options.isEmpty {
-                Text("No financing options available for this price.\nTry a different amount or use custom terms.")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
+                VStack(spacing: 12) {
+                    Image(systemName: "creditcard.trianglebadge.exclamationmark")
+                        .font(.system(size: 32))
+                        .foregroundColor(.furgMint.opacity(0.6))
+
+                    Text("No financing options available for this price.\nTry a different amount or use custom terms.")
+                        .font(.subheadline)
+                        .foregroundColor(.furgCharcoal.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(24)
+                .glassCard()
+                .padding(.horizontal)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(options) { option in
-                            FinancingOptionCard(
+                            GlassFinancingOptionCard(
                                 option: option,
                                 isSelected: selectedOptionId == option.id,
                                 calculation: wishlistManager.calculateFinancing(amount: priceValue, option: option)
@@ -212,7 +318,7 @@ struct FinancingOptionsSection: View {
     }
 }
 
-struct FinancingOptionCard: View {
+struct GlassFinancingOptionCard: View {
     let option: FinancingOption
     let isSelected: Bool
     let calculation: FinancingCalculation
@@ -222,49 +328,77 @@ struct FinancingOptionCard: View {
         Button(action: onSelect) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Image(systemName: option.type.icon)
-                        .foregroundColor(.blue)
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(
+                                colors: [.furgSeafoam, .furgMint],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 28, height: 28)
 
-                    Text(option.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .lineLimit(1)
+                        Image(systemName: option.type.icon)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    }
+
+                    Spacer()
+
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.furgMint)
+                    }
                 }
+
+                Text(option.name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.furgCharcoal)
+                    .lineLimit(1)
 
                 Text("\(String(format: "%.1f", option.apr))% APR")
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.furgCharcoal.opacity(0.6))
 
                 Text("\(option.termMonths) months")
                     .font(.caption)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.furgCharcoal.opacity(0.6))
 
-                Divider()
+                Rectangle()
+                    .fill(Color.furgMint.opacity(0.3))
+                    .frame(height: 1)
 
                 Text(calculation.formattedMonthlyPayment)
                     .font(.headline)
-                    .foregroundColor(.orange)
+                    .foregroundColor(.furgMint)
 
                 Text("/month")
                     .font(.caption2)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.furgCharcoal.opacity(0.5))
             }
             .padding()
-            .frame(width: 140)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+            .frame(width: 150)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(isSelected ? 0.8 : 0.5))
             )
-            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        isSelected
+                            ? LinearGradient(colors: [.furgMint, .furgSeafoam], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            : LinearGradient(colors: [.clear], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 2
+                    )
+            )
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Calculation Result Section
+// MARK: - Glass Calculation Result Section
 
-struct CalculationResultSection: View {
+struct GlassCalculationResultSection: View {
     let calculation: FinancingCalculation
     let purchasePrice: Double
     let option: FinancingOption?
@@ -279,107 +413,112 @@ struct CalculationResultSection: View {
             HStack {
                 Text("Payment Details")
                     .font(.headline)
+                    .foregroundColor(.furgCharcoal)
 
                 Spacer()
 
                 if let option = option {
                     Text(option.name)
                         .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.2))
+                        .foregroundColor(.furgMint)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.furgMint.opacity(0.15))
                         .cornerRadius(8)
                 }
             }
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ResultCard(
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                GlassResultCard(
                     title: "Monthly Payment",
                     value: calculation.formattedMonthlyPayment,
-                    color: .orange,
+                    gradient: [.furgMint, .furgSeafoam],
                     isLarge: true
                 )
 
-                ResultCard(
+                GlassResultCard(
                     title: "Total Payment",
                     value: calculation.formattedTotalPayment,
-                    color: .primary
+                    gradient: [.furgSeafoam, .furgSage]
                 )
 
-                ResultCard(
+                GlassResultCard(
                     title: "Total Interest",
                     value: calculation.formattedTotalInterest,
-                    color: calculation.totalInterest > 0 ? .red : .green
+                    gradient: calculation.totalInterest > 0 ? [.furgWarning, .orange] : [.furgSuccess, .furgMint]
                 )
 
-                ResultCard(
+                GlassResultCard(
                     title: "Payoff Date",
                     value: calculation.payoffDate.formatted(.dateTime.month(.abbreviated).year()),
-                    color: .primary
+                    gradient: [.furgSage, .furgPistachio]
                 )
             }
 
-            // Interest Warning
-            if calculation.totalInterest > 0 {
-                HStack {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+            // Interest Warning/Success
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(calculation.totalInterest > 0
+                            ? Color.furgWarning.opacity(0.2)
+                            : Color.furgSuccess.opacity(0.2))
+                        .frame(width: 36, height: 36)
 
-                    Text("You'll pay \(calculation.formattedTotalInterest) in interest (\(String(format: "%.1f", interestPercentage))% more than the purchase price)")
-                        .font(.caption)
-                        .foregroundColor(.orange)
+                    Image(systemName: calculation.totalInterest > 0
+                        ? "exclamationmark.triangle.fill"
+                        : "checkmark.circle.fill")
+                        .foregroundColor(calculation.totalInterest > 0 ? .furgWarning : .furgSuccess)
                 }
-                .padding()
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(8)
-            } else {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
 
-                    Text("No interest! You only pay the purchase price.")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
+                Text(calculation.totalInterest > 0
+                    ? "You'll pay \(calculation.formattedTotalInterest) in interest (\(String(format: "%.1f", interestPercentage))% more)"
+                    : "No interest! You only pay the purchase price.")
+                    .font(.caption)
+                    .foregroundColor(.furgCharcoal.opacity(0.8))
             }
+            .padding()
+            .background(
+                (calculation.totalInterest > 0 ? Color.furgWarning : Color.furgSuccess).opacity(0.1)
+            )
+            .cornerRadius(12)
         }
         .padding()
-        .background(Color(uiColor: .secondarySystemBackground))
-        .cornerRadius(12)
+        .glassCard()
         .padding(.horizontal)
     }
 }
 
-struct ResultCard: View {
+struct GlassResultCard: View {
     let title: String
     let value: String
-    let color: Color
+    let gradient: [Color]
     var isLarge: Bool = false
 
     var body: some View {
-        VStack(alignment: .center, spacing: 4) {
+        VStack(alignment: .center, spacing: 6) {
             Text(title)
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
 
             Text(value)
                 .font(isLarge ? .title2 : .headline)
                 .fontWeight(.bold)
-                .foregroundColor(color)
+                .foregroundStyle(LinearGradient(
+                    colors: gradient,
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ))
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(uiColor: .tertiarySystemBackground))
-        .cornerRadius(8)
+        .background(Color.white.opacity(0.3))
+        .cornerRadius(12)
     }
 }
 
-// MARK: - Comparison Table Section
+// MARK: - Glass Comparison Table Section
 
-struct ComparisonTableSection: View {
+struct GlassComparisonTableSection: View {
     let options: [FinancingOption]
     let purchasePrice: Double
     let wishlistManager: WishlistManager
@@ -395,7 +534,7 @@ struct ComparisonTableSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Compare All Options")
                 .font(.headline)
-                .padding(.horizontal)
+                .foregroundColor(.furgCharcoal)
 
             VStack(spacing: 0) {
                 // Header
@@ -403,82 +542,133 @@ struct ComparisonTableSection: View {
                     Text("Option")
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Monthly")
-                        .frame(width: 70, alignment: .trailing)
+                        .frame(width: 65, alignment: .trailing)
                     Text("Total")
-                        .frame(width: 70, alignment: .trailing)
+                        .frame(width: 65, alignment: .trailing)
                     Text("Interest")
-                        .frame(width: 70, alignment: .trailing)
+                        .frame(width: 60, alignment: .trailing)
                 }
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.furgCharcoal.opacity(0.6))
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, 10)
 
-                Divider()
+                Rectangle()
+                    .fill(Color.furgMint.opacity(0.3))
+                    .frame(height: 1)
 
-                // Cash option
+                // Cash option (best)
                 HStack {
-                    HStack(spacing: 4) {
-                        Image(systemName: "banknote")
-                            .foregroundColor(.green)
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient(
+                                    colors: [.furgSuccess, .furgMint],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 20, height: 20)
+
+                            Image(systemName: "banknote")
+                                .font(.caption2)
+                                .foregroundColor(.white)
+                        }
                         Text("Pay Cash")
+                            .font(.subheadline)
+                            .foregroundColor(.furgCharcoal)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text("—")
-                        .frame(width: 70, alignment: .trailing)
+                        .frame(width: 65, alignment: .trailing)
+                        .foregroundColor(.furgCharcoal.opacity(0.5))
 
                     Text(String(format: "$%.0f", purchasePrice))
-                        .frame(width: 70, alignment: .trailing)
+                        .font(.subheadline)
+                        .frame(width: 65, alignment: .trailing)
+                        .foregroundColor(.furgCharcoal)
 
                     Text("$0")
-                        .foregroundColor(.green)
-                        .frame(width: 70, alignment: .trailing)
+                        .font(.subheadline)
+                        .foregroundColor(.furgSuccess)
+                        .frame(width: 60, alignment: .trailing)
                 }
-                .font(.subheadline)
                 .padding(.horizontal)
-                .padding(.vertical, 10)
-                .background(Color.green.opacity(0.1))
+                .padding(.vertical, 12)
+                .background(Color.furgSuccess.opacity(0.1))
 
-                Divider()
+                Rectangle()
+                    .fill(Color.white.opacity(0.3))
+                    .frame(height: 1)
 
                 // Financing options
                 ForEach(sortedOptions, id: \.option.id) { item in
                     HStack {
-                        HStack(spacing: 4) {
-                            Image(systemName: item.option.type.icon)
-                                .foregroundColor(.blue)
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .fill(LinearGradient(
+                                        colors: [.furgSeafoam, .furgMint],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 20, height: 20)
+
+                                Image(systemName: item.option.type.icon)
+                                    .font(.caption2)
+                                    .foregroundColor(.white)
+                            }
                             Text(item.option.name)
+                                .font(.subheadline)
+                                .foregroundColor(.furgCharcoal)
                                 .lineLimit(1)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                         Text(String(format: "$%.0f", item.calculation.monthlyPayment))
-                            .frame(width: 70, alignment: .trailing)
+                            .font(.subheadline)
+                            .frame(width: 65, alignment: .trailing)
+                            .foregroundColor(.furgCharcoal)
 
                         Text(String(format: "$%.0f", item.calculation.totalPayment))
-                            .frame(width: 70, alignment: .trailing)
+                            .font(.subheadline)
+                            .frame(width: 65, alignment: .trailing)
+                            .foregroundColor(.furgCharcoal)
 
                         Text(String(format: "$%.0f", item.calculation.totalInterest))
-                            .foregroundColor(item.calculation.totalInterest > 0 ? .red : .green)
-                            .frame(width: 70, alignment: .trailing)
+                            .font(.subheadline)
+                            .foregroundColor(item.calculation.totalInterest > 0 ? .furgWarning : .furgSuccess)
+                            .frame(width: 60, alignment: .trailing)
                     }
-                    .font(.subheadline)
                     .padding(.horizontal)
-                    .padding(.vertical, 10)
-                    .background(selectedOptionId == item.option.id ? Color.blue.opacity(0.1) : Color.clear)
+                    .padding(.vertical, 12)
+                    .background(selectedOptionId == item.option.id ? Color.furgMint.opacity(0.1) : Color.clear)
 
                     if item.option.id != sortedOptions.last?.option.id {
-                        Divider()
+                        Rectangle()
+                            .fill(Color.white.opacity(0.3))
+                            .frame(height: 1)
+                            .padding(.horizontal)
                     }
                 }
             }
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color.white.opacity(0.2))
             .cornerRadius(12)
-            .padding(.horizontal)
         }
+        .padding()
+        .glassCard()
+        .padding(.horizontal)
     }
 }
+
+// Keep old names for backward compatibility
+typealias PriceInputSection = GlassPriceInputSection
+typealias CustomFinancingSection = GlassCustomFinancingSection
+typealias FinancingOptionsSection = GlassFinancingOptionsSection
+typealias FinancingOptionCard = GlassFinancingOptionCard
+typealias CalculationResultSection = GlassCalculationResultSection
+typealias ResultCard = GlassResultCard
+typealias ComparisonTableSection = GlassComparisonTableSection
 
 #Preview {
     FinancingCalculatorView()

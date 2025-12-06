@@ -32,7 +32,7 @@ class AuthManager: NSObject, ObservableObject {
     }
 
     func checkAuthenticationStatus() {
-        if let token = token, let userId = UserDefaults.standard.string(forKey: Config.Keys.userId) {
+        if token != nil, let userId = UserDefaults.standard.string(forKey: Config.Keys.userId) {
             self.isAuthenticated = true
             self.userID = userId
         }
@@ -54,6 +54,26 @@ class AuthManager: NSObject, ObservableObject {
         UserDefaults.standard.removeObject(forKey: Config.Keys.userId)
         isAuthenticated = false
         userID = nil
+    }
+
+    #if DEBUG
+    func debugBypassLogin() {
+        // Debug-only function to bypass authentication for testing
+        let debugUserId = "debug-user-\(UUID().uuidString.prefix(8))"
+        let debugToken = "debug-token-\(UUID().uuidString)"
+
+        UserDefaults.standard.set(debugToken, forKey: Config.Keys.jwtToken)
+        UserDefaults.standard.set(debugUserId, forKey: Config.Keys.userId)
+
+        self.userID = debugUserId
+        self.isAuthenticated = true
+        self.errorMessage = nil
+    }
+    #endif
+
+    func handleAppleSignIn(credential: ASAuthorizationAppleIDCredential) async {
+        await MainActor.run { isLoading = true }
+        await handleAppleIDCredential(credential)
     }
 
     private func handleAppleIDCredential(_ credential: ASAuthorizationAppleIDCredential) async {
@@ -142,10 +162,12 @@ extension AuthManager: ASAuthorizationControllerDelegate {
 
 extension AuthManager: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            fatalError("No window available")
+        return MainActor.assumeIsolated {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = windowScene.windows.first else {
+                fatalError("No window available")
+            }
+            return window
         }
-        return window
     }
 }

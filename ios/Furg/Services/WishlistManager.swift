@@ -69,7 +69,7 @@ class WishlistManager: ObservableObject {
         var monthlyPayment: Double
 
         if let promoPeriod = option.promotionalPeriod,
-           let promoApr = option.promotionalApr,
+           option.promotionalApr != nil,
            promoPeriod >= termMonths {
             // Entire term within promotional period
             monthlyPayment = amount / Double(termMonths)

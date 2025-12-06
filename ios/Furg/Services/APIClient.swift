@@ -7,6 +7,9 @@
 
 import Foundation
 
+// Empty response for void POST calls
+struct EmptyAPIResponse: Decodable {}
+
 @MainActor
 class APIClient: ObservableObject {
     @Published var isLoading = false
@@ -68,14 +71,23 @@ class APIClient: ObservableObject {
     // MARK: - Generic Request Methods
 
     func get<T: Decodable>(_ endpoint: String) async throws -> T {
-        let request = try createRequest(endpoint: "/api/v1\(endpoint)")
+        let fullEndpoint = endpoint.hasPrefix("/api") ? endpoint : "/api/v1\(endpoint)"
+        let request = try createRequest(endpoint: fullEndpoint)
         return try await performRequest(request)
     }
 
     func post<T: Decodable, B: Encodable>(_ endpoint: String, body: B) async throws -> T {
+        let fullEndpoint = endpoint.hasPrefix("/api") ? endpoint : "/api/v1\(endpoint)"
         let bodyData = try JSONEncoder().encode(body)
-        let request = try createRequest(endpoint: "/api/v1\(endpoint)", method: "POST", body: bodyData)
+        let request = try createRequest(endpoint: fullEndpoint, method: "POST", body: bodyData)
         return try await performRequest(request)
+    }
+
+    func postVoid<B: Encodable>(_ endpoint: String, body: B) async throws {
+        let fullEndpoint = endpoint.hasPrefix("/api") ? endpoint : "/api/v1\(endpoint)"
+        let bodyData = try JSONEncoder().encode(body)
+        let request = try createRequest(endpoint: fullEndpoint, method: "POST", body: bodyData)
+        let _: EmptyAPIResponse = try await performRequest(request)
     }
 
     // MARK: - Chat API

@@ -332,77 +332,26 @@ class SubscriptionManager: ObservableObject {
     }
 }
 
-// MARK: - APIClient Extensions
+// MARK: - APIClient Extensions for Subscriptions
 
 extension APIClient {
     func getSubscriptions() async throws -> SubscriptionsResponse {
-        let request = try createRequest(endpoint: "/api/v1/subscriptions")
-        return try await performRequest(request)
+        return try await get("/subscriptions")
     }
 
     func detectSubscriptions() async throws -> SubscriptionsResponse {
-        let request = try createRequest(endpoint: "/api/v1/subscriptions/detect", method: "POST")
-        return try await performRequest(request)
+        return try await post("/subscriptions/detect", body: EmptyBody())
     }
 
     func getCancellationGuide(subscriptionId: String) async throws -> CancellationGuideResponse {
-        let request = try createRequest(endpoint: "/api/v1/subscriptions/\(subscriptionId)/cancellation-guide")
-        return try await performRequest(request)
+        return try await get("/subscriptions/\(subscriptionId)/cancellation-guide")
     }
 
     func cancelSubscription(subscriptionId: String) async throws {
-        let request = try createRequest(endpoint: "/api/v1/subscriptions/\(subscriptionId)/cancel", method: "POST")
-        let _: [String: String] = try await performRequest(request)
+        try await postVoid("/subscriptions/\(subscriptionId)/cancel", body: EmptyBody())
     }
 
     func getNegotiationScript(billId: String) async throws -> NegotiationScriptResponse {
-        let request = try createRequest(endpoint: "/api/v1/bills/\(billId)/negotiation-script")
-        return try await performRequest(request)
-    }
-
-    private func createRequest(endpoint: String, method: String = "GET", body: Data? = nil) throws -> URLRequest {
-        guard let url = URL(string: "\(Config.baseURL)\(endpoint)") else {
-            throw URLError(.badURL)
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
-
-        if let token = APIClient.authToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        if let body = body {
-            request.httpBody = body
-        }
-
-        return request
-    }
-
-    private func performRequest<T: Decodable>(_ request: URLRequest) async throws -> T {
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-
-        if httpResponse.statusCode == 401 {
-            throw NSError(domain: "APIError", code: 401,
-                        userInfo: [NSLocalizedDescriptionKey: "Authentication required. Please sign in again."])
-        }
-
-        if httpResponse.statusCode != 200 {
-            if let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
-                throw NSError(domain: "APIError", code: httpResponse.statusCode,
-                            userInfo: [NSLocalizedDescriptionKey: apiError.detail])
-            }
-            throw URLError(.badServerResponse)
-        }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(T.self, from: data)
+        return try await get("/bills/\(billId)/negotiation-script")
     }
 }

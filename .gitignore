@@ -1,3 +1,21 @@
+# Backend
 backend/.env
 backend/__pycache__/
 backend/**/__pycache__/
+
+# iOS Build
+ios/build/
+ios/build-device/
+*.xcuserstate
+*.xcuserdatad/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Secrets (never commit)
+*.p8
+*.p12
+*.mobileprovision
+FurgGitHubSecrets/

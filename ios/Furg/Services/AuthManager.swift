@@ -7,6 +7,9 @@
 
 import SwiftUI
 import AuthenticationServices
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "AuthManager")
 
 @MainActor
 class AuthManager: NSObject, ObservableObject {
@@ -184,11 +187,17 @@ extension AuthManager: ASAuthorizationControllerDelegate {
 extension AuthManager: ASAuthorizationControllerPresentationContextProviding {
     nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         return MainActor.assumeIsolated {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = windowScene.windows.first else {
-                fatalError("No window available")
+            // Try to get window from connected scenes
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                return window
             }
-            return window
+
+            // Fallback: create a temporary window if none exists
+            logger.warning("No window available for presentation anchor, creating fallback")
+            let fallbackWindow = UIWindow(frame: UIScreen.main.bounds)
+            fallbackWindow.makeKeyAndVisible()
+            return fallbackWindow
         }
     }
 }

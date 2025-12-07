@@ -223,11 +223,29 @@ struct ForecastAlert: Identifiable, Codable {
     let date: Date
     let severity: AlertSeverity
     let actionLabel: String?
+    var actionType: ForecastActionType {
+        switch type {
+        case .lowBalance: return .showBalance
+        case .billDue: return .showBills
+        case .payday: return .none
+        case .overdraft: return .showBalance
+        case .goalMilestone: return .showGoals
+        case .unusualSpending: return .showCategories
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, type, title, message, date, severity
         case actionLabel = "action_label"
     }
+}
+
+enum ForecastActionType {
+    case showBalance
+    case showBills
+    case showGoals
+    case showCategories
+    case none
 }
 
 enum AlertType: String, Codable {

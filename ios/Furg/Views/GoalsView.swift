@@ -125,6 +125,9 @@ struct GoalsView: View {
             }
             .padding(.horizontal, 20)
         }
+        .refreshable {
+            await goalsManager.loadGoals()
+        }
         .task {
             await goalsManager.loadGoals()
         }

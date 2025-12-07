@@ -13,6 +13,7 @@ struct HomeView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @State private var showHideSheet = false
     @State private var showAddTransactionSheet = false
+    @State private var showNotifications = false
     @State private var animate = false
     @State private var selectedTab = 0
 
@@ -20,7 +21,9 @@ struct HomeView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
                 // Header with greeting
-                HomeHeader(greeting: greeting)
+                HomeHeader(greeting: greeting) {
+                    showNotifications = true
+                }
                     .offset(y: animate ? 0 : -20)
                     .opacity(animate ? 1 : 0)
                     .animation(.easeOut(duration: 0.5), value: animate)
@@ -82,6 +85,11 @@ struct HomeView: View {
             }
             .padding(.horizontal, 20)
         }
+        .refreshable {
+            await financeManager.refreshAll()
+            await goalsManager.loadGoals()
+            await subscriptionManager.loadSubscriptions()
+        }
         .task {
             await financeManager.refreshAll()
             await goalsManager.loadGoals()
@@ -91,10 +99,14 @@ struct HomeView: View {
             withAnimation { animate = true }
         }
         .sheet(isPresented: $showHideSheet) {
-            HideMoneySheet(hideAmount: .constant(""), financeManager: financeManager)
+            HideMoneySheet(financeManager: financeManager)
         }
         .sheet(isPresented: $showAddTransactionSheet) {
             AddTransactionSheet()
+                .environmentObject(financeManager)
+        }
+        .sheet(isPresented: $showNotifications) {
+            NotificationsListSheet()
         }
     }
 
@@ -113,6 +125,7 @@ struct HomeView: View {
 
 struct HomeHeader: View {
     let greeting: String
+    var onNotifications: (() -> Void)? = nil
 
     var body: some View {
         HStack {
@@ -131,7 +144,7 @@ struct HomeHeader: View {
             // Profile/notification area
             HStack(spacing: 12) {
                 Button {
-                    // Notifications
+                    onNotifications?()
                 } label: {
                     ZStack(alignment: .topTrailing) {
                         Image(systemName: "bell.fill")
@@ -747,12 +760,25 @@ struct SubscriptionAlertCard: View {
 
 struct AddTransactionSheet: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var financeManager: FinanceManager
     @State private var merchant = ""
     @State private var amount = ""
     @State private var category = "Shopping"
     @State private var isExpense = true
+    @State private var isSaving = false
+    @State private var showSuccess = false
+    @State private var errorMessage: String?
 
-    let categories = ["Shopping", "Food", "Transportation", "Entertainment", "Utilities", "Health", "Other"]
+    let categories = ["Shopping", "Food", "Transportation", "Entertainment", "Utilities", "Health", "Groceries", "Income", "Other"]
+
+    private var isValidAmount: Bool {
+        guard let value = Double(amount), value > 0 else { return false }
+        return true
+    }
+
+    private var isFormValid: Bool {
+        !merchant.trimmingCharacters(in: .whitespaces).isEmpty && isValidAmount
+    }
 
     var body: some View {
         ZStack {
@@ -780,7 +806,9 @@ struct AddTransactionSheet: View {
                 // Type toggle
                 HStack(spacing: 0) {
                     Button {
-                        isExpense = true
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isExpense = true
+                        }
                     } label: {
                         Text("Expense")
                             .font(.furgBody)
@@ -792,7 +820,9 @@ struct AddTransactionSheet: View {
                     }
 
                     Button {
-                        isExpense = false
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isExpense = false
+                        }
                     } label: {
                         Text("Income")
                             .font(.furgBody)
@@ -824,6 +854,12 @@ struct AddTransactionSheet: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 180)
+                    }
+
+                    if !amount.isEmpty && !isValidAmount {
+                        Text("Please enter a valid amount")
+                            .font(.furgCaption)
+                            .foregroundColor(.furgError)
                     }
                 }
                 .padding(24)
@@ -869,30 +905,247 @@ struct AddTransactionSheet: View {
                     }
                 }
 
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.furgCaption)
+                        .foregroundColor(.furgError)
+                        .padding(.horizontal)
+                }
+
                 Spacer()
 
                 // Add button
                 Button {
-                    // Add transaction logic
-                    dismiss()
+                    Task {
+                        await saveTransaction()
+                    }
                 } label: {
                     HStack {
-                        Image(systemName: "plus")
-                        Text("Add Transaction")
+                        if isSaving {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .furgCharcoal))
+                        } else if showSuccess {
+                            Image(systemName: "checkmark")
+                            Text("Added!")
+                        } else {
+                            Image(systemName: "plus")
+                            Text("Add Transaction")
+                        }
                     }
                     .font(.furgHeadline)
                     .foregroundColor(.furgCharcoal)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
-                    .background(FurgGradients.mintGradient)
+                    .background {
+                        if showSuccess {
+                            Color.furgSuccess
+                        } else {
+                            FurgGradients.mintGradient
+                        }
+                    }
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
-                .disabled(merchant.isEmpty || amount.isEmpty)
-                .opacity(merchant.isEmpty || amount.isEmpty ? 0.5 : 1)
+                .disabled(!isFormValid || isSaving)
+                .opacity(!isFormValid || isSaving ? 0.5 : 1)
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, 20)
         }
+    }
+
+    private func saveTransaction() async {
+        guard let amountValue = Double(amount), amountValue > 0 else {
+            errorMessage = "Please enter a valid amount"
+            return
+        }
+
+        let trimmedMerchant = merchant.trimmingCharacters(in: .whitespaces)
+        guard !trimmedMerchant.isEmpty else {
+            errorMessage = "Please enter a merchant name"
+            return
+        }
+
+        isSaving = true
+        errorMessage = nil
+
+        let success = await financeManager.addTransaction(
+            merchant: trimmedMerchant,
+            amount: amountValue,
+            category: category,
+            isExpense: isExpense
+        )
+
+        isSaving = false
+
+        if success {
+            withAnimation {
+                showSuccess = true
+            }
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            dismiss()
+        } else {
+            errorMessage = financeManager.errorMessage ?? "Failed to add transaction"
+        }
+    }
+}
+
+// MARK: - Notifications List Sheet
+
+struct NotificationsListSheet: View {
+    @Environment(\.dismiss) var dismiss
+
+    // Sample notifications
+    private let notifications: [NotificationItem] = [
+        NotificationItem(
+            icon: "flame.fill",
+            iconColor: .furgWarning,
+            title: "Spending Alert",
+            message: "You spent $127 at Amazon today. That's 40% of your daily budget.",
+            time: "2 hours ago",
+            isRead: false
+        ),
+        NotificationItem(
+            icon: "calendar.badge.exclamationmark",
+            iconColor: .furgInfo,
+            title: "Bill Reminder",
+            message: "Your Netflix subscription of $15.99 is due tomorrow.",
+            time: "5 hours ago",
+            isRead: false
+        ),
+        NotificationItem(
+            icon: "star.fill",
+            iconColor: .furgMint,
+            title: "Goal Milestone",
+            message: "You're 75% of the way to your Emergency Fund goal!",
+            time: "Yesterday",
+            isRead: true
+        ),
+        NotificationItem(
+            icon: "chart.bar.fill",
+            iconColor: .purple,
+            title: "Weekly Report",
+            message: "Your spending was 12% lower than last week. Great job!",
+            time: "2 days ago",
+            isRead: true
+        ),
+        NotificationItem(
+            icon: "dollarsign.circle.fill",
+            iconColor: .furgSuccess,
+            title: "Income Detected",
+            message: "A deposit of $3,245.67 was detected from ACME Corp.",
+            time: "3 days ago",
+            isRead: true
+        )
+    ]
+
+    var body: some View {
+        ZStack {
+            AnimatedMeshBackground()
+
+            VStack(spacing: 20) {
+                // Header
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(12)
+                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                    }
+
+                    Spacer()
+
+                    Text("Notifications")
+                        .font(.furgTitle2)
+                        .foregroundColor(.white)
+
+                    Spacer()
+
+                    Button {
+                        // Mark all as read
+                    } label: {
+                        Text("Clear All")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.furgMint)
+                    }
+                }
+                .padding(.top, 20)
+
+                // Notifications list
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 12) {
+                        ForEach(notifications) { notification in
+                            NotificationRow(notification: notification)
+                        }
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
+struct NotificationItem: Identifiable {
+    let id = UUID()
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let message: String
+    let time: String
+    let isRead: Bool
+}
+
+struct NotificationRow: View {
+    let notification: NotificationItem
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(notification.iconColor.opacity(0.15))
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: notification.icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(notification.iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(notification.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    if !notification.isRead {
+                        Circle()
+                            .fill(Color.furgMint)
+                            .frame(width: 8, height: 8)
+                    }
+
+                    Spacer()
+
+                    Text(notification.time)
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.4))
+                }
+
+                Text(notification.message)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(2)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(notification.isRead ? 0.05 : 0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(notification.isRead ? Color.clear : Color.furgMint.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
 

@@ -20,17 +20,17 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case 0:
-                    HomeView()
+                    DashboardView()
                 case 1:
                     ChatView()
                 case 2:
-                    GoalsView()
+                    TransactionsListView()
                 case 3:
-                    SubscriptionsView()
+                    AccountsView()
                 case 4:
                     SettingsView()
                 default:
-                    HomeView()
+                    DashboardView()
                 }
             }
 
@@ -48,8 +48,8 @@ struct CustomTabBar: View {
     let tabs: [(icon: String, label: String)] = [
         ("house.fill", "Home"),
         ("message.fill", "Chat"),
-        ("target", "Goals"),
-        ("creditcard.fill", "Subs"),
+        ("list.bullet.rectangle", "Activity"),
+        ("chart.pie.fill", "Accounts"),
         ("gearshape.fill", "Settings")
     ]
 

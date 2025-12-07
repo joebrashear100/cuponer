@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "SettingsView")
 
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -20,6 +23,9 @@ struct SettingsView: View {
     @State private var showNotificationSettings = false
     @State private var showWishlist = false
     @State private var showSpendingLimits = false
+    @State private var showConnectBank = false
+    @State private var showAppleWallet = false
+    @State private var showReceiptScanner = false
     @State private var animate = false
 
     private let apiClient = APIClient()
@@ -186,91 +192,121 @@ struct SettingsView: View {
 
                     // Connected banks
                     SettingsSection(title: "CONNECTED BANKS") {
-                        if plaidManager.linkedBanks.isEmpty {
-                            Button {
-                                Task { await plaidManager.presentPlaidLink() }
-                            } label: {
-                                HStack {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.furgMint.opacity(0.15))
-                                            .frame(width: 40, height: 40)
-                                        Image(systemName: "plus")
-                                            .foregroundColor(.furgMint)
-                                    }
+                        Button {
+                            showConnectBank = true
+                        } label: {
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.furgMint.opacity(0.15))
+                                        .frame(width: 40, height: 40)
+                                    Image(systemName: plaidManager.linkedBanks.isEmpty ? "plus" : "building.columns.fill")
+                                        .foregroundColor(.furgMint)
+                                }
 
-                                    Text("Connect Your Bank")
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(plaidManager.linkedBanks.isEmpty ? "Connect Your Bank" : "Manage Banks")
                                         .font(.furgBody)
                                         .foregroundColor(.white)
 
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.white.opacity(0.3))
-                                }
-                                .padding(16)
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            ForEach(plaidManager.linkedBanks) { bank in
-                                HStack {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.furgSeafoam.opacity(0.15))
-                                            .frame(width: 40, height: 40)
-                                        Image(systemName: "building.columns.fill")
-                                            .foregroundColor(.furgSeafoam)
-                                    }
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(bank.name)
-                                            .font(.furgBody)
-                                            .foregroundColor(.white)
-                                        Text("Synced \(bank.lastSynced, style: .relative) ago")
+                                    if !plaidManager.linkedBanks.isEmpty {
+                                        Text("\(plaidManager.linkedBanks.count) bank\(plaidManager.linkedBanks.count == 1 ? "" : "s") connected")
                                             .font(.furgCaption)
-                                            .foregroundColor(.white.opacity(0.4))
+                                            .foregroundColor(.white.opacity(0.5))
                                     }
+                                }
 
-                                    Spacer()
+                                Spacer()
 
+                                if !plaidManager.linkedBanks.isEmpty {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.furgSuccess)
                                 }
-                                .padding(16)
-                            }
 
-                            HStack(spacing: 12) {
-                                Button {
-                                    Task { await plaidManager.presentPlaidLink() }
-                                } label: {
-                                    Text("Add Bank")
-                                        .font(.furgCaption)
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 10)
-                                        .background(Color.white.opacity(0.1))
-                                        .clipShape(Capsule())
-                                }
-
-                                Button {
-                                    Task { await plaidManager.syncBanks() }
-                                } label: {
-                                    Text("Sync All")
-                                        .font(.furgCaption)
-                                        .foregroundColor(.furgCharcoal)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 10)
-                                        .background(Color.furgMint)
-                                        .clipShape(Capsule())
-                                }
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.white.opacity(0.3))
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 16)
+                            .padding(16)
                         }
+                        .buttonStyle(.plain)
                     }
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+
+                    // Receipt Scanning
+                    SettingsSection(title: "RECEIPT SCANNING") {
+                        Button {
+                            showReceiptScanner = true
+                        } label: {
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.furgSeafoam.opacity(0.15))
+                                        .frame(width: 40, height: 40)
+                                    Image(systemName: "doc.text.viewfinder")
+                                        .foregroundColor(.furgSeafoam)
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Scan Receipt")
+                                        .font(.furgBody)
+                                        .foregroundColor(.white)
+
+                                    Text("Extract itemized expenses")
+                                        .font(.furgCaption)
+                                        .foregroundColor(.white.opacity(0.5))
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                            .padding(16)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.31), value: animate)
+
+                    // Apple Wallet
+                    SettingsSection(title: "APPLE WALLET") {
+                        Button {
+                            showAppleWallet = true
+                        } label: {
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.white.opacity(0.15))
+                                        .frame(width: 40, height: 40)
+                                    Image(systemName: "wallet.pass.fill")
+                                        .foregroundColor(.white)
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Apple Card & Cash")
+                                        .font(.furgBody)
+                                        .foregroundColor(.white)
+
+                                    Text("Free, on-device access")
+                                        .font(.furgCaption)
+                                        .foregroundColor(.white.opacity(0.5))
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                            .padding(16)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.33), value: animate)
 
                     // About section
                     SettingsSection(title: "ABOUT") {
@@ -339,6 +375,26 @@ struct SettingsView: View {
                     .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
                 }
 
+                // Version info
+                VStack(spacing: 8) {
+                    Text("FURG")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.furgMint)
+
+                    Text("Version 2.2.0 (Build 2024.12.06)")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.4))
+
+                    Text("New: Apple FinanceKit, Apple Card/Cash Support")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.3))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 20)
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.6), value: animate)
+
                 Spacer(minLength: 120)
             }
             .padding(.horizontal, 20)
@@ -376,13 +432,16 @@ struct SettingsView: View {
             RoundUpSettingsView()
                 .environmentObject(roundUpManager)
                 .environmentObject(GoalsManager())
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showForecast) {
             ForecastView()
                 .environmentObject(ForecastingManager())
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showNotificationSettings) {
             NotificationSettingsSheet()
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showWishlist) {
             NavigationStack {
@@ -401,12 +460,35 @@ struct SettingsView: View {
                 }
             }
             .environmentObject(WishlistManager())
+            .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showSpendingLimits) {
             NavigationStack {
                 SpendingLimitsView()
             }
             .environmentObject(SpendingLimitsManager())
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showConnectBank) {
+            ConnectBankView()
+                .environmentObject(plaidManager)
+                .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showAppleWallet) {
+            Group {
+                if #available(iOS 17.4, *) {
+                    AppleWalletView()
+                } else {
+                    Text("Apple Wallet integration requires iOS 17.4 or later")
+                        .foregroundColor(.white)
+                        .padding()
+                }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showReceiptScanner) {
+            ReceiptScanView()
+                .presentationBackground(Color.furgCharcoal)
         }
     }
 
@@ -414,7 +496,7 @@ struct SettingsView: View {
         do {
             profile = try await apiClient.getProfile()
         } catch {
-            print("Failed to load profile: \(error)")
+            logger.error("Failed to load profile: \(error.localizedDescription)")
         }
     }
 
@@ -423,7 +505,7 @@ struct SettingsView: View {
             try await apiClient.updateProfile(["intensity_mode": mode])
             profile?.intensityMode = mode
         } catch {
-            print("Failed to update intensity mode: \(error)")
+            logger.error("Failed to update intensity mode: \(error.localizedDescription)")
         }
     }
 
@@ -432,7 +514,7 @@ struct SettingsView: View {
             try await apiClient.updateProfile(["emergency_buffer": buffer])
             profile?.emergencyBuffer = buffer
         } catch {
-            print("Failed to update emergency buffer: \(error)")
+            logger.error("Failed to update emergency buffer: \(error.localizedDescription)")
         }
     }
 }
@@ -775,12 +857,14 @@ struct EmergencyBufferSheet: View {
 
 struct NotificationSettingsSheet: View {
     @Environment(\.dismiss) var dismiss
-    @State private var spendingAlerts = true
-    @State private var billReminders = true
-    @State private var goalMilestones = true
-    @State private var dailySummary = false
-    @State private var weeklyReport = true
-    @State private var roastNotifications = true
+
+    // Persisted notification preferences using AppStorage
+    @AppStorage("notification_spendingAlerts") private var spendingAlerts = true
+    @AppStorage("notification_billReminders") private var billReminders = true
+    @AppStorage("notification_goalMilestones") private var goalMilestones = true
+    @AppStorage("notification_dailySummary") private var dailySummary = false
+    @AppStorage("notification_weeklyReport") private var weeklyReport = true
+    @AppStorage("notification_roastNotifications") private var roastNotifications = true
 
     var body: some View {
         ZStack {

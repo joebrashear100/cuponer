@@ -14,13 +14,21 @@ struct RoundUpSettingsView: View {
     @State private var showGoalPicker = false
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                // Header
-                RoundUpHeader()
-                    .offset(y: animate ? 0 : -20)
-                    .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5), value: animate)
+        ZStack {
+            // Dark background
+            Color.furgCharcoal
+                .ignoresSafeArea()
+
+            // Animated gradient overlay
+            AnimatedMeshBackground()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    // Header
+                    RoundUpHeader()
+                        .offset(y: animate ? 0 : -20)
+                        .opacity(animate ? 1 : 0)
+                        .animation(.easeOut(duration: 0.5), value: animate)
 
                 // Summary Card
                 RoundUpSummaryCard(summary: roundUpManager.summary ?? roundUpManager.demoSummary)
@@ -111,6 +119,7 @@ struct RoundUpSettingsView: View {
                 Spacer(minLength: 120)
             }
             .padding(.horizontal, 20)
+        }
         }
         .task {
             await roundUpManager.loadConfig()

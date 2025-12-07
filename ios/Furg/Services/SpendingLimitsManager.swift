@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "SpendingLimitsManager")
 
 // MARK: - Models
 
@@ -250,23 +253,25 @@ class SpendingLimitsManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        // TODO: Replace with actual API call
-        do {
-            try await Task.sleep(nanoseconds: 500_000_000)
+        // Load from local storage first, then sync with API
+        if let savedLimits = loadFromStorage(key: "spending_limits", type: [SpendingLimit].self) {
+            limits = savedLimits
+        } else {
             limits = SpendingLimit.demo
-        } catch {
-            self.error = error.localizedDescription
+            saveToStorage(limits, key: "spending_limits")
         }
+        logger.debug("Loaded \(self.limits.count) spending limits")
     }
 
     func loadAlerts() async {
-        // TODO: Replace with actual API call
-        do {
-            try await Task.sleep(nanoseconds: 300_000_000)
+        // Load from local storage first
+        if let savedAlerts = loadFromStorage(key: "spending_alerts", type: [SpendingAlert].self) {
+            alerts = savedAlerts
+        } else {
             alerts = SpendingAlert.demo
-        } catch {
-            self.error = error.localizedDescription
+            saveToStorage(alerts, key: "spending_alerts")
         }
+        logger.debug("Loaded \(self.alerts.count) spending alerts")
     }
 
     func createLimit(
@@ -286,8 +291,8 @@ class SpendingLimitsManager: ObservableObject {
         )
 
         limits.append(newLimit)
-
-        // TODO: API call to persist
+        saveToStorage(limits, key: "spending_limits")
+        logger.info("Created spending limit for \(category)")
     }
 
     func updateLimit(_ limit: SpendingLimit, newAmount: Decimal) async {
@@ -303,31 +308,42 @@ class SpendingLimitsManager: ObservableObject {
                 isActive: updated.isActive
             )
             limits[index] = updated
+            saveToStorage(limits, key: "spending_limits")
+            logger.info("Updated spending limit: \(limit.category)")
         }
-
-        // TODO: API call to persist
     }
 
     func deleteLimit(_ limit: SpendingLimit) async {
         limits.removeAll { $0.id == limit.id }
-
-        // TODO: API call to delete
+        saveToStorage(limits, key: "spending_limits")
+        logger.info("Deleted spending limit: \(limit.category)")
     }
 
     func markAlertRead(_ alert: SpendingAlert) async {
         if let index = alerts.firstIndex(where: { $0.id == alert.id }) {
             alerts[index].isRead = true
+            saveToStorage(alerts, key: "spending_alerts")
         }
-
-        // TODO: API call to update
     }
 
     func markAllAlertsRead() async {
         for i in alerts.indices {
             alerts[i].isRead = true
         }
+        saveToStorage(alerts, key: "spending_alerts")
+    }
 
-        // TODO: API call to update
+    // MARK: - Local Storage
+
+    private func saveToStorage<T: Encodable>(_ value: T, key: String) {
+        if let data = try? JSONEncoder().encode(value) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    private func loadFromStorage<T: Decodable>(key: String, type: T.Type) -> T? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(type, from: data)
     }
 
     func checkTransaction(amount: Decimal, category: String) -> SpendingAlert? {

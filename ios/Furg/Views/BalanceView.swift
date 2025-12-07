@@ -133,7 +133,7 @@ struct BalanceView: View {
             withAnimation { animate = true }
         }
         .sheet(isPresented: $showHideSheet) {
-            HideMoneySheet(hideAmount: $hideAmount, financeManager: financeManager)
+            HideMoneySheet(financeManager: financeManager)
         }
     }
 
@@ -453,11 +453,12 @@ struct HiddenAccountsSection: View {
 
 struct HideMoneySheet: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var hideAmount: String
     let financeManager: FinanceManager
+    @State private var hideAmount = ""
     @State private var purpose = "forced_savings"
     @State private var showResult = false
     @State private var resultMessage = ""
+    @State private var isProcessing = false
 
     let purposes = [
         ("forced_savings", "Forced Savings", "piggybank.fill"),
@@ -562,8 +563,13 @@ struct HideMoneySheet: View {
                     Task { await hideMoneyAction() }
                 } label: {
                     HStack {
-                        Image(systemName: "eye.slash.fill")
-                        Text("Hide Money")
+                        if isProcessing {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .furgCharcoal))
+                        } else {
+                            Image(systemName: "eye.slash.fill")
+                            Text("Hide Money")
+                        }
                     }
                     .font(.furgHeadline)
                     .foregroundColor(.furgCharcoal)
@@ -572,6 +578,8 @@ struct HideMoneySheet: View {
                     .background(FurgGradients.mintGradient)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
+                .disabled(hideAmount.isEmpty || isProcessing)
+                .opacity(hideAmount.isEmpty || isProcessing ? 0.6 : 1)
                 .padding(.bottom, 20)
             }
             .padding(.horizontal, 20)
@@ -594,10 +602,12 @@ struct HideMoneySheet: View {
             return
         }
 
+        isProcessing = true
         let success = await financeManager.hideAmount(amount, purpose: purpose)
+        isProcessing = false
 
         if success {
-            resultMessage = "Successfully hidden $\(Int(amount))!"
+            resultMessage = "Successfully hidden $\(String(format: "%.2f", amount))!"
         } else {
             resultMessage = financeManager.errorMessage ?? "Failed to hide money"
         }

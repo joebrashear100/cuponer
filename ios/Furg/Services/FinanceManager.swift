@@ -102,9 +102,76 @@ class FinanceManager: ObservableObject {
             let response = try await apiClient.getTransactions(days: days)
             transactions = response.transactions
         } catch {
-            // Keep empty or existing transactions on error
+            // Load from local storage if API fails
+            if let saved = loadLocalTransactions() {
+                transactions = saved
+            }
             errorMessage = nil
         }
+    }
+
+    func addTransaction(merchant: String, amount: Double, category: String, isExpense: Bool) async -> Bool {
+        let formatter = ISO8601DateFormatter()
+        let dateString = formatter.string(from: Date())
+
+        let transaction = Transaction(
+            date: dateString,
+            amount: isExpense ? -abs(amount) : abs(amount),
+            merchant: merchant,
+            category: category
+        )
+
+        // Add to local list immediately
+        transactions.insert(transaction, at: 0)
+        saveLocalTransactions()
+
+        // Try to sync with API
+        let request = CreateTransactionRequest(
+            merchant: merchant,
+            amount: isExpense ? -abs(amount) : abs(amount),
+            category: category,
+            date: dateString
+        )
+
+        do {
+            try await apiClient.postVoid("/transactions", body: request)
+            return true
+        } catch {
+            // Transaction still saved locally
+            return true
+        }
+    }
+
+    func deleteTransaction(_ transaction: Transaction) async -> Bool {
+        transactions.removeAll { $0.id == transaction.id }
+        saveLocalTransactions()
+
+        do {
+            try await apiClient.postVoid("/transactions/\(transaction.id)/delete", body: EmptyRequest())
+            return true
+        } catch {
+            return true // Still removed locally
+        }
+    }
+
+    private struct CreateTransactionRequest: Encodable {
+        let merchant: String
+        let amount: Double
+        let category: String
+        let date: String
+    }
+
+    private struct EmptyRequest: Encodable {}
+
+    private func saveLocalTransactions() {
+        if let data = try? JSONEncoder().encode(transactions) {
+            UserDefaults.standard.set(data, forKey: "local_transactions")
+        }
+    }
+
+    private func loadLocalTransactions() -> [Transaction]? {
+        guard let data = UserDefaults.standard.data(forKey: "local_transactions") else { return nil }
+        return try? JSONDecoder().decode([Transaction].self, from: data)
     }
 
     func loadSpendingSummary(days: Int = 30) async {

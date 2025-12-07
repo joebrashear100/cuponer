@@ -188,6 +188,16 @@ struct Transaction: Codable, Identifiable {
         isPending = try container.decodeIfPresent(Bool.self, forKey: .isPending) ?? false
     }
 
+    init(id: String = UUID().uuidString, date: String, amount: Double, merchant: String, category: String, isBill: Bool = false, isPending: Bool = false) {
+        self.id = id
+        self.date = date
+        self.amount = amount
+        self.merchant = merchant
+        self.category = category
+        self.isBill = isBill
+        self.isPending = isPending
+    }
+
     var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"

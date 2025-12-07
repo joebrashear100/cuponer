@@ -11,6 +11,10 @@ struct ForecastView: View {
     @EnvironmentObject var forecastingManager: ForecastingManager
     @State private var animate = false
     @State private var selectedTimeframe = 30
+    @State private var showBalance = false
+    @State private var showBills = false
+    @State private var showGoals = false
+    @State private var showCategories = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -61,7 +65,9 @@ struct ForecastView: View {
                         alerts: forecastingManager.alerts.isEmpty
                             ? forecastingManager.demoAlerts
                             : forecastingManager.alerts
-                    )
+                    ) { actionType in
+                        handleAlertAction(actionType)
+                    }
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
@@ -86,6 +92,57 @@ struct ForecastView: View {
         }
         .onAppear {
             withAnimation { animate = true }
+        }
+        .sheet(isPresented: $showBalance) {
+            NavigationStack {
+                BalanceView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showBalance = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+        }
+        .sheet(isPresented: $showGoals) {
+            NavigationStack {
+                GoalsView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showGoals = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+        }
+        .sheet(isPresented: $showCategories) {
+            NavigationStack {
+                CategoriesView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showCategories = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+        }
+    }
+
+    private func handleAlertAction(_ actionType: ForecastActionType) {
+        switch actionType {
+        case .showBalance:
+            showBalance = true
+        case .showBills:
+            showBills = true
+        case .showGoals:
+            showGoals = true
+        case .showCategories:
+            showCategories = true
+        case .none:
+            break
         }
     }
 }
@@ -382,6 +439,7 @@ struct BalanceProjectionChart: View {
 
 struct ForecastAlertsSection: View {
     let alerts: [ForecastAlert]
+    var onAlertAction: ((ForecastActionType) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -395,7 +453,9 @@ struct ForecastAlertsSection: View {
             }
 
             ForEach(alerts) { alert in
-                ForecastAlertRow(alert: alert)
+                ForecastAlertRow(alert: alert) { actionType in
+                    onAlertAction?(actionType)
+                }
             }
         }
     }
@@ -403,6 +463,7 @@ struct ForecastAlertsSection: View {
 
 struct ForecastAlertRow: View {
     let alert: ForecastAlert
+    var onAction: ((ForecastActionType) -> Void)?
 
     var iconColor: Color {
         switch alert.severity {
@@ -451,11 +512,15 @@ struct ForecastAlertRow: View {
 
             if let actionLabel = alert.actionLabel {
                 Button {
-                    // Handle action
+                    onAction?(alert.actionType)
                 } label: {
-                    Text(actionLabel)
-                        .font(.furgCaption.bold())
-                        .foregroundColor(.furgMint)
+                    HStack(spacing: 4) {
+                        Text(actionLabel)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .font(.furgCaption.bold())
+                    .foregroundColor(.furgMint)
                 }
             }
         }

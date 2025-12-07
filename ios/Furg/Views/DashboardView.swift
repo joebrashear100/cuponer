@@ -223,8 +223,10 @@ struct DashboardView: View {
                     // Mini sparkline
                     MiniSparklineView()
                         .frame(height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .padding(20)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
                 .background(
                     RoundedRectangle(cornerRadius: 24)
                         .fill(.ultraThinMaterial)

@@ -38,6 +38,7 @@ struct CashFlowView: View {
     @State private var selectedBar: CashFlowPeriod?
     @State private var showShareSheet = false
     @State private var shareText = ""
+    @State private var showSpendingDashboard = false
 
     enum TimePeriod: String, CaseIterable {
         case week = "Week"
@@ -50,6 +51,14 @@ struct CashFlowView: View {
         case overview = "Overview"
         case income = "Income"
         case spending = "Spending"
+
+        var shortLabel: String {
+            switch self {
+            case .overview: return "All"
+            case .income: return "In"
+            case .spending: return "Out"
+            }
+        }
     }
 
     // Demo data
@@ -184,6 +193,18 @@ struct CashFlowView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [shareText])
         }
+        .sheet(isPresented: $showSpendingDashboard) {
+            NavigationStack {
+                SpendingDashboardView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showSpendingDashboard = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
     }
 
     // MARK: - Generate Report
@@ -248,7 +269,7 @@ struct CashFlowView: View {
 
                 Text(Date().formatted(.dateTime.month(.wide).year()))
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(.white.opacity(0.6))
             }
 
             Spacer()
@@ -311,10 +332,12 @@ struct CashFlowView: View {
 
     // MARK: - Summary Cards
 
+    var totalSavings: Double { max(0, netIncome) }
+
     private var summaryCards: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             CashFlowSummaryCard(
-                title: "Income",
+                title: "In",
                 amount: totalIncome,
                 trend: "+12%",
                 trendUp: true,
@@ -322,7 +345,7 @@ struct CashFlowView: View {
             )
 
             CashFlowSummaryCard(
-                title: "Spending",
+                title: "Out",
                 amount: totalSpending,
                 trend: "-5%",
                 trendUp: false,
@@ -330,11 +353,11 @@ struct CashFlowView: View {
             )
 
             CashFlowSummaryCard(
-                title: "Net",
-                amount: netIncome,
+                title: "Saved",
+                amount: totalSavings,
                 trend: "+18%",
-                trendUp: netIncome > 0,
-                color: netIncome > 0 ? .furgSuccess : .furgDanger
+                trendUp: totalSavings > 0,
+                color: .furgSuccess
             )
         }
     }
@@ -343,14 +366,12 @@ struct CashFlowView: View {
 
     private var mainChart: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Cash Flow Trend")
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Trend")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
 
-                Spacer()
-
-                // Tab selector
+                // Tab selector - full width
                 HStack(spacing: 4) {
                     ForEach(CashFlowTab.allCases, id: \.self) { tab in
                         Button {
@@ -358,10 +379,10 @@ struct CashFlowView: View {
                                 selectedTab = tab
                             }
                         } label: {
-                            Text(tab.rawValue)
-                                .font(.system(size: 12, weight: .medium))
+                            Text(tab.shortLabel)
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(selectedTab == tab ? .furgCharcoal : .white.opacity(0.5))
-                                .padding(.horizontal, 10)
+                                .frame(maxWidth: .infinity)
                                 .padding(.vertical, 6)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
@@ -370,6 +391,11 @@ struct CashFlowView: View {
                         }
                     }
                 }
+                .padding(3)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.white.opacity(0.08))
+                )
             }
 
             // Chart
@@ -466,6 +492,7 @@ struct CashFlowView: View {
                 Spacer()
 
                 Button("View All") {
+                    showSpendingDashboard = true
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.furgMint)

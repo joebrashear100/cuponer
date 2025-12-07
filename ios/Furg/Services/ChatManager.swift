@@ -2,7 +2,7 @@
 //  ChatManager.swift
 //  Furg
 //
-//  Manages chat conversation with FURG personality
+//  Manages chat conversation with FURG personality using Claude AI
 //
 
 import Foundation
@@ -13,23 +13,12 @@ class ChatManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let apiClient = APIClient()
+    private let claudeService = ClaudeService.shared
 
     func loadHistory() async {
-        do {
-            let response = try await apiClient.getChatHistory()
-
-            messages = response.messages.map { msg in
-                ChatMessage(
-                    id: UUID().uuidString,
-                    role: msg.role == "user" ? .user : .assistant,
-                    content: msg.content,
-                    timestamp: ISO8601DateFormatter().date(from: msg.timestamp) ?? Date()
-                )
-            }
-        } catch {
-            errorMessage = "Failed to load history: \(error.localizedDescription)"
-        }
+        // For now, we keep history in memory via ClaudeService
+        // Messages persist during app session
+        errorMessage = nil
     }
 
     func sendMessage(_ text: String) async {
@@ -45,24 +34,29 @@ class ChatManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response = try await apiClient.sendChatMessage(text)
+            let response = try await claudeService.sendMessage(text)
 
             let aiMessage = ChatMessage(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: response.message,
+                content: response,
                 timestamp: Date()
             )
 
             messages.append(aiMessage)
         } catch {
-            errorMessage = "Failed to send message: \(error.localizedDescription)"
+            // Check if it's an API key issue
+            if error.localizedDescription.contains("invalid") || error.localizedDescription.contains("key") {
+                errorMessage = "API key not configured. Add your Claude API key in Config.swift"
+            } else {
+                errorMessage = nil // Don't show error banner, just show in chat
+            }
 
-            // Add error message to chat
+            // Add friendly error message to chat
             let errorMsg = ChatMessage(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "Whoa, my roasting circuits are overloaded. Try again in a sec.",
+                content: "My brain's having a moment. 🧠 Check your API key in Config.swift or try again!",
                 timestamp: Date()
             )
             messages.append(errorMsg)
@@ -73,5 +67,6 @@ class ChatManager: ObservableObject {
 
     func clearHistory() {
         messages.removeAll()
+        claudeService.clearHistory()
     }
 }

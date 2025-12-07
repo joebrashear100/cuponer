@@ -25,6 +25,7 @@
 		F10000010000000000000026 /* RoundUpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000026 /* RoundUpManager.swift */; };
 		F10000010000000000000027 /* SpendingLimitsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000027 /* SpendingLimitsManager.swift */; };
 		F10000010000000000000028 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000028 /* SubscriptionManager.swift */; };
+		F10000010000000000000037 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000037 /* ClaudeService.swift */; };
 		F10000010000000000000011 /* BalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000011 /* BalanceView.swift */; };
 		F10000010000000000000012 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000012 /* ChatView.swift */; };
 		F10000010000000000000013 /* FinancingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000013 /* FinancingCalculatorView.swift */; };
@@ -64,6 +65,7 @@
 		F20000010000000000000026 /* RoundUpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundUpManager.swift; sourceTree = "<group>"; };
 		F20000010000000000000027 /* SpendingLimitsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsManager.swift; sourceTree = "<group>"; };
 		F20000010000000000000028 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
+		F20000010000000000000037 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
 		F20000010000000000000011 /* BalanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceView.swift; sourceTree = "<group>"; };
 		F20000010000000000000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		F20000010000000000000013 /* FinancingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancingCalculatorView.swift; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 				F20000010000000000000026 /* RoundUpManager.swift */,
 				F20000010000000000000027 /* SpendingLimitsManager.swift */,
 				F20000010000000000000028 /* SubscriptionManager.swift */,
+				F20000010000000000000037 /* ClaudeService.swift */,
 				F20000010000000000000010 /* WishlistManager.swift */,
 			);
 			path = Services;
@@ -281,6 +284,7 @@
 				F10000010000000000000026 /* RoundUpManager.swift in Sources */,
 				F10000010000000000000027 /* SpendingLimitsManager.swift in Sources */,
 				F10000010000000000000028 /* SubscriptionManager.swift in Sources */,
+				F10000010000000000000037 /* ClaudeService.swift in Sources */,
 				F10000010000000000000010 /* WishlistManager.swift in Sources */,
 				F10000010000000000000011 /* BalanceView.swift in Sources */,
 				F10000010000000000000012 /* ChatView.swift in Sources */,

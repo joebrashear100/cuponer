@@ -16,6 +16,15 @@ struct Config {
     static let baseURL = "https://api.furg.app" // Update with your production URL
     #endif
 
+    // MARK: - Claude AI Configuration
+
+    struct Claude {
+        static let apiKey = "YOUR_CLAUDE_API_KEY_HERE" // Replace with actual key
+        static let baseURL = "https://api.anthropic.com/v1/messages"
+        static let model = "claude-sonnet-4-20250514"
+        static let maxTokens = 1024
+    }
+
     // MARK: - API Endpoints
 
     struct API {

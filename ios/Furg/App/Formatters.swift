@@ -78,6 +78,12 @@ struct PercentageFormatter {
         return "\(Int(value.rounded()))%"
     }
 
+    /// Format as signed percentage showing + or - (e.g., +5.25%, -3.50%)
+    static func formatSigned(_ value: Double, decimals: Int = 2) -> String {
+        let sign = value >= 0 ? "+" : ""
+        return "\(sign)\(String(format: "%.\(decimals)f", value))%"
+    }
+
     /// Format with explicit decimal places
     static func format(_ value: Double, decimals: Int) -> String {
         return String(format: "%.\(decimals)f%%", value)
@@ -317,5 +323,35 @@ struct CategoryColors {
             .blue, .green, .orange, .purple, .pink, .yellow, .cyan, .mint
         ]
         return colors[index % colors.count]
+    }
+}
+
+// MARK: - Merchant Category Colors
+
+struct MerchantCategoryColors {
+    /// Get color for merchant category
+    static func color(for category: String) -> Color {
+        switch category.lowercased() {
+        case "grocery", "groceries":
+            return .green
+        case "electronics":
+            return .blue
+        case "department":
+            return .purple
+        case "pharmacy":
+            return .red
+        case "home goods", "homegoods":
+            return .orange
+        case "clothing", "apparel":
+            return .pink
+        case "restaurant", "dining":
+            return .orange
+        case "gas", "fuel":
+            return .yellow
+        case "warehouse":
+            return .indigo
+        default:
+            return .gray
+        }
     }
 }

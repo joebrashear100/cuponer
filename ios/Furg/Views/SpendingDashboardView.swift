@@ -156,7 +156,7 @@ struct SpendingDashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             OverviewMetricCard(
                 title: "Total Spent",
-                value: formatCurrency(totalSpending),
+                value: CurrencyFormatter.formatCompact(totalSpending),
                 subtitle: "\(Int((totalSpending/budgetLimit) * 100))% of budget",
                 icon: "creditcard.fill",
                 color: .furgWarning
@@ -164,7 +164,7 @@ struct SpendingDashboardView: View {
 
             OverviewMetricCard(
                 title: "Daily Avg",
-                value: formatCurrency(avgDailySpend),
+                value: CurrencyFormatter.formatCompact(avgDailySpend),
                 subtitle: "per day",
                 icon: "calendar",
                 color: .furgMint
@@ -173,7 +173,7 @@ struct SpendingDashboardView: View {
             OverviewMetricCard(
                 title: "Top Category",
                 value: "Housing",
-                subtitle: formatCurrency(1500),
+                subtitle: CurrencyFormatter.formatCompact(1500),
                 icon: "house.fill",
                 color: .blue
             )
@@ -181,7 +181,7 @@ struct SpendingDashboardView: View {
             OverviewMetricCard(
                 title: "Top Merchant",
                 value: topMerchant,
-                subtitle: formatCurrency(topMerchantAmount),
+                subtitle: CurrencyFormatter.formatCompact(topMerchantAmount),
                 icon: "storefront.fill",
                 color: .purple
             )
@@ -281,13 +281,13 @@ struct SpendingDashboardView: View {
             .frame(height: 16)
 
             HStack {
-                Text(formatCurrency(totalSpending))
+                Text(CurrencyFormatter.formatCompact(totalSpending))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
 
                 Spacer()
 
-                Text("of \(formatCurrency(budgetLimit))")
+                Text("of \(CurrencyFormatter.formatCompact(budgetLimit))")
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.5))
             }
@@ -298,8 +298,8 @@ struct SpendingDashboardView: View {
                     .foregroundColor(budgetLimit > totalSpending ? .furgSuccess : .furgDanger)
 
                 Text(budgetLimit > totalSpending
-                     ? "\(formatCurrency(budgetLimit - totalSpending)) remaining"
-                     : "\(formatCurrency(totalSpending - budgetLimit)) over budget")
+                     ? "\(CurrencyFormatter.formatCompact(budgetLimit - totalSpending)) remaining"
+                     : "\(CurrencyFormatter.formatCompact(totalSpending - budgetLimit)) over budget")
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.7))
             }
@@ -367,13 +367,6 @@ struct SpendingDashboardView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.06))
         )
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 
@@ -469,7 +462,7 @@ private struct CategorySpendRow: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(formatCurrency(category.amount))
+                    Text(CurrencyFormatter.formatCompact(category.amount))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
 
@@ -494,13 +487,6 @@ private struct CategorySpendRow: View {
             .frame(height: 6)
         }
         .padding(.vertical, 4)
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 

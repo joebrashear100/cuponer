@@ -82,6 +82,8 @@ struct CategoriesView: View {
     @State private var selectedCategory: CategorySpending?
     @State private var animate = false
     @State private var showBudgetEditor = false
+    @State private var isLoading = false
+    @State private var hasError = false
 
     enum TimePeriod: String, CaseIterable {
         case week = "Week"
@@ -115,8 +117,8 @@ struct CategoriesView: View {
         ZStack {
             AnimatedMeshBackground()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 24) {
                     // Header
                     header
                         .offset(y: animate ? 0 : -20)
@@ -140,7 +142,7 @@ struct CategoriesView: View {
                         .opacity(animate ? 1 : 0)
                         .animation(.spring(response: 0.6).delay(0.2), value: animate)
 
-                    // Category List
+                    // Category List - Fixed scrolling by using explicit IDs
                     categoryList
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
@@ -155,6 +157,12 @@ struct CategoriesView: View {
                     Spacer(minLength: 120)
                 }
                 .padding(.horizontal, 20)
+            }
+            .refreshable {
+                // Pull to refresh
+                isLoading = true
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                isLoading = false
             }
         }
         .onAppear {

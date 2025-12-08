@@ -577,7 +577,7 @@ struct CashFlowView: View {
 
                 MetricCard(
                     title: "Avg Daily Spend",
-                    value: formatCurrency(totalSpending / 30),
+                    value: CurrencyFormatter.formatCompact(totalSpending / 30),
                     subtitle: "per day",
                     icon: "calendar",
                     color: .furgWarning
@@ -586,7 +586,7 @@ struct CashFlowView: View {
                 MetricCard(
                     title: "Largest Expense",
                     value: "Housing",
-                    subtitle: formatCurrency(1500),
+                    subtitle: CurrencyFormatter.formatCompact(1500),
                     icon: "house.fill",
                     color: .blue
                 )
@@ -609,13 +609,6 @@ struct CashFlowView: View {
                         .stroke(Color.white.opacity(0.12), lineWidth: 1)
                 )
         )
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 
@@ -647,7 +640,7 @@ private struct CashFlowSummaryCard: View {
                 .foregroundColor(trendUp ? .furgSuccess : .furgDanger)
             }
 
-            Text(formatCurrency(amount))
+            Text(CurrencyFormatter.formatCompact(amount))
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
 
@@ -670,13 +663,6 @@ private struct CashFlowSummaryCard: View {
                         .stroke(Color.white.opacity(0.15), lineWidth: 1)
                 )
         )
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 

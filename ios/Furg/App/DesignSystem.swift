@@ -343,7 +343,7 @@ struct StatCard: View {
     }
 }
 
-struct PillTabBar: View {
+struct LegacyPillTabBar: View {
     @Binding var selectedIndex: Int
     let tabs: [String]
 

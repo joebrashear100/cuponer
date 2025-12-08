@@ -86,5 +86,23 @@
 	<!-- FinanceKit Access -->
 	<key>NSFinancialDataUsageDescription</key>
 	<string>Furg uses FinanceKit to access your Apple Card, Apple Cash, and Apple Savings data for a complete financial picture.</string>
+
+	<!-- HealthKit Access -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>Furg uses HealthKit to correlate your activity with spending patterns and provide insights about how your lifestyle affects your finances.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Furg may save financial wellness data to HealthKit.</string>
+
+	<!-- Siri Integration -->
+	<key>NSSiriUsageDescription</key>
+	<string>Use Siri to check your balance, spending, and get financial tips hands-free.</string>
+
+	<!-- Background Modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+		<string>processing</string>
+	</array>
 </dict>
 </plist>

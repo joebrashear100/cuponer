@@ -334,12 +334,12 @@ struct MerchantRowCard: View {
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(categoryColor(merchant.category).opacity(0.2))
+                .fill(MerchantCategoryColors.color(for: merchant.category.rawValue).opacity(0.2))
                 .frame(width: 44, height: 44)
                 .overlay(
                     Text(String(merchant.name.prefix(1)))
                         .font(.headline)
-                        .foregroundColor(categoryColor(merchant.category))
+                        .foregroundColor(MerchantCategoryColors.color(for: merchant.category.rawValue))
                 )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -370,18 +370,6 @@ struct MerchantRowCard: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-
-    private func categoryColor(_ category: MerchantCategory) -> Color {
-        switch category {
-        case .grocery: return .green
-        case .electronics: return .blue
-        case .department: return .purple
-        case .pharmacy: return .red
-        case .homeGoods: return .orange
-        case .clothing: return .pink
-        default: return .gray
-        }
-    }
 }
 
 // MARK: - Merchants List
@@ -411,13 +399,13 @@ struct MerchantListRow: View {
         HStack(spacing: 12) {
             // Logo placeholder
             Circle()
-                .fill(categoryColor(merchant.category).opacity(0.2))
+                .fill(MerchantCategoryColors.color(for: merchant.category.rawValue).opacity(0.2))
                 .frame(width: 50, height: 50)
                 .overlay(
                     Text(String(merchant.name.prefix(1)))
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(categoryColor(merchant.category))
+                        .foregroundColor(MerchantCategoryColors.color(for: merchant.category.rawValue))
                 )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -480,18 +468,6 @@ struct MerchantListRow: View {
         .padding(12)
         .background(Color(.systemGray6))
         .cornerRadius(12)
-    }
-
-    private func categoryColor(_ category: MerchantCategory) -> Color {
-        switch category {
-        case .grocery: return .green
-        case .electronics: return .blue
-        case .department: return .purple
-        case .pharmacy: return .red
-        case .homeGoods: return .orange
-        case .clothing: return .pink
-        default: return .gray
-        }
     }
 }
 

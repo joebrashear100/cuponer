@@ -210,8 +210,8 @@ struct PerformanceChartSection: View {
                 VStack(alignment: .leading, spacing: 8) {
                     // Change indicator
                     HStack {
-                        Text(formatCurrency(data.change))
-                        Text("(\(formatPercent(data.changePercent)))")
+                        Text(CurrencyFormatter.formatSigned(data.change))
+                        Text("(\(PercentageFormatter.formatSigned(data.changePercent)))")
                     }
                     .font(.subheadline)
                     .foregroundColor(data.change >= 0 ? .green : .red)
@@ -235,19 +235,6 @@ struct PerformanceChartSection: View {
         .background(Color(.systemGray6))
         .cornerRadius(16)
         .padding(.horizontal)
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 2
-        let sign = amount >= 0 ? "+" : ""
-        return sign + (formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)")
-    }
-
-    private func formatPercent(_ percent: Double) -> String {
-        let sign = percent >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.2f", percent))%"
     }
 }
 
@@ -303,20 +290,13 @@ struct PerformanceChart: View {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel {
                     if let val = value.as(Double.self) {
-                        Text(formatCompact(val))
+                        Text(CurrencyFormatter.formatAbbreviated(val))
                             .font(.caption2)
                     }
                 }
             }
         }
         .chartXAxis(.hidden)
-    }
-
-    private func formatCompact(_ value: Double) -> String {
-        if value >= 1000 {
-            return "$\(Int(value / 1000))K"
-        }
-        return "$\(Int(value))"
     }
 }
 
@@ -471,9 +451,9 @@ struct HoldingsSection: View {
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(formatCurrency(account.totalValue))
+                            Text(CurrencyFormatter.format(account.totalValue))
                                 .font(.headline)
-                            Text(formatChange(account.dayChange, percent: account.dayChangePercent))
+                            Text("\(CurrencyFormatter.formatSigned(account.dayChange)) (\(PercentageFormatter.formatSigned(account.dayChangePercent)))")
                                 .font(.caption)
                                 .foregroundColor(account.dayChange >= 0 ? .green : .red)
                         }
@@ -495,7 +475,7 @@ struct HoldingsSection: View {
                                 .foregroundColor(.green)
                             Text("Cash")
                             Spacer()
-                            Text(formatCurrency(account.cashBalance))
+                            Text(CurrencyFormatter.format(account.cashBalance))
                                 .fontWeight(.medium)
                         }
                         .padding(.horizontal)
@@ -508,17 +488,6 @@ struct HoldingsSection: View {
             }
         }
         .padding(.horizontal)
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
-
-    private func formatChange(_ change: Double, percent: Double) -> String {
-        let sign = change >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.2f", change)) (\(sign)\(String(format: "%.2f", percent))%)"
     }
 }
 
@@ -553,13 +522,13 @@ struct HoldingRow: View {
 
             // Value and change
             VStack(alignment: .trailing, spacing: 2) {
-                Text(formatCurrency(holding.marketValue))
+                Text(CurrencyFormatter.format(holding.marketValue))
                     .font(.subheadline)
                     .fontWeight(.medium)
                 HStack(spacing: 2) {
                     Image(systemName: holding.totalGain >= 0 ? "arrow.up.right" : "arrow.down.right")
                         .font(.caption2)
-                    Text(formatPercent(holding.totalGainPercent))
+                    Text(PercentageFormatter.formatSigned(holding.totalGainPercent))
                         .font(.caption)
                 }
                 .foregroundColor(holding.totalGain >= 0 ? .green : .red)
@@ -579,17 +548,6 @@ struct HoldingRow: View {
         case .crypto: return .yellow
         default: return .gray
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
-
-    private func formatPercent(_ percent: Double) -> String {
-        let sign = percent >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.2f", percent))%"
     }
 }
 
@@ -683,7 +641,7 @@ struct AllocationRow: View {
                 Text(name)
                     .font(.subheadline)
                 Spacer()
-                Text(formatCurrency(value))
+                Text(CurrencyFormatter.formatCompact(value))
                     .font(.subheadline)
                     .fontWeight(.medium)
                 Text("\(String(format: "%.1f", percentage))%")
@@ -711,13 +669,6 @@ struct AllocationRow: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
-    }
 }
 
 // MARK: - Dividends Section
@@ -732,7 +683,7 @@ struct DividendsSection: View {
                 VStack(spacing: 12) {
                     HStack(spacing: 24) {
                         VStack {
-                            Text(formatCurrency(summary.totalAnnualDividends))
+                            Text(CurrencyFormatter.format(summary.totalAnnualDividends))
                                 .font(.title2)
                                 .fontWeight(.bold)
                             Text("Annual Dividends")
@@ -755,7 +706,7 @@ struct DividendsSection: View {
 
                     HStack {
                         VStack {
-                            Text(formatCurrency(summary.monthlyAverage))
+                            Text(CurrencyFormatter.format(summary.monthlyAverage))
                                 .fontWeight(.medium)
                             Text("Monthly Avg")
                                 .font(.caption)
@@ -789,13 +740,13 @@ struct DividendsSection: View {
                                     Text(dividend.symbol)
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
-                                    Text("Ex: \(formatDate(dividend.exDate))")
+                                    Text("Ex: \(DateFormatters.shortDate(dividend.exDate))")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing) {
-                                    Text(formatCurrency(dividend.expectedPayout))
+                                    Text(CurrencyFormatter.format(dividend.expectedPayout))
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                         .foregroundColor(.green)
@@ -823,11 +774,11 @@ struct DividendsSection: View {
                             HStack {
                                 Text(payment.symbol)
                                     .fontWeight(.medium)
-                                Text(formatDate(payment.date))
+                                Text(DateFormatters.shortDate(payment.date))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text(formatCurrency(payment.amount))
+                                Text(CurrencyFormatter.format(payment.amount))
                                     .foregroundColor(.green)
                                 if payment.isReinvested {
                                     Image(systemName: "arrow.triangle.2.circlepath")
@@ -845,18 +796,6 @@ struct DividendsSection: View {
                     .padding()
             }
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        return formatter.string(from: date)
     }
 }
 
@@ -932,14 +871,14 @@ struct GoalCard: View {
                 .frame(height: 8)
 
                 HStack {
-                    Text(formatCurrency(goal.currentAmount))
+                    Text(CurrencyFormatter.formatCompact(goal.currentAmount))
                         .font(.caption)
                     Spacer()
                     Text("\(String(format: "%.1f", progress))%")
                         .font(.caption)
                         .fontWeight(.medium)
                     Spacer()
-                    Text(formatCurrency(goal.targetAmount))
+                    Text(CurrencyFormatter.formatCompact(goal.targetAmount))
                         .font(.caption)
                 }
                 .foregroundColor(.secondary)
@@ -952,7 +891,7 @@ struct GoalCard: View {
                         Text("Target")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        Text(formatDate(targetDate))
+                        Text(DateFormatters.monthYear(targetDate))
                             .font(.caption)
                     }
                 }
@@ -961,7 +900,7 @@ struct GoalCard: View {
                     Text("Monthly")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    Text(formatCurrency(goal.monthlyContribution))
+                    Text(CurrencyFormatter.formatCompact(goal.monthlyContribution))
                         .font(.caption)
                 }
             }
@@ -970,19 +909,6 @@ struct GoalCard: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .padding(.horizontal)
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM yyyy"
-        return formatter.string(from: date)
     }
 }
 
@@ -1095,13 +1021,13 @@ struct HoldingDetailView: View {
                         Text(holding.name)
                             .foregroundColor(.secondary)
 
-                        Text(formatCurrency(holding.currentPrice))
+                        Text(CurrencyFormatter.format(holding.currentPrice))
                             .font(.title)
 
                         HStack {
                             Image(systemName: holding.dayChange >= 0 ? "arrow.up.right" : "arrow.down.right")
-                            Text(formatCurrency(holding.dayChange))
-                            Text("(\(formatPercent(holding.dayChangePercent)))")
+                            Text(CurrencyFormatter.formatSigned(holding.dayChange))
+                            Text("(\(PercentageFormatter.formatSigned(holding.dayChangePercent)))")
                         }
                         .foregroundColor(holding.dayChange >= 0 ? .green : .red)
                     }
@@ -1110,11 +1036,11 @@ struct HoldingDetailView: View {
                     // Position details
                     VStack(spacing: 12) {
                         DetailRow(label: "Shares", value: String(format: "%.4f", holding.shares))
-                        DetailRow(label: "Market Value", value: formatCurrency(holding.marketValue))
-                        DetailRow(label: "Avg Cost", value: formatCurrency(holding.averageCost))
-                        DetailRow(label: "Total Cost", value: formatCurrency(holding.averageCost * holding.shares))
-                        DetailRow(label: "Total Gain/Loss", value: formatCurrency(holding.totalGain), isHighlighted: true, isPositive: holding.totalGain >= 0)
-                        DetailRow(label: "Return", value: formatPercent(holding.totalGainPercent), isHighlighted: true, isPositive: holding.totalGain >= 0)
+                        DetailRow(label: "Market Value", value: CurrencyFormatter.format(holding.marketValue))
+                        DetailRow(label: "Avg Cost", value: CurrencyFormatter.format(holding.averageCost))
+                        DetailRow(label: "Total Cost", value: CurrencyFormatter.format(holding.averageCost * holding.shares))
+                        DetailRow(label: "Total Gain/Loss", value: CurrencyFormatter.formatSigned(holding.totalGain), isHighlighted: true, isPositive: holding.totalGain >= 0)
+                        DetailRow(label: "Return", value: PercentageFormatter.formatSigned(holding.totalGainPercent), isHighlighted: true, isPositive: holding.totalGain >= 0)
                     }
                     .padding()
                     .background(Color(.systemGray6))
@@ -1134,10 +1060,10 @@ struct HoldingDetailView: View {
                                 DetailRow(label: "Dividend Yield", value: "\(String(format: "%.2f", yield))%")
                             }
                             if let high = holding.fiftyTwoWeekHigh {
-                                DetailRow(label: "52-Week High", value: formatCurrency(high))
+                                DetailRow(label: "52-Week High", value: CurrencyFormatter.format(high))
                             }
                             if let low = holding.fiftyTwoWeekLow {
-                                DetailRow(label: "52-Week Low", value: formatCurrency(low))
+                                DetailRow(label: "52-Week Low", value: CurrencyFormatter.format(low))
                             }
                         }
                         .padding()
@@ -1171,17 +1097,6 @@ struct HoldingDetailView: View {
                 }
             }
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
-
-    private func formatPercent(_ percent: Double) -> String {
-        let sign = percent >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.2f", percent))%"
     }
 }
 

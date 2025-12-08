@@ -259,6 +259,11 @@ class ARShoppingManager: NSObject, ObservableObject {
         annotations = []
     }
 
+    /// Alias for startSession - used by views
+    func startShoppingSession(storeName: String? = nil) {
+        startSession(storeName: storeName)
+    }
+
     func endSession() {
         guard var session = currentSession else { return }
 
@@ -274,6 +279,11 @@ class ARShoppingManager: NSObject, ObservableObject {
         isSessionActive = false
         detectedProducts = []
         annotations = []
+    }
+
+    /// Alias for endSession - used by views
+    func endShoppingSession() {
+        endSession()
     }
 
     // MARK: - Product Detection

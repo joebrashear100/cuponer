@@ -98,7 +98,7 @@ struct ARShoppingView: View {
             }
         }
         .sheet(isPresented: $showingSessionSummary) {
-            SessionSummarySheet(session: arManager.sessionHistory.last)
+            SessionSummarySheet(session: arManager.pastSessions.first)
         }
     }
 }
@@ -339,22 +339,26 @@ struct ProductAnnotationCard: View {
                     .font(.headline)
                     .lineLimit(1)
                 Spacer()
-                Text(formatPrice(product.detectedPrice))
-                    .font(.headline)
-                    .foregroundColor(.green)
+                if let price = product.detectedPrice {
+                    Text(CurrencyFormatter.format(price))
+                        .font(.headline)
+                        .foregroundColor(.green)
+                }
             }
 
             // Affordability indicator
-            HStack(spacing: 4) {
-                Image(systemName: affordabilityIcon(for: product.affordability.impactLevel))
-                    .foregroundColor(affordabilityColor(for: product.affordability.impactLevel))
-                Text("\(String(format: "%.1f", product.affordability.hoursOfWork)) hours of work")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if let affordability = product.affordabilityAnalysis {
+                HStack(spacing: 4) {
+                    Image(systemName: AffordabilityColors.icon(for: affordability.impactLevel.rawValue))
+                        .foregroundColor(AffordabilityColors.color(for: affordability.impactLevel.rawValue))
+                    Text("\(String(format: "%.1f", affordability.hoursOfWork)) hours of work")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             // Best card recommendation
-            if let card = product.cardRecommendation {
+            if let card = product.bestCard {
                 HStack(spacing: 4) {
                     Image(systemName: "creditcard.fill")
                         .font(.caption)
@@ -362,8 +366,8 @@ struct ProductAnnotationCard: View {
                     Text("Use \(card.cardName)")
                         .font(.caption)
                         .foregroundColor(.blue)
-                    if card.cashbackAmount > 0 {
-                        Text("(\(formatPrice(card.cashbackAmount)) back)")
+                    if card.estimatedReward > 0 {
+                        Text("(\(CurrencyFormatter.format(card.estimatedReward)) back)")
                             .font(.caption2)
                             .foregroundColor(.green)
                     }
@@ -371,11 +375,11 @@ struct ProductAnnotationCard: View {
             }
 
             // Price comparison badge
-            if let comparison = product.priceComparison, comparison.savingsAmount > 0 {
+            if let comparison = product.priceComparison, comparison.potentialSavings > 0 {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle.fill")
                         .foregroundColor(.orange)
-                    Text("Save \(formatPrice(comparison.savingsAmount)) at \(comparison.bestStore)")
+                    Text("Save \(CurrencyFormatter.format(comparison.potentialSavings)) at \(comparison.bestPrice?.store ?? "other store")")
                         .font(.caption)
                         .foregroundColor(.orange)
                 }
@@ -386,34 +390,6 @@ struct ProductAnnotationCard: View {
         .cornerRadius(12)
         .frame(width: 220)
         .shadow(radius: 8)
-    }
-
-    private func formatPrice(_ price: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: price)) ?? "$\(price)"
-    }
-
-    private func affordabilityIcon(for level: String) -> String {
-        switch level {
-        case "easily_affordable": return "checkmark.circle.fill"
-        case "affordable": return "checkmark.circle"
-        case "consider_carefully": return "exclamationmark.circle"
-        case "stretch": return "exclamationmark.triangle"
-        case "not_recommended": return "xmark.circle.fill"
-        default: return "questionmark.circle"
-        }
-    }
-
-    private func affordabilityColor(for level: String) -> Color {
-        switch level {
-        case "easily_affordable": return .green
-        case "affordable": return .green.opacity(0.8)
-        case "consider_carefully": return .yellow
-        case "stretch": return .orange
-        case "not_recommended": return .red
-        default: return .gray
-        }
     }
 }
 
@@ -582,10 +558,12 @@ struct ProductDetailSheet: View {
                             .fontWeight(.bold)
 
                         HStack {
-                            Text(formatPrice(product.detectedPrice))
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.green)
+                            if let price = product.detectedPrice {
+                                Text(CurrencyFormatter.format(price))
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            }
 
                             Spacer()
 
@@ -602,44 +580,46 @@ struct ProductDetailSheet: View {
                     .cornerRadius(12)
 
                     // Affordability Analysis
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Affordability Analysis")
-                            .font(.headline)
+                    if let affordability = product.affordabilityAnalysis {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Affordability Analysis")
+                                .font(.headline)
 
-                        AffordabilityRow(
-                            icon: "clock",
-                            title: "Time Cost",
-                            value: "\(String(format: "%.1f", product.affordability.hoursOfWork)) hours of work"
-                        )
+                            AffordabilityRow(
+                                icon: "clock",
+                                title: "Time Cost",
+                                value: "\(String(format: "%.1f", affordability.hoursOfWork)) hours of work"
+                            )
 
-                        AffordabilityRow(
-                            icon: "chart.pie",
-                            title: "Budget Impact",
-                            value: "\(String(format: "%.1f", product.affordability.percentOfMonthlyBudget))% of monthly budget"
-                        )
+                            AffordabilityRow(
+                                icon: "chart.pie",
+                                title: "Budget Impact",
+                                value: "\(String(format: "%.1f", affordability.percentOfMonthlyBudget))% of monthly budget"
+                            )
 
-                        AffordabilityRow(
-                            icon: "chart.bar",
-                            title: "Discretionary Spend",
-                            value: "\(String(format: "%.1f", product.affordability.percentOfDailyDiscretionary))% of daily discretionary"
-                        )
+                            AffordabilityRow(
+                                icon: "chart.bar",
+                                title: "Discretionary Spend",
+                                value: "\(String(format: "%.1f", affordability.percentOfDailyBudget))% of daily budget"
+                            )
 
-                        HStack {
-                            Text("Overall:")
-                                .fontWeight(.medium)
-                            Spacer()
-                            Text(formatImpactLevel(product.affordability.impactLevel))
-                                .fontWeight(.bold)
-                                .foregroundColor(affordabilityColor(for: product.affordability.impactLevel))
+                            HStack {
+                                Text("Overall:")
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Text(AffordabilityColors.displayText(for: affordability.impactLevel.rawValue))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(AffordabilityColors.color(for: affordability.impactLevel.rawValue))
+                            }
+                            .padding(.top, 8)
                         }
-                        .padding(.top, 8)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
 
                     // Card Recommendation
-                    if let card = product.cardRecommendation {
+                    if let card = product.bestCard {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Best Card to Use")
                                 .font(.headline)
@@ -652,21 +632,21 @@ struct ProductDetailSheet: View {
                                 VStack(alignment: .leading) {
                                     Text(card.cardName)
                                         .fontWeight(.semibold)
-                                    Text("\(String(format: "%.1f", card.cashbackPercent))% cashback")
+                                    Text("\(String(format: "%.1f", card.rewardRate))% \(card.rewardType)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
 
                                 Spacer()
 
-                                Text("+\(formatPrice(card.cashbackAmount))")
+                                Text("+\(CurrencyFormatter.format(card.estimatedReward))")
                                     .font(.title3)
                                     .fontWeight(.bold)
                                     .foregroundColor(.green)
                             }
 
-                            if !card.explanation.isEmpty {
-                                Text(card.explanation)
+                            if let offer = card.specialOffer {
+                                Text(offer)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -682,26 +662,26 @@ struct ProductDetailSheet: View {
                             Text("Price Comparison")
                                 .font(.headline)
 
-                            ForEach(comparison.stores, id: \.name) { store in
+                            ForEach(comparison.alternatives) { storePrice in
                                 HStack {
-                                    Text(store.name)
+                                    Text(storePrice.store)
                                     Spacer()
-                                    Text(formatPrice(store.price))
-                                        .fontWeight(store.name == comparison.bestStore ? .bold : .regular)
-                                        .foregroundColor(store.name == comparison.bestStore ? .green : .primary)
-                                    if store.name == comparison.bestStore {
+                                    Text(CurrencyFormatter.format(storePrice.price))
+                                        .fontWeight(storePrice.store == comparison.bestPrice?.store ? .bold : .regular)
+                                        .foregroundColor(storePrice.store == comparison.bestPrice?.store ? .green : .primary)
+                                    if storePrice.store == comparison.bestPrice?.store {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(.green)
                                     }
                                 }
                             }
 
-                            if comparison.savingsAmount > 0 {
+                            if comparison.potentialSavings > 0 {
                                 HStack {
                                     Text("Potential Savings:")
                                         .fontWeight(.medium)
                                     Spacer()
-                                    Text(formatPrice(comparison.savingsAmount))
+                                    Text(CurrencyFormatter.format(comparison.potentialSavings))
                                         .fontWeight(.bold)
                                         .foregroundColor(.green)
                                 }
@@ -716,7 +696,7 @@ struct ProductDetailSheet: View {
                     // Actions
                     VStack(spacing: 12) {
                         Button(action: {
-                            // Add to wishlist
+                            ARShoppingManager.shared.addToWishlist(product.id)
                         }) {
                             Label("Add to Wishlist", systemImage: "heart")
                                 .frame(maxWidth: .infinity)
@@ -751,34 +731,6 @@ struct ProductDetailSheet: View {
             }
         }
     }
-
-    private func formatPrice(_ price: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: price)) ?? "$\(price)"
-    }
-
-    private func formatImpactLevel(_ level: String) -> String {
-        switch level {
-        case "easily_affordable": return "Easily Affordable"
-        case "affordable": return "Affordable"
-        case "consider_carefully": return "Consider Carefully"
-        case "stretch": return "A Stretch"
-        case "not_recommended": return "Not Recommended"
-        default: return level.capitalized
-        }
-    }
-
-    private func affordabilityColor(for level: String) -> Color {
-        switch level {
-        case "easily_affordable": return .green
-        case "affordable": return .green.opacity(0.8)
-        case "consider_carefully": return .yellow
-        case "stretch": return .orange
-        case "not_recommended": return .red
-        default: return .gray
-        }
-    }
 }
 
 struct AffordabilityRow: View {
@@ -803,8 +755,14 @@ struct AffordabilityRow: View {
 // MARK: - Session Summary Sheet
 
 struct SessionSummarySheet: View {
-    let session: ShoppingSession?
+    let session: ARShoppingSession?
     @Environment(\.dismiss) private var dismiss
+
+    private var sessionDuration: TimeInterval {
+        guard let session = session else { return 0 }
+        let endTime = session.endTime ?? Date()
+        return endTime.timeIntervalSince(session.startTime)
+    }
 
     var body: some View {
         NavigationView {
@@ -815,57 +773,92 @@ struct SessionSummarySheet: View {
                         HStack(spacing: 16) {
                             SessionStatCard(
                                 icon: "tag.fill",
-                                value: "\(session.productsScanned)",
+                                value: "\(session.detectedProducts.count)",
                                 label: "Products Scanned",
                                 color: .blue
                             )
 
                             SessionStatCard(
                                 icon: "clock.fill",
-                                value: formatDuration(session.duration),
+                                value: TimeFormatter.formatDurationReadable(sessionDuration),
                                 label: "Duration",
                                 color: .purple
                             )
                         }
 
-                        // Stores visited
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Stores Visited")
-                                .font(.headline)
+                        // Store visited
+                        if let storeName = session.storeName {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Store Visited")
+                                    .font(.headline)
 
-                            ForEach(session.storesVisited, id: \.self) { store in
                                 HStack {
                                     Image(systemName: "building.2")
                                         .foregroundColor(.blue)
-                                    Text(store)
+                                    Text(storeName)
                                     Spacer()
                                 }
                                 .padding(.vertical, 4)
                             }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
 
                         // Scanned items
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Items Scanned")
                                 .font(.headline)
 
-                            ForEach(session.itemsScanned, id: \.self) { item in
+                            ForEach(session.detectedProducts) { product in
                                 HStack {
                                     Image(systemName: "barcode.viewfinder")
                                         .foregroundColor(.green)
-                                    Text(item)
+                                    Text(product.productName)
                                     Spacer()
+                                    if let price = product.detectedPrice {
+                                        Text(CurrencyFormatter.format(price))
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
                                 .padding(.vertical, 4)
                             }
 
-                            if session.itemsScanned.isEmpty {
+                            if session.detectedProducts.isEmpty {
                                 Text("No items were scanned in this session")
                                     .foregroundColor(.secondary)
                                     .italic()
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+
+                        // Financial summary
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Financial Summary")
+                                .font(.headline)
+
+                            HStack {
+                                Text("Total Potential Spend:")
+                                Spacer()
+                                Text(CurrencyFormatter.format(session.totalPotentialSpend))
+                                    .fontWeight(.semibold)
+                            }
+
+                            HStack {
+                                Text("Potential Savings Found:")
+                                Spacer()
+                                Text(CurrencyFormatter.format(session.totalPotentialSavings))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.green)
+                            }
+
+                            HStack {
+                                Text("Items Added to Cart:")
+                                Spacer()
+                                Text("\(session.productsAddedToCart.count)")
+                                    .fontWeight(.semibold)
                             }
                         }
                         .padding()
@@ -877,7 +870,7 @@ struct SessionSummarySheet: View {
                             Text("Session Insights")
                                 .font(.headline)
 
-                            Text("You scanned \(session.productsScanned) products across \(session.storesVisited.count) stores during your shopping trip.")
+                            Text("You scanned \(session.detectedProducts.count) products\(session.storeName != nil ? " at \(session.storeName!)" : "") during your shopping trip.")
                                 .foregroundColor(.secondary)
                         }
                         .padding()
@@ -910,15 +903,6 @@ struct SessionSummarySheet: View {
                 }
             }
         }
-    }
-
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        if minutes > 0 {
-            return "\(minutes)m \(seconds)s"
-        }
-        return "\(seconds)s"
     }
 }
 

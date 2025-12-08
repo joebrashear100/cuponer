@@ -151,11 +151,11 @@ struct DebtPayoffView: View {
 
             // Stats row
             HStack(spacing: 0) {
-                StatItem(label: "Monthly Min", value: "$\(Int(debtManager.totalMinimumPayments))")
+                DebtStatItem(label: "Monthly Min", value: "$\(Int(debtManager.totalMinimumPayments))")
                 Divider().background(Color.white.opacity(0.2)).frame(height: 30)
-                StatItem(label: "Avg APR", value: String(format: "%.1f%%", debtManager.averageInterestRate * 100))
+                DebtStatItem(label: "Avg APR", value: String(format: "%.1f%%", debtManager.averageInterestRate * 100))
                 Divider().background(Color.white.opacity(0.2)).frame(height: 30)
-                StatItem(label: "Monthly Interest", value: "$\(Int(debtManager.totalMonthlyInterest))")
+                DebtStatItem(label: "Monthly Interest", value: "$\(Int(debtManager.totalMonthlyInterest))")
             }
         }
         .padding(20)
@@ -377,7 +377,7 @@ struct DebtPayoffView: View {
 
 // MARK: - Supporting Views
 
-struct StatItem: View {
+struct DebtStatItem: View {
     let label: String
     let value: String
 

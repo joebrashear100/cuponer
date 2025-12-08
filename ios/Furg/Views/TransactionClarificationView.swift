@@ -305,7 +305,7 @@ struct ClarificationCard: View {
                     // Suggested categories
                     FlowLayout(spacing: 8) {
                         ForEach(clarification.suggestedCategories) { suggestion in
-                            CategoryChip(
+                            TransactionCategoryChip(
                                 category: suggestion.category,
                                 confidence: suggestion.confidence,
                                 isSelected: selectedCategory == suggestion.category
@@ -315,7 +315,7 @@ struct ClarificationCard: View {
                         }
 
                         // Other category option
-                        CategoryChip(
+                        TransactionCategoryChip(
                             category: "Other...",
                             confidence: 0,
                             isSelected: false
@@ -365,7 +365,7 @@ struct ClarificationCard: View {
     }
 }
 
-struct CategoryChip: View {
+struct TransactionCategoryChip: View {
     let category: String
     let confidence: Double
     let isSelected: Bool

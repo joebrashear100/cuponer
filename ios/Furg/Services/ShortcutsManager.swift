@@ -235,9 +235,9 @@ struct CheckGoalProgressIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         // Demo data - in production, fetch from GoalsManager
         let goals = [
-            GoalProgress(name: "Emergency Fund", current: 3500, target: 5000),
-            GoalProgress(name: "Vacation", current: 800, target: 2000),
-            GoalProgress(name: "New Laptop", current: 450, target: 1500)
+            ShortcutGoalProgress(name: "Emergency Fund", current: 3500, target: 5000),
+            ShortcutGoalProgress(name: "Vacation", current: 800, target: 2000),
+            ShortcutGoalProgress(name: "New Laptop", current: 450, target: 1500)
         ]
 
         let summary = goals.map { goal in
@@ -251,7 +251,7 @@ struct CheckGoalProgressIntent: AppIntent {
     }
 }
 
-struct GoalProgress: Identifiable {
+struct ShortcutGoalProgress: Identifiable {
     let id = UUID()
     let name: String
     let current: Double
@@ -263,7 +263,7 @@ struct GoalProgress: Identifiable {
 }
 
 struct GoalProgressSnippetView: View {
-    let goals: [GoalProgress]
+    let goals: [ShortcutGoalProgress]
 
     var body: some View {
         VStack(spacing: 12) {

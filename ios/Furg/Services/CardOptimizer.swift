@@ -56,7 +56,7 @@ struct CardReward: Codable {
     }
 }
 
-struct CardRecommendation: Identifiable {
+struct CardUsageRecommendation: Identifiable {
     let id = UUID()
     let card: UserCard
     let category: String
@@ -103,7 +103,7 @@ class CardOptimizer: ObservableObject {
 
     @Published var userCards: [UserCard] = []
     @Published var rotatingCategories: [RotatingCategory] = []
-    @Published var categoryRecommendations: [String: CardRecommendation] = [:]
+    @Published var categoryRecommendations: [String: CardUsageRecommendation] = [:]
     @Published var recentPurchaseRecommendations: [PurchaseRecommendation] = []
     @Published var cardUsageStats: [CardUsageStats] = []
     @Published var totalOptimizedValue: Double = 0
@@ -235,7 +235,7 @@ class CardOptimizer: ObservableObject {
     // MARK: - Recommendations
 
     func generateCategoryRecommendations() {
-        var recommendations: [String: CardRecommendation] = [:]
+        var recommendations: [String: CardUsageRecommendation] = [:]
 
         let categories = Set(userCards.flatMap { $0.rewardsStructure.keys })
 
@@ -275,7 +275,7 @@ class CardOptimizer: ObservableObject {
                 let estimatedMonthlySpending = getEstimatedSpending(for: category)
                 let estimatedValue = estimatedMonthlySpending * reward.multiplier * 0.01 // Convert to dollars
 
-                recommendations[category] = CardRecommendation(
+                recommendations[category] = CardUsageRecommendation(
                     card: card,
                     category: category,
                     reward: reward,

@@ -211,7 +211,7 @@ struct LocationInsightsView: View {
     private var insightsContent: some View {
         VStack(spacing: 16) {
             ForEach(Array(locationManager.locationInsights.enumerated()), id: \.element.id) { index, insight in
-                InsightCard(insight: insight)
+                LocationInsightCard(insight: insight)
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
                     .animation(.spring(response: 0.6).delay(0.2 + Double(index) * 0.05), value: animate)
@@ -446,10 +446,10 @@ struct NearbyMerchantCard: View {
 
             // Stats row
             HStack(spacing: 24) {
-                StatItem(value: "\(merchant.visitCount)", label: "visits")
+                LocationStatItem(value: "\(merchant.visitCount)", label: "visits")
 
                 if let lastVisit = merchant.lastVisit {
-                    StatItem(value: formatRelativeDate(lastVisit), label: "last visit")
+                    LocationStatItem(value: formatRelativeDate(lastVisit), label: "last visit")
                 }
 
                 Spacer()
@@ -495,7 +495,7 @@ struct NearbyMerchantCard: View {
     }
 }
 
-struct StatItem: View {
+struct LocationStatItem: View {
     let value: String
     let label: String
 
@@ -512,7 +512,7 @@ struct StatItem: View {
     }
 }
 
-struct InsightCard: View {
+struct LocationInsightCard: View {
     let insight: LocationInsight
 
     var insightColor: Color {

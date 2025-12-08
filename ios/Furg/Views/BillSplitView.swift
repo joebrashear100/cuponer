@@ -370,7 +370,7 @@ struct NewSplitSheet: View {
     @State private var description = ""
     @State private var amount = ""
     @State private var selectedFriends: Set<String> = []
-    @State private var splitType: SplitType = .equal
+    @State private var splitType: BillSplitType = .equal
 
     let friends = [
         ("Alex Chen", "AC"),
@@ -528,7 +528,7 @@ struct NewSplitSheet: View {
     }
 }
 
-enum SplitType {
+enum BillSplitType {
     case equal, percentage, custom
 
     var label: String {
@@ -549,7 +549,7 @@ enum SplitType {
 }
 
 struct SplitTypeButton: View {
-    let type: SplitType
+    let type: BillSplitType
     let isSelected: Bool
     let action: () -> Void
 

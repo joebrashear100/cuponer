@@ -161,7 +161,7 @@ struct RecommendationsView: View {
     private var quickActionsSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                QuickActionButton(
+                RecommendationActionButton(
                     icon: "creditcard.fill",
                     title: "Which Card?",
                     subtitle: "Maximize rewards",
@@ -170,7 +170,7 @@ struct RecommendationsView: View {
                     showCardOptimizer = true
                 }
 
-                QuickActionButton(
+                RecommendationActionButton(
                     icon: "banknote",
                     title: "Best Rates",
                     subtitle: "Savings accounts",
@@ -179,7 +179,7 @@ struct RecommendationsView: View {
                     selectedCategory = .accounts
                 }
 
-                QuickActionButton(
+                RecommendationActionButton(
                     icon: "shield.fill",
                     title: "Insurance",
                     subtitle: "Compare quotes",
@@ -188,7 +188,7 @@ struct RecommendationsView: View {
                     selectedCategory = .insurance
                 }
 
-                QuickActionButton(
+                RecommendationActionButton(
                     icon: "percent",
                     title: "Refinance",
                     subtitle: "Lower rates",
@@ -349,7 +349,7 @@ struct RecommendationsView: View {
 
 // MARK: - Supporting Views
 
-struct QuickActionButton: View {
+struct RecommendationActionButton: View {
     let icon: String
     let title: String
     let subtitle: String
@@ -945,7 +945,7 @@ struct CardSummaryRow: View {
 }
 
 struct CategoryCardGuideRow: View {
-    let recommendation: CardRecommendation
+    let recommendation: CardUsageRecommendation
 
     var body: some View {
         HStack(spacing: 12) {

@@ -266,19 +266,19 @@ struct LifeIntegrationView: View {
                 .font(.headline)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                QuickActionButton(icon: "doc.text.viewfinder", title: "Scan Receipt", color: .blue) {
+                LifeQuickActionButton(icon: "doc.text.viewfinder", title: "Scan Receipt", color: .blue) {
                     showingCamera = true
                 }
 
-                QuickActionButton(icon: "cart.badge.plus", title: "Add to List", color: .green) {
+                LifeQuickActionButton(icon: "cart.badge.plus", title: "Add to List", color: .green) {
                     // Add to shopping list
                 }
 
-                QuickActionButton(icon: "face.smiling", title: "Log Mood", color: .pink) {
+                LifeQuickActionButton(icon: "face.smiling", title: "Log Mood", color: .pink) {
                     // Log mood
                 }
 
-                QuickActionButton(icon: "dollarsign.circle", title: "Quick Entry", color: .orange) {
+                LifeQuickActionButton(icon: "dollarsign.circle", title: "Quick Entry", color: .orange) {
                     // Quick transaction entry
                 }
             }
@@ -365,7 +365,7 @@ struct ContextMetricView: View {
     }
 }
 
-struct QuickActionButton: View {
+struct LifeQuickActionButton: View {
     let icon: String
     let title: String
     let color: Color
@@ -715,9 +715,9 @@ struct ShoppingTabView: View {
         VStack(spacing: 16) {
             // Shopping Stats
             HStack(spacing: 16) {
-                StatCard(value: "\(shoppingIntelligence.listItemCount)", label: "List Items", color: .blue)
-                StatCard(value: "\(shoppingIntelligence.activeDealsCount)", label: "Active Deals", color: .green)
-                StatCard(value: "$\(Int(loyaltyPrograms.totalPointsValue))", label: "Points Value", color: .orange)
+                LifeStatCard(value: "\(shoppingIntelligence.listItemCount)", label: "List Items", color: .blue)
+                LifeStatCard(value: "\(shoppingIntelligence.activeDealsCount)", label: "Active Deals", color: .green)
+                LifeStatCard(value: "$\(Int(loyaltyPrograms.totalPointsValue))", label: "Points Value", color: .orange)
             }
 
             // Shopping List Preview
@@ -965,7 +965,7 @@ struct SimulateTabView: View {
     }
 }
 
-struct StatCard: View {
+struct LifeStatCard: View {
     let value: String
     let label: String
     let color: Color

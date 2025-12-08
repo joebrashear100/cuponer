@@ -127,14 +127,14 @@ struct CategoryFilterView: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                CategoryChip(
+                MerchantCategoryChip(
                     title: "All",
                     isSelected: selectedCategory == nil,
                     action: { selectedCategory = nil }
                 )
 
                 ForEach([MerchantCategory.grocery, .electronics, .department, .pharmacy, .homeGoods, .clothing], id: \.self) { category in
-                    CategoryChip(
+                    MerchantCategoryChip(
                         title: category.rawValue,
                         isSelected: selectedCategory == category,
                         action: { selectedCategory = category }
@@ -145,7 +145,7 @@ struct CategoryFilterView: View {
     }
 }
 
-struct CategoryChip: View {
+struct MerchantCategoryChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
@@ -182,7 +182,7 @@ struct InsightsSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(insights.prefix(5)) { insight in
-                        InsightCard(insight: insight)
+                        MerchantInsightCard(insight: insight)
                     }
                 }
             }
@@ -190,7 +190,7 @@ struct InsightsSection: View {
     }
 }
 
-struct InsightCard: View {
+struct MerchantInsightCard: View {
     let insight: MerchantInsight
 
     var body: some View {

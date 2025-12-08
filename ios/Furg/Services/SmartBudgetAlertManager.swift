@@ -150,7 +150,7 @@ struct BudgetAlert: Identifiable {
     let type: AlertType
     let title: String
     let message: String
-    let severity: AlertSeverity
+    let severity: BudgetAlertSeverity
     let category: String?
     let actionLabel: String
     let actionType: AlertAction
@@ -168,7 +168,7 @@ struct BudgetAlert: Identifiable {
     }
 }
 
-enum AlertSeverity {
+enum BudgetAlertSeverity {
     case critical, warning, info, positive
 
     var color: Color {

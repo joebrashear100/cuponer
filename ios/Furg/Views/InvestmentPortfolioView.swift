@@ -808,7 +808,7 @@ struct GoalsSection: View {
     var body: some View {
         VStack(spacing: 16) {
             ForEach(goals) { goal in
-                GoalCard(goal: goal)
+                InvestmentGoalCard(goal: goal)
             }
 
             Button(action: { showingAddGoal = true }) {
@@ -823,7 +823,7 @@ struct GoalsSection: View {
     }
 }
 
-struct GoalCard: View {
+struct InvestmentGoalCard: View {
     let goal: InvestmentGoal
     @StateObject private var portfolioManager = InvestmentPortfolioManager.shared
 

@@ -172,7 +172,7 @@ struct SharedGoal: Identifiable, Codable {
     var targetAmount: Double
     var currentAmount: Double
     var deadline: Date?
-    var contributions: [GoalContribution]
+    var contributions: [SharedGoalContribution]
     var icon: String
     var color: String
     var isCompleted: Bool
@@ -187,7 +187,7 @@ struct SharedGoal: Identifiable, Codable {
     }
 }
 
-struct GoalContribution: Identifiable, Codable {
+struct SharedGoalContribution: Identifiable, Codable {
     let id: UUID
     let memberId: UUID
     let amount: Double
@@ -513,7 +513,7 @@ class SharedBudgetManager: ObservableObject {
     func contributeToGoal(_ goalId: UUID, memberId: UUID, amount: Double, notes: String? = nil) {
         guard let index = sharedGoals.firstIndex(where: { $0.id == goalId }) else { return }
 
-        let contribution = GoalContribution(
+        let contribution = SharedGoalContribution(
             id: UUID(),
             memberId: memberId,
             amount: amount,
@@ -686,8 +686,8 @@ class SharedBudgetManager: ObservableObject {
         if var goal = sharedGoals.first {
             goal.currentAmount = 850
             goal.contributions = [
-                GoalContribution(id: UUID(), memberId: currentUserId, amount: 450, date: Calendar.current.date(byAdding: .day, value: -30, to: Date())!, notes: nil),
-                GoalContribution(id: UUID(), memberId: partnerId, amount: 400, date: Calendar.current.date(byAdding: .day, value: -20, to: Date())!, notes: nil)
+                SharedGoalContribution(id: UUID(), memberId: currentUserId, amount: 450, date: Calendar.current.date(byAdding: .day, value: -30, to: Date())!, notes: nil),
+                SharedGoalContribution(id: UUID(), memberId: partnerId, amount: 400, date: Calendar.current.date(byAdding: .day, value: -20, to: Date())!, notes: nil)
             ]
             sharedGoals[0] = goal
             saveSharedGoals()

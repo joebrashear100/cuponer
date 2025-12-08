@@ -78,7 +78,7 @@ struct ReceiptInsight: Identifiable, Codable {
     }
 }
 
-struct MerchantProfile: Identifiable, Codable {
+struct ScannedMerchantProfile: Identifiable, Codable {
     let id: String
     var name: String
     var addresses: [String]
@@ -109,7 +109,7 @@ class ReceiptScannerManager: ObservableObject {
 
     // MARK: - Published Properties
     @Published var scannedReceipts: [ScannedReceipt] = []
-    @Published var merchantProfiles: [MerchantProfile] = []
+    @Published var merchantProfiles: [ScannedMerchantProfile] = []
     @Published var itemDatabase: [String: [ReceiptItem]] = [:] // Item name -> purchase history
     @Published var categoryBreakdown: [ReceiptCategory] = []
     @Published var insights: [ReceiptInsight] = []
@@ -714,14 +714,14 @@ class ReceiptScannerManager: ObservableObject {
                     profile.frequentItems[itemIndex].purchaseCount += item.quantity
                     profile.frequentItems[itemIndex].lastPrice = item.unitPrice
                     profile.frequentItems[itemIndex].priceHistory.append(
-                        MerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)
+                        ScannedMerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)
                     )
                 } else {
-                    profile.frequentItems.append(MerchantProfile.FrequentItem(
+                    profile.frequentItems.append(ScannedMerchantProfile.FrequentItem(
                         name: item.name,
                         purchaseCount: item.quantity,
                         lastPrice: item.unitPrice,
-                        priceHistory: [MerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)]
+                        priceHistory: [ScannedMerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)]
                     ))
                 }
             }
@@ -733,7 +733,7 @@ class ReceiptScannerManager: ObservableObject {
             merchantProfiles[index] = profile
         } else {
             // New merchant
-            let profile = MerchantProfile(
+            let profile = ScannedMerchantProfile(
                 id: UUID().uuidString,
                 name: receipt.merchantName,
                 addresses: receipt.merchantAddress.map { [$0] } ?? [],
@@ -741,11 +741,11 @@ class ReceiptScannerManager: ObservableObject {
                 totalSpent: receipt.total,
                 averageTransaction: receipt.total,
                 frequentItems: receipt.items.map { item in
-                    MerchantProfile.FrequentItem(
+                    ScannedMerchantProfile.FrequentItem(
                         name: item.name,
                         purchaseCount: item.quantity,
                         lastPrice: item.unitPrice,
-                        priceHistory: [MerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)]
+                        priceHistory: [ScannedMerchantProfile.FrequentItem.PricePoint(date: receipt.scanDate, price: item.unitPrice)]
                     )
                 },
                 lastVisit: receipt.transactionDate ?? receipt.scanDate,
@@ -881,7 +881,7 @@ class ReceiptScannerManager: ObservableObject {
         }
 
         if let data = userDefaults.data(forKey: merchantsKey),
-           let merchants = try? JSONDecoder().decode([MerchantProfile].self, from: data) {
+           let merchants = try? JSONDecoder().decode([ScannedMerchantProfile].self, from: data) {
             merchantProfiles = merchants
         }
 

@@ -12,7 +12,7 @@ struct BillNegotiationView: View {
     @State private var animate = false
     @State private var selectedBill: NegotiableBill?
     @State private var showNegotiationScript = false
-    @State private var selectedScript: NegotiationScript?
+    @State private var selectedScript: BillNegotiationScript?
 
     // Demo negotiable bills
     let bills: [NegotiableBill] = [
@@ -138,7 +138,7 @@ struct BillNegotiationView: View {
                 BillNegotiationDetailSheet(bill: bill)
             }
             .sheet(item: $selectedScript) { script in
-                NegotiationScriptSheet(script: script)
+                BillNegotiationScriptSheet(script: script)
             }
         }
     }
@@ -404,7 +404,7 @@ struct NegotiableBill: Identifiable {
     }
 }
 
-struct NegotiationScript: Identifiable {
+struct BillNegotiationScript: Identifiable {
     let id = UUID()
     let title: String
     let steps: [String]
@@ -719,7 +719,7 @@ private struct BillNegotiationDetailSheet: View {
                 .padding(.bottom, 20)
             }
             .sheet(isPresented: $showScript) {
-                NegotiationScriptSheet(script: NegotiationScript(
+                BillNegotiationScriptSheet(script: BillNegotiationScript(
                     title: "\(bill.name) Script",
                     steps: [
                         "\"Hi, I've been a loyal customer for [X years] and I'm calling about my bill.\"",
@@ -735,8 +735,8 @@ private struct BillNegotiationDetailSheet: View {
     }
 }
 
-private struct NegotiationScriptSheet: View {
-    let script: NegotiationScript
+private struct BillNegotiationScriptSheet: View {
+    let script: BillNegotiationScript
     @Environment(\.dismiss) var dismiss
 
     var body: some View {

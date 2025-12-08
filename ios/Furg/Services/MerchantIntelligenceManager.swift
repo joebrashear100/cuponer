@@ -187,7 +187,7 @@ struct LoyaltyTier: Codable {
 struct PaymentOption: Codable {
     let type: PaymentType
     let bonusRewards: Double? // Extra percentage
-    let financing: FinancingOption?
+    let financing: MerchantFinancingOption?
 }
 
 enum PaymentType: String, Codable {
@@ -205,7 +205,7 @@ enum PaymentType: String, Codable {
     case giftCard = "Gift Card"
 }
 
-struct FinancingOption: Codable {
+struct MerchantFinancingOption: Codable {
     let provider: String
     let minPurchase: Double
     let interestFree: Bool
@@ -455,7 +455,7 @@ class MerchantIntelligenceManager: ObservableObject {
                     PaymentOption(type: .credit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .debit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil),
-                    PaymentOption(type: .affirm, bonusRewards: nil, financing: FinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
+                    PaymentOption(type: .affirm, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
                 ],
                 operatingHours: OperatingHours(
                     regular: [
@@ -749,8 +749,8 @@ class MerchantIntelligenceManager: ObservableObject {
                     gasDiscount: nil
                 ),
                 paymentOptions: [
-                    PaymentOption(type: .credit, bonusRewards: nil, financing: FinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 12)),
-                    PaymentOption(type: .storeCard, bonusRewards: 5, financing: FinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 18)),
+                    PaymentOption(type: .credit, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 12)),
+                    PaymentOption(type: .storeCard, bonusRewards: 5, financing: MerchantFinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 18)),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil)
                 ],
                 operatingHours: OperatingHours(
@@ -832,7 +832,7 @@ class MerchantIntelligenceManager: ObservableObject {
                 paymentOptions: [
                     PaymentOption(type: .credit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .storeCard, bonusRewards: 5, financing: nil),
-                    PaymentOption(type: .affirm, bonusRewards: nil, financing: FinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
+                    PaymentOption(type: .affirm, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
                 ],
                 operatingHours: nil,
                 crowdData: nil,
@@ -1009,8 +1009,8 @@ class MerchantIntelligenceManager: ObservableObject {
                     gasDiscount: nil
                 ),
                 paymentOptions: [
-                    PaymentOption(type: .credit, bonusRewards: nil, financing: FinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 6)),
-                    PaymentOption(type: .storeCard, bonusRewards: 0, financing: FinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 24)),
+                    PaymentOption(type: .credit, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 6)),
+                    PaymentOption(type: .storeCard, bonusRewards: 0, financing: MerchantFinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 24)),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil)
                 ],
                 operatingHours: OperatingHours(
@@ -1397,7 +1397,7 @@ class MerchantIntelligenceManager: ObservableObject {
         return nil
     }
 
-    func getFinancingOptions(merchantId: String, purchaseAmount: Double) -> [FinancingOption] {
+    func getFinancingOptions(merchantId: String, purchaseAmount: Double) -> [MerchantFinancingOption] {
         guard let merchant = merchantProfiles[merchantId] else { return [] }
 
         return merchant.paymentOptions.compactMap { option in

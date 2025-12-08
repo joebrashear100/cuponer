@@ -634,9 +634,9 @@ struct MerchantHeaderView: View {
             // User stats if available
             if let stats = merchant.userStats {
                 HStack(spacing: 20) {
-                    UserStatItem(title: "Total Spent", value: formatCurrency(stats.totalSpent))
+                    UserStatItem(title: "Total Spent", value: CurrencyFormatter.formatCompact(stats.totalSpent))
                     UserStatItem(title: "Visits", value: "\(stats.visitCount)")
-                    UserStatItem(title: "Avg. Trip", value: formatCurrency(stats.averageTransaction))
+                    UserStatItem(title: "Avg. Trip", value: CurrencyFormatter.formatCompact(stats.averageTransaction))
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -645,13 +645,6 @@ struct MerchantHeaderView: View {
             }
         }
         .padding()
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
     }
 }
 

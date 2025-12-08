@@ -114,15 +114,15 @@ struct PortfolioSummaryCard: View {
                 Text("Total Portfolio Value")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                Text(formatCurrency(summary.totalValue))
+                Text(CurrencyFormatter.format(summary.totalValue))
                     .font(.system(size: 36, weight: .bold))
             }
 
             // Day change
             HStack(spacing: 4) {
                 Image(systemName: summary.dayChange >= 0 ? "arrow.up.right" : "arrow.down.right")
-                Text(formatCurrency(abs(summary.dayChange)))
-                Text("(\(formatPercent(summary.dayChangePercent)))")
+                Text(CurrencyFormatter.format(abs(summary.dayChange)))
+                Text("(\(formatSignedPercent(summary.dayChangePercent)))")
             }
             .font(.subheadline)
             .foregroundColor(summary.dayChange >= 0 ? .green : .red)
@@ -132,7 +132,7 @@ struct PortfolioSummaryCard: View {
             // Stats row
             HStack(spacing: 24) {
                 VStack(spacing: 4) {
-                    Text(formatCurrency(summary.totalGain))
+                    Text(CurrencyFormatter.format(summary.totalGain))
                         .font(.headline)
                         .foregroundColor(summary.totalGain >= 0 ? .green : .red)
                     Text("Total Gain")
@@ -141,7 +141,7 @@ struct PortfolioSummaryCard: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text(formatPercent(summary.totalGainPercent))
+                    Text(formatSignedPercent(summary.totalGainPercent))
                         .font(.headline)
                         .foregroundColor(summary.totalGain >= 0 ? .green : .red)
                     Text("Return")
@@ -150,7 +150,7 @@ struct PortfolioSummaryCard: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text(formatCurrency(summary.cashTotal))
+                    Text(CurrencyFormatter.format(summary.cashTotal))
                         .font(.headline)
                     Text("Cash")
                         .font(.caption)
@@ -173,14 +173,7 @@ struct PortfolioSummaryCard: View {
         .padding(.horizontal)
     }
 
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
-
-    private func formatPercent(_ percent: Double) -> String {
+    private func formatSignedPercent(_ percent: Double) -> String {
         let sign = percent >= 0 ? "+" : ""
         return "\(sign)\(String(format: "%.2f", percent))%"
     }

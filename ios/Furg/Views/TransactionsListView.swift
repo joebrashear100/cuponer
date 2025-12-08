@@ -738,7 +738,7 @@ private struct TransactionRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(formatCurrency(transaction.amount))
+                Text(transaction.amount > 0 ? CurrencyFormatter.formatSigned(transaction.amount) : CurrencyFormatter.format(transaction.amount))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(transaction.amount > 0 ? .furgSuccess : .white)
 
@@ -772,14 +772,6 @@ private struct TransactionRow: View {
                 Label("Change Category", systemImage: "folder")
             }
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.maximumFractionDigits = 2
-        let prefix = amount > 0 ? "+" : ""
-        return prefix + (formatter.string(from: NSNumber(value: amount)) ?? "$0")
     }
 }
 
@@ -881,7 +873,7 @@ private struct AICategoryPicker: View {
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.5))
 
-                    Text(formatCurrency(transaction.amount))
+                    Text(CurrencyFormatter.format(transaction.amount))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(transaction.amount > 0 ? .furgSuccess : .furgDanger)
                 }
@@ -1012,12 +1004,6 @@ private struct AICategoryPicker: View {
 
             isProcessing = false
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 
@@ -1224,7 +1210,7 @@ private struct SubscriptionManagementSheet: View {
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
 
-                        Text(formatCurrency(transaction.amount))
+                        Text(CurrencyFormatter.format(abs(transaction.amount)))
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -1356,12 +1342,6 @@ private struct SubscriptionManagementSheet: View {
                 }
             }
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSNumber(value: abs(amount))) ?? "$0"
     }
 }
 

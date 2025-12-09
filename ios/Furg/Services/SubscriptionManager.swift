@@ -361,10 +361,10 @@ extension APIClient {
     }
 
     func cancelSubscription(subscriptionId: String) async throws {
-        try await postVoid("/subscriptions/\(subscriptionId)/cancel", body: EmptyBody())
+        try await postVoid("/subscriptions/\(subscriptionId)/mark-cancelled", body: EmptyBody())
     }
 
     func getNegotiationScript(billId: String) async throws -> NegotiationScriptResponse {
-        return try await get("/bills/\(billId)/negotiation-script")
+        return try await get("/subscriptions/\(billId)/negotiation-script")
     }
 }

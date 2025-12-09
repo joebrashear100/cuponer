@@ -30,6 +30,31 @@ struct Account: Identifiable {
         guard let prev = previousBalance, prev != 0 else { return nil }
         return ((balance - prev) / abs(prev)) * 100
     }
+
+    /// Convert to AccountInfo for AccountDetailView
+    func toAccountInfo() -> AccountInfo {
+        let accountType: AccountInfo.AccountType
+        switch type {
+        case .checking: accountType = .checking
+        case .savings: accountType = .savings
+        case .investment, .crypto, .retirement: accountType = .investment
+        case .creditCard: accountType = .credit
+        default: accountType = .checking
+        }
+
+        return AccountInfo(
+            name: name,
+            institution: institution,
+            type: accountType,
+            balance: balance,
+            change: balanceChange ?? 0,
+            lastFour: "••••",
+            interestRate: loanDetails?.interestRate ?? creditCardDetails?.apr,
+            openedDate: lastUpdated.formatted(.dateTime.month().year()),
+            color: color,
+            icon: icon
+        )
+    }
 }
 
 // MARK: - Credit Card Details
@@ -237,6 +262,8 @@ struct AccountsView: View {
     @State private var selectedSection: AccountSection = .netWorth
     @State private var animate = false
     @State private var showAddAccount = false
+    @State private var selectedAccount: Account?
+    @State private var showAccountDetail = false
 
     enum AccountSection: String, CaseIterable {
         case netWorth = "Net Worth"
@@ -421,6 +448,18 @@ struct AccountsView: View {
         .sheet(isPresented: $showAddAccount) {
             AddAccountSheet()
         }
+        .sheet(isPresented: $showAccountDetail) {
+            if let account = selectedAccount {
+                AccountDetailView(account: account.toAccountInfo())
+            }
+        }
+    }
+
+    // MARK: - Helper to convert Account to AccountInfo
+
+    private func selectAccount(_ account: Account) {
+        selectedAccount = account
+        showAccountDetail = true
     }
 
     // MARK: - Header
@@ -722,7 +761,12 @@ struct AccountsView: View {
                         .padding(.horizontal, 4)
 
                         ForEach(typeAccounts) { account in
-                            AccountRow(account: account)
+                            Button {
+                                selectAccount(account)
+                            } label: {
+                                AccountRow(account: account)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     .offset(y: animate ? 0 : 20)

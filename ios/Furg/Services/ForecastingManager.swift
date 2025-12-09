@@ -268,24 +268,155 @@ enum AlertSeverity: String, Codable {
 
 extension APIClient {
     func getForecast() async throws -> CashFlowForecast {
-        return try await get("/forecast")
+        let response: ForecastAPIResponse = try await get("/forecast")
+        return response.toCashFlowForecast()
     }
 
     func getDailyProjections(days: Int) async throws -> [DailyProjection] {
-        let response: DailyProjectionsResponse = try await get("/forecast/daily?days=\(days)")
-        return response.projections
+        let response: DailyProjectionsAPIResponse = try await get("/forecast/daily?days=\(days)")
+        return response.projections.map { projection in
+            DailyProjection(
+                date: ISO8601DateFormatter().date(from: projection.date) ?? Date(),
+                projectedBalance: Decimal(projection.projectedBalance),
+                income: 0,
+                expenses: Decimal(projection.billsDue),
+                bills: projection.bills.map { bill in
+                    ProjectedBill(
+                        name: bill.merchant ?? "Unknown",
+                        amount: Decimal(bill.amount ?? 0),
+                        dueDate: Date()
+                    )
+                },
+                confidence: 0.8
+            )
+        }
     }
 
     func getForecastAlerts() async throws -> [ForecastAlert] {
-        let response: ForecastAlertsResponse = try await get("/forecast/alerts")
-        return response.alerts
+        let response: ForecastAlertsAPIResponse = try await get("/forecast/alerts")
+        return response.alerts.enumerated().map { index, alert in
+            ForecastAlert(
+                id: "\(index)",
+                type: alert.alertType,
+                title: alert.title,
+                message: alert.message,
+                date: Date(),
+                severity: alert.alertSeverity,
+                actionLabel: alert.action
+            )
+        }
     }
 }
 
-struct DailyProjectionsResponse: Codable {
-    let projections: [DailyProjection]
+// MARK: - API Response Models
+
+struct ForecastAPIResponse: Codable {
+    let currentBalance: Double
+    let projectedBalance: Double
+    let daysForecast: Int
+    let avgMonthlyIncome: Double
+    let avgMonthlyExpenses: Double
+    let netMonthly: Double
+    let riskLevel: String
+    let riskMessage: String
+    let runwayDays: Int
+
+    enum CodingKeys: String, CodingKey {
+        case currentBalance = "current_balance"
+        case projectedBalance = "projected_balance"
+        case daysForecast = "days_forecast"
+        case avgMonthlyIncome = "avg_monthly_income"
+        case avgMonthlyExpenses = "avg_monthly_expenses"
+        case netMonthly = "net_monthly"
+        case riskLevel = "risk_level"
+        case riskMessage = "risk_message"
+        case runwayDays = "runway_days"
+    }
+
+    func toCashFlowForecast() -> CashFlowForecast {
+        CashFlowForecast(
+            currentBalance: Decimal(currentBalance),
+            projectedBalance30Days: Decimal(projectedBalance),
+            projectedBalance60Days: Decimal(projectedBalance * 1.5),
+            projectedBalance90Days: Decimal(projectedBalance * 2),
+            expectedIncome: Decimal(avgMonthlyIncome),
+            expectedExpenses: Decimal(avgMonthlyExpenses),
+            expectedBills: Decimal(avgMonthlyExpenses * 0.4),
+            safeToSpend: Decimal(max(0, currentBalance - avgMonthlyExpenses * 0.5)),
+            lowestProjectedBalance: Decimal(min(currentBalance, projectedBalance)),
+            lowestBalanceDate: Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date(),
+            nextPayday: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date(),
+            daysUntilPayday: 7
+        )
+    }
 }
 
-struct ForecastAlertsResponse: Codable {
-    let alerts: [ForecastAlert]
+struct DailyProjectionsAPIResponse: Codable {
+    let projections: [DailyProjectionAPI]
+    let lowestPoint: Double
+    let lowestDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case projections
+        case lowestPoint = "lowest_point"
+        case lowestDate = "lowest_date"
+    }
+}
+
+struct DailyProjectionAPI: Codable {
+    let date: String
+    let projectedBalance: Double
+    let billsDue: Double
+    let bills: [BillAPI]
+    let isLow: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case projectedBalance = "projected_balance"
+        case billsDue = "bills_due"
+        case bills
+        case isLow = "is_low"
+    }
+}
+
+struct BillAPI: Codable {
+    let merchant: String?
+    let amount: Double?
+}
+
+struct ForecastAlertsAPIResponse: Codable {
+    let alerts: [ForecastAlertAPI]
+    let riskLevel: String
+
+    enum CodingKeys: String, CodingKey {
+        case alerts
+        case riskLevel = "risk_level"
+    }
+}
+
+struct ForecastAlertAPI: Codable {
+    let type: String
+    let title: String
+    let message: String
+    let action: String?
+
+    var alertType: AlertType {
+        switch type {
+        case "danger": return .overdraft
+        case "warning": return .lowBalance
+        case "info": return .billDue
+        case "success": return .payday
+        default: return .lowBalance
+        }
+    }
+
+    var alertSeverity: AlertSeverity {
+        switch type {
+        case "danger": return .critical
+        case "warning": return .warning
+        case "info": return .info
+        case "success": return .positive
+        default: return .info
+        }
+    }
 }

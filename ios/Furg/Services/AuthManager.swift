@@ -3,6 +3,7 @@
 //  Furg
 //
 //  Handles Sign in with Apple and JWT token management
+//  SECURITY: Tokens stored in Keychain, not UserDefaults
 //
 
 import SwiftUI
@@ -20,28 +21,69 @@ class AuthManager: NSObject, ObservableObject {
     @Published var errorMessage: String?
 
     private let onboardingKey = "hasCompletedOnboarding"
+    private let keychain = KeychainService.shared
 
+    /// JWT token stored securely in Keychain
     private var token: String? {
-        get { UserDefaults.standard.string(forKey: Config.Keys.jwtToken) }
+        get {
+            keychain.getStringOptional(for: .jwtToken)
+        }
         set {
             if let newValue = newValue {
-                UserDefaults.standard.set(newValue, forKey: Config.Keys.jwtToken)
+                do {
+                    try keychain.save(newValue, for: .jwtToken)
+                } catch {
+                    logger.error("Failed to save JWT token to Keychain: \(error.localizedDescription)")
+                }
             } else {
-                UserDefaults.standard.removeObject(forKey: Config.Keys.jwtToken)
+                try? keychain.delete(.jwtToken)
+            }
+        }
+    }
+
+    /// User ID stored securely in Keychain
+    private var storedUserId: String? {
+        get {
+            keychain.getStringOptional(for: .userId)
+        }
+        set {
+            if let newValue = newValue {
+                try? keychain.save(newValue, for: .userId)
+            } else {
+                try? keychain.delete(.userId)
             }
         }
     }
 
     override init() {
         super.init()
+        migrateFromUserDefaults()
         checkAuthenticationStatus()
     }
 
+    /// Migrate credentials from UserDefaults to Keychain (one-time migration)
+    private func migrateFromUserDefaults() {
+        // Migrate JWT token if exists in UserDefaults
+        if let oldToken = UserDefaults.standard.string(forKey: Config.Keys.jwtToken) {
+            token = oldToken
+            UserDefaults.standard.removeObject(forKey: Config.Keys.jwtToken)
+            logger.info("Migrated JWT token from UserDefaults to Keychain")
+        }
+
+        // Migrate user ID if exists in UserDefaults
+        if let oldUserId = UserDefaults.standard.string(forKey: Config.Keys.userId) {
+            storedUserId = oldUserId
+            UserDefaults.standard.removeObject(forKey: Config.Keys.userId)
+            logger.info("Migrated user ID from UserDefaults to Keychain")
+        }
+    }
+
     func checkAuthenticationStatus() {
-        if token != nil, let userId = UserDefaults.standard.string(forKey: Config.Keys.userId) {
+        if token != nil, let userId = storedUserId {
             self.isAuthenticated = true
             self.userID = userId
             self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: onboardingKey)
+            logger.debug("User authenticated: \(userId.prefix(8))...")
         }
     }
 
@@ -68,20 +110,26 @@ class AuthManager: NSObject, ObservableObject {
 
     func signOut() {
         token = nil
-        UserDefaults.standard.removeObject(forKey: Config.Keys.userId)
+        storedUserId = nil
         isAuthenticated = false
         userID = nil
+        logger.info("User signed out")
     }
 
     #if DEBUG
+    /// Debug login for testing - requires DEBUG_USER_ID and DEBUG_JWT_TOKEN environment variables
+    /// Set these in your Xcode scheme to enable debug login
+    /// SECURITY: Never commit actual tokens to source code
     func debugBypassLogin(skipOnboarding: Bool = true) {
-        // Debug-only function to bypass authentication for testing
-        // This token is properly signed with the backend's JWT_SECRET and expires in 30 days from Dec 6, 2025
-        let debugUserId = "debug-user-12345"
-        let debugToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGVidWctdXNlci0xMjM0NSIsImV4cCI6MTc2NzY0MjEwOCwiaWF0IjoxNzY1MDUwMTA4LCJ0eXBlIjoiYWNjZXNzIn0.3eQ5RsqGg_rgaeWzYzsYP1gJaAQms-6ikKg9lLF-ynM"
+        guard let debugUserId = ProcessInfo.processInfo.environment["DEBUG_USER_ID"],
+              let debugToken = ProcessInfo.processInfo.environment["DEBUG_JWT_TOKEN"] else {
+            logger.warning("Debug login requires DEBUG_USER_ID and DEBUG_JWT_TOKEN environment variables")
+            errorMessage = "Debug login not configured. Set environment variables in Xcode scheme."
+            return
+        }
 
-        UserDefaults.standard.set(debugToken, forKey: Config.Keys.jwtToken)
-        UserDefaults.standard.set(debugUserId, forKey: Config.Keys.userId)
+        token = debugToken
+        storedUserId = debugUserId
 
         self.userID = debugUserId
         self.isAuthenticated = true
@@ -92,6 +140,8 @@ class AuthManager: NSObject, ObservableObject {
             UserDefaults.standard.set(true, forKey: onboardingKey)
             self.hasCompletedOnboarding = true
         }
+
+        logger.info("Debug login successful for user: \(debugUserId.prefix(8))...")
     }
     #endif
 
@@ -117,10 +167,11 @@ class AuthManager: NSObject, ObservableObject {
             await MainActor.run {
                 self.token = response.jwt
                 self.userID = response.userId
-                UserDefaults.standard.set(response.userId, forKey: Config.Keys.userId)
+                self.storedUserId = response.userId
                 self.isAuthenticated = true
                 self.isLoading = false
                 self.errorMessage = nil
+                logger.info("Apple Sign In successful for user: \(response.userId.prefix(8))...")
             }
         } catch {
             await MainActor.run {

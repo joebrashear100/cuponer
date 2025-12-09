@@ -22,6 +22,9 @@ final class CacheManager {
     private var expirationTimes: [String: Date] = [:]
     private let defaultExpiration: TimeInterval = 300 // 5 minutes
 
+    // Track observer for proper cleanup
+    private var memoryWarningObserver: NSObjectProtocol?
+
     private init() {
         // Configure memory cache limits
         memoryCache.countLimit = 100
@@ -40,13 +43,21 @@ final class CacheManager {
         // Clean expired cache on init
         cleanExpiredCache()
 
-        // Observe memory warnings
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleMemoryWarning),
-            name: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil
-        )
+        // Observe memory warnings with block-based observer for proper cleanup
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleMemoryWarning()
+        }
+    }
+
+    deinit {
+        // CRITICAL: Remove observer to prevent memory leaks
+        if let observer = memoryWarningObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Memory Cache
@@ -173,7 +184,7 @@ final class CacheManager {
         }
     }
 
-    @objc private func handleMemoryWarning() {
+    private func handleMemoryWarning() {
         clearMemoryCache()
     }
 

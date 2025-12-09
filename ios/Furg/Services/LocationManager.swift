@@ -81,15 +81,21 @@ class LocationManager: NSObject, ObservableObject {
             guard let self = self else { return }
 
             if let error = error {
-                self.lastError = error
+                DispatchQueue.main.async { [weak self] in
+                    self?.lastError = error
+                }
                 return
             }
 
             guard let placemark = placemarks?.first else { return }
 
-            DispatchQueue.main.async {
-                self.currentCity = placemark.locality
-                self.currentNeighborhood = placemark.subLocality ?? placemark.name
+            // Capture values before dispatch to avoid retain cycle
+            let city = placemark.locality
+            let neighborhood = placemark.subLocality ?? placemark.name
+
+            DispatchQueue.main.async { [weak self] in
+                self?.currentCity = city
+                self?.currentNeighborhood = neighborhood
             }
         }
     }
@@ -234,25 +240,26 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
 
-        DispatchQueue.main.async {
-            self.currentLocation = location
-            self.reverseGeocode(location)
+        DispatchQueue.main.async { [weak self] in
+            self?.currentLocation = location
+            self?.reverseGeocode(location)
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        DispatchQueue.main.async {
-            self.lastError = error
+        DispatchQueue.main.async { [weak self] in
+            self?.lastError = error
         }
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        DispatchQueue.main.async {
-            self.authorizationStatus = manager.authorizationStatus
-            self.updateLocationEnabled()
+        let status = manager.authorizationStatus
+        DispatchQueue.main.async { [weak self] in
+            self?.authorizationStatus = status
+            self?.updateLocationEnabled()
 
-            if self.isLocationEnabled {
-                self.startUpdatingLocation()
+            if self?.isLocationEnabled == true {
+                self?.startUpdatingLocation()
             }
         }
     }

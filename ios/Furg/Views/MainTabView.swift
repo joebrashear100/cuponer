@@ -139,7 +139,25 @@ struct TabBarButton: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AccessibleTabButtonStyle(isSelected: isSelected))
+        // Accessibility
+        .accessibilityLabel(label)
+        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to switch to \(label)")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : [.isButton])
+        .accessibilityRemoveTraits(isSelected ? [] : [.isSelected])
+    }
+}
+
+// MARK: - Accessible Button Style
+/// Custom button style that provides visual feedback while maintaining accessibility
+private struct AccessibleTabButtonStyle: ButtonStyle {
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
+            .opacity(configuration.isPressed ? 0.7 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 

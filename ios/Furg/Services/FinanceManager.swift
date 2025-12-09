@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "FinanceManager")
 
 @MainActor
 class FinanceManager: ObservableObject {
@@ -17,6 +20,7 @@ class FinanceManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var hasBankConnected = false
+    @Published var isUsingDemoData = false // Track if showing demo data
 
     private let apiClient = APIClient()
 
@@ -46,11 +50,15 @@ class FinanceManager: ObservableObject {
         do {
             balance = try await apiClient.getBalance()
             hasBankConnected = true
+            isUsingDemoData = false
+            logger.debug("Loaded real balance data")
         } catch {
-            // Use demo data if API fails
+            // Use demo data if API fails - log the error but show demo data
+            logger.warning("Failed to load balance, using demo data: \(error.localizedDescription)")
             balance = demoBalance
             hasBankConnected = false
-            errorMessage = nil // Don't show error, just use demo data
+            isUsingDemoData = true
+            // Keep errorMessage nil to not alarm user, but they can check isUsingDemoData
         }
     }
 
@@ -101,12 +109,14 @@ class FinanceManager: ObservableObject {
         do {
             let response = try await apiClient.getTransactions(days: days)
             transactions = response.transactions
+            logger.debug("Loaded \(response.transactions.count) transactions")
         } catch {
             // Load from local storage if API fails
+            logger.warning("Failed to load transactions from API: \(error.localizedDescription)")
             if let saved = loadLocalTransactions() {
                 transactions = saved
+                logger.info("Loaded \(saved.count) transactions from local storage")
             }
-            errorMessage = nil
         }
     }
 
@@ -177,8 +187,9 @@ class FinanceManager: ObservableObject {
     func loadSpendingSummary(days: Int = 30) async {
         do {
             spendingSummary = try await apiClient.getSpendingSummary(days: days)
+            logger.debug("Loaded spending summary for \(days) days")
         } catch {
-            errorMessage = nil
+            logger.warning("Failed to load spending summary: \(error.localizedDescription)")
         }
     }
 
@@ -188,10 +199,11 @@ class FinanceManager: ObservableObject {
         do {
             let response = try await apiClient.getBills()
             bills = response.bills
+            logger.debug("Loaded \(response.bills.count) bills")
         } catch {
             // Use demo bills if API fails
+            logger.warning("Failed to load bills, using demo data: \(error.localizedDescription)")
             bills = demoBills
-            errorMessage = nil
         }
     }
 

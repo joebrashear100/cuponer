@@ -31,6 +31,7 @@ final class KeychainService {
         case plaidItemId = "plaid_item_id"
         case appleUserIdentifier = "apple_user_identifier"
         case refreshToken = "refresh_token"
+        case claudeApiKey = "claude_api_key"
     }
 
     // MARK: - Save

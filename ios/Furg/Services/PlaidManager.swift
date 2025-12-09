@@ -154,17 +154,22 @@ class PlaidManager: ObservableObject {
         do {
             let accounts: PlaidAccountsResponse = try await apiClient.get("/plaid/accounts")
 
-            // Update linked banks with fresh balance data
-            for i in 0..<linkedBanks.count {
-                for j in 0..<linkedBanks[i].accounts.count {
-                    if let accountData = accounts.accounts.first(where: { $0.accountId == linkedBanks[i].accounts[j].id }) {
-                        linkedBanks[i].accounts[j].currentBalance = accountData.balances.current
-                        linkedBanks[i].accounts[j].availableBalance = accountData.balances.available
+            // Thread-safe update: create new array and assign atomically
+            // This avoids potential race conditions from in-place mutation
+            var updatedBanks = linkedBanks
+            for i in 0..<updatedBanks.count {
+                for j in 0..<updatedBanks[i].accounts.count {
+                    if let accountData = accounts.accounts.first(where: { $0.accountId == updatedBanks[i].accounts[j].id }) {
+                        updatedBanks[i].accounts[j].currentBalance = accountData.balances.current
+                        updatedBanks[i].accounts[j].availableBalance = accountData.balances.available
                     }
                 }
             }
 
+            // Assign atomically on MainActor
+            linkedBanks = updatedBanks
             saveLinkedBanks()
+            logger.debug("Refreshed balances for \(accounts.accounts.count) accounts")
         } catch {
             logger.error("Failed to refresh balances: \(error.localizedDescription)")
         }

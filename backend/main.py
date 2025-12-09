@@ -988,6 +988,498 @@ async def _get_negotiation_script(subscription: dict) -> dict:
     }
 
 
+# ==================== ROUND-UP ENDPOINTS ====================
+
+class RoundUpConfigRequest(BaseModel):
+    enabled: bool = True
+    multiplier: float = 1.0  # 1x, 2x, 3x round-ups
+    goal_id: Optional[str] = None
+    auto_transfer: bool = False
+    max_per_transaction: float = 10.0
+
+
+@app.get("/api/v1/round-ups/config")
+async def get_roundup_config(user_id: str = Depends(get_current_user)):
+    """Get user's round-up configuration"""
+    config = await db.get_roundup_config(user_id)
+
+    if not config:
+        # Return default config
+        return {
+            "enabled": False,
+            "multiplier": 1.0,
+            "goal_id": None,
+            "auto_transfer": False,
+            "max_per_transaction": 10.0
+        }
+
+    return config
+
+
+@app.post("/api/v1/round-ups/config")
+async def update_roundup_config(
+    request: RoundUpConfigRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Update round-up configuration"""
+    config = {
+        "enabled": request.enabled,
+        "multiplier": request.multiplier,
+        "goal_id": request.goal_id,
+        "auto_transfer": request.auto_transfer,
+        "max_per_transaction": request.max_per_transaction
+    }
+
+    success = await db.upsert_roundup_config(user_id, config)
+
+    if not success:
+        raise HTTPException(400, "Failed to update round-up config")
+
+    return {"message": "Round-up configuration updated", "config": config}
+
+
+@app.get("/api/v1/round-ups/summary")
+async def get_roundup_summary(user_id: str = Depends(get_current_user)):
+    """Get round-up savings summary"""
+    summary = await db.get_roundup_summary(user_id)
+
+    return {
+        "total_saved": round(summary.get("total_saved", 0), 2),
+        "pending_amount": round(summary.get("pending_amount", 0), 2),
+        "this_month": round(summary.get("this_month", 0), 2),
+        "transaction_count": summary.get("transaction_count", 0),
+        "average_roundup": round(summary.get("average_roundup", 0), 2)
+    }
+
+
+@app.get("/api/v1/round-ups/pending")
+async def get_pending_roundups(user_id: str = Depends(get_current_user)):
+    """Get pending round-up transactions"""
+    pending = await db.get_pending_roundups(user_id)
+
+    return {
+        "pending": pending,
+        "total": round(sum(p.get("roundup_amount", 0) for p in pending), 2),
+        "count": len(pending)
+    }
+
+
+class TransferRoundUpsRequest(BaseModel):
+    goal_id: str
+
+
+@app.post("/api/v1/round-ups/transfer")
+async def transfer_roundups(
+    request: TransferRoundUpsRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Transfer pending round-ups to a goal"""
+    amount = await db.transfer_roundups(user_id, request.goal_id)
+
+    return {
+        "message": "Round-ups transferred successfully",
+        "amount_transferred": round(amount, 2),
+        "goal_id": request.goal_id
+    }
+
+
+# ==================== FORECAST ENDPOINTS ====================
+
+@app.get("/api/v1/forecast")
+async def get_forecast(
+    days: int = 30,
+    user_id: str = Depends(get_current_user)
+):
+    """Get cash flow forecast"""
+    # Get current balance
+    balance_summary = await ShadowBankingService.get_balance_summary(user_id)
+    current_balance = balance_summary.get("visible_balance", 0)
+
+    # Get upcoming bills
+    upcoming_bills = await BillDetector.calculate_upcoming_bills(user_id, days)
+
+    # Get average income (look at last 90 days)
+    start_date = datetime.now() - timedelta(days=90)
+    transactions = await db.get_transactions(user_id, start_date=start_date, limit=500)
+
+    # Calculate average monthly income
+    income_txns = [t for t in transactions if t.get("amount", 0) > 0]
+    total_income = sum(t.get("amount", 0) for t in income_txns)
+    avg_monthly_income = (total_income / 3) if total_income > 0 else 0  # 3 months
+
+    # Calculate average monthly expenses
+    expense_txns = [t for t in transactions if t.get("amount", 0) < 0]
+    total_expenses = abs(sum(t.get("amount", 0) for t in expense_txns))
+    avg_monthly_expenses = (total_expenses / 3) if total_expenses > 0 else 0
+
+    # Project balance
+    days_in_month = 30
+    daily_net = (avg_monthly_income - avg_monthly_expenses) / days_in_month
+    projected_balance = current_balance + (daily_net * days)
+
+    # Calculate risk level
+    bills_total = upcoming_bills.get("total_amount", 0)
+    buffer_needed = bills_total * 1.5
+
+    if current_balance > buffer_needed * 2:
+        risk_level = "low"
+        risk_message = "You're in great shape! Plenty of buffer for upcoming bills."
+    elif current_balance > buffer_needed:
+        risk_level = "medium"
+        risk_message = "You're okay, but consider building more buffer."
+    else:
+        risk_level = "high"
+        risk_message = "Watch out! Upcoming bills may strain your balance."
+
+    return {
+        "current_balance": round(current_balance, 2),
+        "projected_balance": round(projected_balance, 2),
+        "days_forecast": days,
+        "avg_monthly_income": round(avg_monthly_income, 2),
+        "avg_monthly_expenses": round(avg_monthly_expenses, 2),
+        "net_monthly": round(avg_monthly_income - avg_monthly_expenses, 2),
+        "upcoming_bills": upcoming_bills,
+        "risk_level": risk_level,
+        "risk_message": risk_message,
+        "runway_days": int(current_balance / (avg_monthly_expenses / 30)) if avg_monthly_expenses > 0 else 365
+    }
+
+
+@app.get("/api/v1/forecast/daily")
+async def get_daily_projections(
+    days: int = 14,
+    user_id: str = Depends(get_current_user)
+):
+    """Get day-by-day balance projections"""
+    # Get current balance
+    balance_summary = await ShadowBankingService.get_balance_summary(user_id)
+    current_balance = balance_summary.get("visible_balance", 0)
+
+    # Get upcoming bills
+    bills = await db.get_upcoming_bills(user_id, days=days)
+
+    # Create daily projections
+    projections = []
+    running_balance = current_balance
+
+    for day in range(days):
+        date = datetime.now() + timedelta(days=day)
+        date_str = date.strftime("%Y-%m-%d")
+
+        # Find bills due on this day
+        day_bills = [b for b in bills if b.get("next_due_date") and
+                    b["next_due_date"].strftime("%Y-%m-%d") == date_str]
+
+        bills_due = sum(b.get("amount", 0) for b in day_bills)
+        running_balance -= bills_due
+
+        projections.append({
+            "date": date_str,
+            "projected_balance": round(running_balance, 2),
+            "bills_due": round(bills_due, 2),
+            "bills": [{"merchant": b.get("merchant"), "amount": b.get("amount")} for b in day_bills],
+            "is_low": running_balance < 100
+        })
+
+    return {
+        "projections": projections,
+        "lowest_point": min(p["projected_balance"] for p in projections),
+        "lowest_date": min(projections, key=lambda p: p["projected_balance"])["date"]
+    }
+
+
+@app.get("/api/v1/forecast/alerts")
+async def get_forecast_alerts(user_id: str = Depends(get_current_user)):
+    """Get forecast-based alerts"""
+    alerts = []
+
+    # Get forecast data
+    forecast = await get_forecast(days=30, user_id=user_id)
+
+    # Check for low balance warning
+    if forecast["projected_balance"] < 100:
+        alerts.append({
+            "type": "danger",
+            "title": "Low Balance Warning",
+            "message": f"Your balance is projected to drop to ${forecast['projected_balance']:.2f} in the next 30 days.",
+            "action": "Review upcoming bills"
+        })
+
+    # Check for negative runway
+    if forecast["runway_days"] < 30:
+        alerts.append({
+            "type": "warning",
+            "title": "Limited Runway",
+            "message": f"At current spending, your funds will last about {forecast['runway_days']} days.",
+            "action": "Reduce spending or increase income"
+        })
+
+    # Check upcoming large bills
+    upcoming = forecast.get("upcoming_bills", {})
+    if upcoming.get("total_amount", 0) > forecast["current_balance"] * 0.5:
+        alerts.append({
+            "type": "info",
+            "title": "Large Bills Coming",
+            "message": f"${upcoming.get('total_amount', 0):.2f} in bills due soon - make sure you're prepared.",
+            "action": "Review bill schedule"
+        })
+
+    # Positive alert if doing well
+    if forecast["risk_level"] == "low" and forecast["net_monthly"] > 0:
+        alerts.append({
+            "type": "success",
+            "title": "Looking Good!",
+            "message": f"You're saving about ${forecast['net_monthly']:.2f}/month. Keep it up!",
+            "action": None
+        })
+
+    return {
+        "alerts": alerts,
+        "risk_level": forecast["risk_level"]
+    }
+
+
+# ==================== SPENDING LIMITS ENDPOINTS ====================
+
+class SpendingLimitRequest(BaseModel):
+    category: str
+    amount: float
+    period: str = "monthly"  # daily, weekly, monthly
+    notify_at: float = 0.8  # Notify at 80% by default
+
+
+@app.get("/api/v1/spending-limits")
+async def get_spending_limits(user_id: str = Depends(get_current_user)):
+    """Get all spending limits"""
+    limits = await db.get_spending_limits(user_id)
+
+    # Check current spending for each limit
+    for limit in limits:
+        check = await db.check_spending_limit(user_id, limit["category"], limit["period"])
+        limit["current_spent"] = check.get("current_spent", 0)
+        limit["percent_used"] = check.get("percent_used", 0)
+        limit["is_exceeded"] = check.get("is_exceeded", False)
+
+    return {"limits": limits}
+
+
+@app.post("/api/v1/spending-limits")
+async def create_spending_limit(
+    request: SpendingLimitRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Create a new spending limit"""
+    limit = {
+        "category": request.category,
+        "amount": request.amount,
+        "period": request.period,
+        "notify_at": request.notify_at
+    }
+
+    limit_id = await db.create_spending_limit(user_id, limit)
+
+    return {
+        "message": "Spending limit created",
+        "limit_id": limit_id,
+        "limit": limit
+    }
+
+
+@app.delete("/api/v1/spending-limits/{limit_id}")
+async def delete_spending_limit(
+    limit_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Delete a spending limit"""
+    success = await db.delete_spending_limit(limit_id)
+
+    if not success:
+        raise HTTPException(400, "Failed to delete spending limit")
+
+    return {"message": "Spending limit deleted"}
+
+
+# ==================== WISHLIST ENDPOINTS ====================
+
+class WishlistItemRequest(BaseModel):
+    name: str
+    price: float
+    priority: int = 3  # 1-5
+    url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@app.get("/api/v1/wishlist")
+async def get_wishlist(user_id: str = Depends(get_current_user)):
+    """Get user's wishlist"""
+    items = await db.get_wishlist(user_id)
+
+    total_cost = sum(i.get("price", 0) for i in items if not i.get("is_purchased"))
+
+    return {
+        "items": items,
+        "total_cost": round(total_cost, 2),
+        "count": len([i for i in items if not i.get("is_purchased")])
+    }
+
+
+@app.post("/api/v1/wishlist")
+async def add_wishlist_item(
+    request: WishlistItemRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Add item to wishlist"""
+    item = {
+        "name": request.name,
+        "price": request.price,
+        "priority": request.priority,
+        "url": request.url,
+        "notes": request.notes
+    }
+
+    item_id = await db.create_wishlist_item(user_id, item)
+
+    return {
+        "message": "Item added to wishlist",
+        "item_id": item_id,
+        "item": item
+    }
+
+
+@app.patch("/api/v1/wishlist/{item_id}")
+async def update_wishlist_item(
+    item_id: str,
+    updates: Dict[str, Any],
+    user_id: str = Depends(get_current_user)
+):
+    """Update wishlist item"""
+    success = await db.update_wishlist_item(item_id, updates)
+
+    if not success:
+        raise HTTPException(400, "Failed to update item")
+
+    return {"message": "Item updated"}
+
+
+@app.delete("/api/v1/wishlist/{item_id}")
+async def delete_wishlist_item(
+    item_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Delete wishlist item"""
+    success = await db.delete_wishlist_item(item_id)
+
+    if not success:
+        raise HTTPException(400, "Failed to delete item")
+
+    return {"message": "Item deleted"}
+
+
+@app.post("/api/v1/wishlist/{item_id}/purchased")
+async def mark_wishlist_purchased(
+    item_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Mark wishlist item as purchased"""
+    success = await db.mark_wishlist_purchased(item_id)
+
+    if not success:
+        raise HTTPException(400, "Failed to update item")
+
+    return {"message": "Item marked as purchased"}
+
+
+# ==================== ACHIEVEMENTS ENDPOINTS ====================
+
+@app.get("/api/v1/achievements")
+async def get_achievements(user_id: str = Depends(get_current_user)):
+    """Get user's achievements and progress"""
+    # Get user stats for achievement calculation
+    goals = await db.get_goals(user_id)
+    transactions = await db.get_transactions(user_id, limit=1000)
+    balance_summary = await ShadowBankingService.get_balance_summary(user_id)
+
+    # Calculate achievements
+    achievements = []
+
+    # Goal achievements
+    completed_goals = [g for g in goals if g.get("current_amount", 0) >= g.get("target_amount", 1)]
+    if len(completed_goals) >= 1:
+        achievements.append({
+            "id": "first_goal",
+            "name": "Goal Getter",
+            "description": "Complete your first savings goal",
+            "icon": "🎯",
+            "earned": True,
+            "earned_date": completed_goals[0].get("completed_at")
+        })
+
+    if len(completed_goals) >= 5:
+        achievements.append({
+            "id": "goal_master",
+            "name": "Goal Master",
+            "description": "Complete 5 savings goals",
+            "icon": "🏆",
+            "earned": True
+        })
+
+    # Savings achievements
+    hidden_balance = balance_summary.get("hidden_balance", 0)
+    if hidden_balance >= 100:
+        achievements.append({
+            "id": "secret_stash",
+            "name": "Secret Stash",
+            "description": "Hide $100 in shadow savings",
+            "icon": "🤫",
+            "earned": True
+        })
+
+    if hidden_balance >= 1000:
+        achievements.append({
+            "id": "hidden_treasure",
+            "name": "Hidden Treasure",
+            "description": "Hide $1,000 in shadow savings",
+            "icon": "💎",
+            "earned": True
+        })
+
+    # Transaction achievements
+    if len(transactions) >= 100:
+        achievements.append({
+            "id": "tracker",
+            "name": "Transaction Tracker",
+            "description": "Track 100 transactions",
+            "icon": "📊",
+            "earned": True
+        })
+
+    # Streak achievements (simplified)
+    achievements.append({
+        "id": "consistent",
+        "name": "Consistency King",
+        "description": "Use FURG for 7 days in a row",
+        "icon": "👑",
+        "earned": True  # Simplified for demo
+    })
+
+    # Available (not yet earned) achievements
+    if hidden_balance < 100:
+        achievements.append({
+            "id": "secret_stash",
+            "name": "Secret Stash",
+            "description": "Hide $100 in shadow savings",
+            "icon": "🤫",
+            "earned": False,
+            "progress": min(hidden_balance / 100 * 100, 99)
+        })
+
+    return {
+        "achievements": achievements,
+        "total_earned": len([a for a in achievements if a.get("earned")]),
+        "total_available": len(achievements)
+    }
+
+
 # ==================== MAIN ====================
 
 if __name__ == "__main__":

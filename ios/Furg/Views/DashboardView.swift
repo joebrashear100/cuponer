@@ -20,6 +20,8 @@ struct DashboardView: View {
     @State private var showTransactions = false
     @State private var showCategories = false
     @State private var showOffers = false
+    @State private var showSpendingAnalytics = false
+    @State private var showFinancialHealth = false
 
     // Demo data
     let netWorth: Double = 298264.74
@@ -137,6 +139,30 @@ struct DashboardView: View {
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showOffers = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showSpendingAnalytics) {
+            NavigationStack {
+                SpendingAnalyticsView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showSpendingAnalytics = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showFinancialHealth) {
+            NavigationStack {
+                FinancialHealthView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showFinancialHealth = false }
                                 .foregroundColor(.furgMint)
                         }
                     }
@@ -281,7 +307,7 @@ struct DashboardView: View {
 
     private var financialHealthCard: some View {
         Button {
-            showAccounts = true
+            showFinancialHealth = true
         } label: {
             HStack(spacing: 16) {
                 // Credit Score Gauge
@@ -366,8 +392,8 @@ struct DashboardView: View {
                 DashboardQuickActionButton(icon: "chart.pie.fill", label: "Categories", color: .purple) {
                     showCategories = true
                 }
-                DashboardQuickActionButton(icon: "list.bullet.rectangle", label: "Transactions", color: .blue) {
-                    showTransactions = true
+                DashboardQuickActionButton(icon: "chart.bar.fill", label: "Analytics", color: .cyan) {
+                    showSpendingAnalytics = true
                 }
                 DashboardQuickActionButton(icon: "tag.fill", label: "Offers", color: .orange) {
                     showOffers = true

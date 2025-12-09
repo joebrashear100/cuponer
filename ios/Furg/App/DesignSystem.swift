@@ -769,3 +769,320 @@ extension View {
         modifier(CopilotSecondaryButton())
     }
 }
+
+// MARK: - Navigation State & Drawer Components
+
+/// Manages global navigation state for side drawer and view selection
+@MainActor
+class NavigationState: ObservableObject {
+    @Published var isDrawerOpen = false
+    @Published var selectedView: AppView = .dashboard
+
+    enum AppView: String, CaseIterable {
+        case dashboard = "Dashboard"
+        case chat = "Chat"
+        case activity = "Activity"
+        case accounts = "Accounts"
+        case settings = "Settings"
+
+        var icon: String {
+            switch self {
+            case .dashboard: return "house.fill"
+            case .chat: return "message.fill"
+            case .activity: return "list.bullet.rectangle"
+            case .accounts: return "chart.pie.fill"
+            case .settings: return "gearshape.fill"
+            }
+        }
+    }
+
+    func toggleDrawer() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            isDrawerOpen.toggle()
+        }
+    }
+
+    func selectView(_ view: AppView) {
+        selectedView = view
+        isDrawerOpen = false
+    }
+}
+
+/// Premium side drawer with profile card and navigation items
+struct SideDrawer: View {
+    @ObservedObject var navigationState: NavigationState
+    @ObservedObject var financeManager: FinanceManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Profile Card
+            ProfileCardSection(financeManager: financeManager)
+                .padding(.horizontal, 20)
+                .padding(.top, 60)
+                .padding(.bottom, 30)
+
+            // Navigation Items
+            VStack(spacing: 8) {
+                ForEach(NavigationState.AppView.allCases, id: \.self) { view in
+                    DrawerMenuItem(
+                        view: view,
+                        isSelected: navigationState.selectedView == view
+                    ) {
+                        navigationState.selectView(view)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+
+            Spacer()
+
+            // App Version Footer
+            Text("Furg v1.0.0")
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.3))
+                .padding(.horizontal, 20)
+                .padding(.bottom, 40)
+        }
+        .frame(width: 280)
+        .background(
+            Color(red: 0.06, green: 0.06, blue: 0.09)
+        )
+        .overlay(
+            Rectangle()
+                .fill(Color.white.opacity(0.05))
+                .frame(width: 1)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        )
+    }
+}
+
+/// Profile card section in drawer showing user info and balance
+struct ProfileCardSection: View {
+    @ObservedObject var financeManager: FinanceManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            profileAvatar
+            profileName
+            profileBalance
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private var profileAvatar: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [.furgMint, .furgSeafoam],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: 60, height: 60)
+            .overlay(
+                Text("JB")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.white)
+            )
+    }
+
+    private var profileName: some View {
+        Text("Joe Brashear")
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundColor(.white)
+    }
+
+    private var profileBalance: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Total Balance")
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.5))
+
+            Text("$4,250")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+        }
+    }
+}
+
+/// Individual menu item in the drawer
+struct DrawerMenuItem: View {
+    let view: NavigationState.AppView
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: view.icon)
+                    .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .furgMint : .white.opacity(0.6))
+                    .frame(width: 28)
+
+                Text(view.rawValue)
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+
+                Spacer()
+
+                if isSelected {
+                    Circle()
+                        .fill(Color.furgMint)
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.white.opacity(0.08) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Expandable floating action button with menu items
+struct FloatingActionButton: View {
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if isExpanded {
+                FABMenuItem(
+                    icon: "plus.circle.fill",
+                    label: "Add Transaction",
+                    color: .chartIncome
+                ) {
+                    // TODO: Show add transaction sheet
+                    isExpanded = false
+                }
+
+                FABMenuItem(
+                    icon: "message.fill",
+                    label: "Ask AI",
+                    color: .chartCategory2
+                ) {
+                    // TODO: Navigate to chat and focus input
+                    isExpanded = false
+                }
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                Image(systemName: isExpanded ? "xmark" : "plus")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(
+                        LinearGradient(
+                            colors: [.chartIncome, Color(red: 0.35, green: 0.75, blue: 0.55)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.3), radius: 12, y: 6)
+            }
+            .rotationEffect(.degrees(isExpanded ? 45 : 0))
+        }
+    }
+}
+
+/// Individual menu item in the FAB menu
+struct FABMenuItem: View {
+    let icon: String
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 48, height: 48)
+                    .background(color)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.2), radius: 8, y: 4)
+
+                Text(label)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color.white.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .transition(.move(edge: .trailing).combined(with: .opacity))
+    }
+}
+
+/// Minimal top navigation bar with drawer toggle, logo, and quick actions
+struct TopNavigationBar: View {
+    @ObservedObject var navigationState: NavigationState
+    let onRefresh: () -> Void
+    let onNotifications: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Drawer Toggle (Hamburger Menu)
+            Button {
+                navigationState.toggleDrawer()
+            } label: {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+            }
+
+            // Logo
+            Text("FURG")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.furgMint)
+
+            Spacer()
+
+            // Refresh Button
+            Button(action: onRefresh) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                    .frame(width: 44, height: 44)
+            }
+
+            // Notifications
+            Button(action: onNotifications) {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                        .frame(width: 44, height: 44)
+
+                    // Notification badge
+                    Circle()
+                        .fill(Color.chartSpending)
+                        .frame(width: 8, height: 8)
+                        .offset(x: 2, y: 10)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(
+            Color(red: 0.08, green: 0.08, blue: 0.12).opacity(0.95)
+        )
+    }
+}

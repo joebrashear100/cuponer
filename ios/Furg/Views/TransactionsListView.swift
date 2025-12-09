@@ -157,6 +157,7 @@ struct TransactionsListView: View {
     @State private var showSubscriptionSheet = false
     @State private var showBudgetCreator = false
     @State private var showTransactionDetail = false
+    @State private var showQuickTransaction = false
 
     // Demo AI insights
     var demoInsights: [TransactionAIInsight] {
@@ -320,6 +321,18 @@ struct TransactionsListView: View {
                 }
             }
         }
+        .sheet(isPresented: $showQuickTransaction) {
+            NavigationStack {
+                QuickTransactionView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showQuickTransaction = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
     }
 
     private func updateTransactionSubscription(transaction: EnhancedTransaction, isSubscription: Bool, frequency: SubscriptionFrequency?) {
@@ -347,6 +360,20 @@ struct TransactionsListView: View {
             }
 
             Spacer()
+
+            Button {
+                showQuickTransaction = true
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 40, height: 40)
+
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.furgMint)
+                }
+            }
 
             Button {
                 showAIChat = true

@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "SubscriptionManager")
 
 @MainActor
 class SubscriptionManager: ObservableObject {
@@ -171,8 +174,9 @@ class SubscriptionManager: ObservableObject {
             let response: SubscriptionsResponse = try await apiClient.getSubscriptions()
             subscriptions = response.subscriptions
             summary = response.summary
+            logger.debug("Loaded \(response.subscriptions.count) subscriptions from API")
         } catch {
-            // Use demo data on error
+            logger.warning("Failed to load subscriptions, using demo data: \(error.localizedDescription)")
             subscriptions = demoSubscriptions
             summary = demoSummary
             errorMessage = nil
@@ -187,7 +191,9 @@ class SubscriptionManager: ObservableObject {
             let response: SubscriptionsResponse = try await apiClient.detectSubscriptions()
             subscriptions = response.subscriptions
             summary = response.summary
+            logger.info("Detected \(response.subscriptions.count) subscriptions")
         } catch {
+            logger.warning("Failed to detect subscriptions: \(error.localizedDescription)")
             errorMessage = "Connect a bank to detect subscriptions automatically"
         }
     }
@@ -197,9 +203,10 @@ class SubscriptionManager: ObservableObject {
     func getCancellationGuide(for subscriptionId: String) async -> CancellationGuide? {
         do {
             let response: CancellationGuideResponse = try await apiClient.getCancellationGuide(subscriptionId: subscriptionId)
+            logger.debug("Loaded cancellation guide for subscription '\(subscriptionId)'")
             return response.guide
         } catch {
-            // Return demo guide
+            logger.warning("Failed to get cancellation guide, using demo: \(error.localizedDescription)")
             if let sub = subscriptions.first(where: { $0.id == subscriptionId }) {
                 return demoCancellationGuide(for: sub)
             }
@@ -214,8 +221,10 @@ class SubscriptionManager: ObservableObject {
                 subscriptions.remove(at: index)
             }
             await loadSubscriptions()
+            logger.info("Marked subscription '\(subscriptionId)' as cancelled")
             return true
         } catch {
+            logger.error("Failed to cancel subscription: \(error.localizedDescription)")
             errorMessage = "Failed to mark subscription as cancelled"
             return false
         }
@@ -226,8 +235,10 @@ class SubscriptionManager: ObservableObject {
     func getNegotiationScript(for billId: String) async -> NegotiationScript? {
         do {
             let response: NegotiationScriptResponse = try await apiClient.getNegotiationScript(billId: billId)
+            logger.debug("Loaded negotiation script for bill '\(billId)'")
             return response.script
         } catch {
+            logger.warning("Failed to get negotiation script: \(error.localizedDescription)")
             return nil
         }
     }
@@ -235,8 +246,10 @@ class SubscriptionManager: ObservableObject {
     func getNegotiationPotential(for billId: String) async -> NegotiationPotential? {
         do {
             let response: NegotiationScriptResponse = try await apiClient.getNegotiationScript(billId: billId)
+            logger.debug("Loaded negotiation potential for bill '\(billId)'")
             return response.potential
         } catch {
+            logger.warning("Failed to get negotiation potential: \(error.localizedDescription)")
             return nil
         }
     }

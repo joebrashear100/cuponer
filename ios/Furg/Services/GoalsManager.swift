@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "GoalsManager")
 
 @MainActor
 class GoalsManager: ObservableObject {
@@ -114,7 +117,9 @@ class GoalsManager: ObservableObject {
         do {
             let response: GoalsResponse = try await apiClient.getGoals()
             goals = response.goals
+            logger.debug("Loaded \(response.goals.count) goals from API")
         } catch {
+            logger.warning("Failed to load goals, using demo data: \(error.localizedDescription)")
             goals = demoGoals
             errorMessage = nil
         }
@@ -123,7 +128,9 @@ class GoalsManager: ObservableObject {
     func loadRoundUpConfig() async {
         do {
             roundUpConfig = try await apiClient.getRoundUpConfig()
+            logger.debug("Loaded round-up config from API")
         } catch {
+            logger.warning("Failed to load round-up config, using defaults: \(error.localizedDescription)")
             roundUpConfig = .default
         }
     }
@@ -131,7 +138,9 @@ class GoalsManager: ObservableObject {
     func loadRoundUpSummary() async {
         do {
             roundUpSummary = try await apiClient.getRoundUpSummary()
+            logger.debug("Loaded round-up summary from API")
         } catch {
+            logger.warning("Failed to load round-up summary: \(error.localizedDescription)")
             roundUpSummary = nil
         }
     }
@@ -156,9 +165,10 @@ class GoalsManager: ObservableObject {
             )
             try await apiClient.createGoal(request)
             await loadGoals()
+            logger.info("Created goal '\(goal.name)' via API")
             return true
         } catch {
-            // Add locally for demo
+            logger.warning("Failed to create goal via API, adding locally: \(error.localizedDescription)")
             goals.append(goal)
             return true
         }
@@ -170,8 +180,10 @@ class GoalsManager: ObservableObject {
             if let index = goals.firstIndex(where: { $0.id == goal.id }) {
                 goals[index] = goal
             }
+            logger.debug("Updated goal '\(goal.name)' via API")
             return true
         } catch {
+            logger.warning("Failed to update goal via API, updating locally: \(error.localizedDescription)")
             if let index = goals.firstIndex(where: { $0.id == goal.id }) {
                 goals[index] = goal
             }
@@ -183,8 +195,10 @@ class GoalsManager: ObservableObject {
         do {
             try await apiClient.deleteGoal(goalId)
             goals.removeAll { $0.id == goalId }
+            logger.info("Deleted goal '\(goalId)' via API")
             return true
         } catch {
+            logger.warning("Failed to delete goal via API, removing locally: \(error.localizedDescription)")
             goals.removeAll { $0.id == goalId }
             return true
         }
@@ -198,8 +212,10 @@ class GoalsManager: ObservableObject {
             if let index = goals.firstIndex(where: { $0.id == goalId }) {
                 goals[index].currentAmount += amount
             }
+            logger.info("Contributed \(amount) to goal '\(goalId)' via API")
             return true
         } catch {
+            logger.warning("Failed to contribute via API, updating locally: \(error.localizedDescription)")
             if let index = goals.firstIndex(where: { $0.id == goalId }) {
                 goals[index].currentAmount += amount
             }
@@ -288,8 +304,10 @@ class GoalsManager: ObservableObject {
         do {
             try await apiClient.updateRoundUpConfig(config)
             roundUpConfig = config
+            logger.debug("Updated round-up config via API")
             return true
         } catch {
+            logger.warning("Failed to update round-up config via API, applying locally: \(error.localizedDescription)")
             roundUpConfig = config
             return true
         }

@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "ChatManager")
 
 @MainActor
 class ChatManager: ObservableObject {
@@ -44,19 +47,41 @@ class ChatManager: ObservableObject {
             )
 
             messages.append(aiMessage)
+            logger.debug("Received AI response for message")
         } catch {
-            // Check if it's an API key issue
-            if error.localizedDescription.contains("invalid") || error.localizedDescription.contains("key") {
-                errorMessage = "API key not configured. Add your Claude API key in Config.swift"
+            logger.error("Chat error: \(error.localizedDescription)")
+
+            // Determine error type and provide appropriate feedback
+            let chatErrorMessage: String
+            let nsError = error as NSError
+
+            if nsError.domain == "ClaudeAPI" {
+                switch nsError.code {
+                case 401:
+                    errorMessage = "API key is invalid or missing. Configure it in settings."
+                    chatErrorMessage = "Looks like my API key isn't working. Check your settings! 🔑"
+                case 429:
+                    errorMessage = nil
+                    chatErrorMessage = "Whoa, too many requests! Give me a sec to catch my breath. 😮‍💨"
+                case 500...599:
+                    errorMessage = nil
+                    chatErrorMessage = "Claude's servers are having a moment. Try again in a bit! 🔧"
+                default:
+                    errorMessage = nil
+                    chatErrorMessage = "Something went wrong on my end. Mind trying again? 🤔"
+                }
+            } else if nsError.domain == NSURLErrorDomain {
+                errorMessage = nil
+                chatErrorMessage = "Can't reach the servers. Check your internet connection! 📶"
             } else {
-                errorMessage = nil // Don't show error banner, just show in chat
+                errorMessage = nil
+                chatErrorMessage = "My brain's having a moment. 🧠 Try again!"
             }
 
-            // Add friendly error message to chat
             let errorMsg = ChatMessage(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "My brain's having a moment. 🧠 Check your API key in Config.swift or try again!",
+                content: chatErrorMessage,
                 timestamp: Date()
             )
             messages.append(errorMsg)

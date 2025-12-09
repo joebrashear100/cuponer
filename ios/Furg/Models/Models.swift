@@ -412,22 +412,3 @@ struct SavingsGoalRequest: Codable {
 struct APIError: Codable {
     let detail: String
 }
-
-// MARK: - Common Enums
-
-/// Shared date range enum for filtering transactions and exports
-enum DateRange: String, CaseIterable {
-    case sevenDays = "7 Days"
-    case thirtyDays = "30 Days"
-    case ninetyDays = "90 Days"
-    case allTime = "All Time"
-
-    var days: Int {
-        switch self {
-        case .sevenDays: return 7
-        case .thirtyDays: return 30
-        case .ninetyDays: return 90
-        case .allTime: return 365
-        }
-    }
-}

@@ -26,6 +26,12 @@ struct SettingsView: View {
     @State private var showConnectBank = false
     @State private var showAppleWallet = false
     @State private var showReceiptScanner = false
+    @State private var showAchievements = false
+    @State private var showDebtPayoff = false
+    @State private var showCardRecommendations = false
+    @State private var showInvestmentPortfolio = false
+    @State private var showMerchantIntelligence = false
+    @State private var showLifeIntegration = false
     @State private var animate = false
 
     private let apiClient = APIClient()
@@ -185,6 +191,21 @@ struct SettingsView: View {
                             )
                         }
                         .buttonStyle(.plain)
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        Button {
+                            showAchievements = true
+                        } label: {
+                            SettingsRow(
+                                icon: "trophy.fill",
+                                title: "Achievements",
+                                value: "Track progress",
+                                color: .yellow,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
@@ -307,6 +328,85 @@ struct SettingsView: View {
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.33), value: animate)
+
+                    // Advanced Features
+                    SettingsSection(title: "ADVANCED FEATURES") {
+                        Button {
+                            showDebtPayoff = true
+                        } label: {
+                            SettingsRow(
+                                icon: "chart.line.downtrend.xyaxis",
+                                title: "Debt Payoff",
+                                value: "Plan your payoff",
+                                color: .red,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        Button {
+                            showCardRecommendations = true
+                        } label: {
+                            SettingsRow(
+                                icon: "creditcard.fill",
+                                title: "Card Recommendations",
+                                value: "Optimize rewards",
+                                color: .indigo,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        Button {
+                            showInvestmentPortfolio = true
+                        } label: {
+                            SettingsRow(
+                                icon: "chart.pie.fill",
+                                title: "Investment Portfolio",
+                                value: "Track investments",
+                                color: .purple,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        Button {
+                            showMerchantIntelligence = true
+                        } label: {
+                            SettingsRow(
+                                icon: "building.2.fill",
+                                title: "Merchant Insights",
+                                value: "Spending patterns",
+                                color: .cyan,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        Button {
+                            showLifeIntegration = true
+                        } label: {
+                            SettingsRow(
+                                icon: "heart.text.square.fill",
+                                title: "Life Integration",
+                                value: "Context-aware finance",
+                                color: .pink,
+                                showChevron: true
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.35), value: animate)
 
                     // About section
                     SettingsSection(title: "ABOUT") {
@@ -489,6 +589,78 @@ struct SettingsView: View {
         .sheet(isPresented: $showReceiptScanner) {
             ReceiptScanView()
                 .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showAchievements) {
+            NavigationStack {
+                AchievementsView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showAchievements = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showDebtPayoff) {
+            NavigationStack {
+                DebtPayoffView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showDebtPayoff = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showCardRecommendations) {
+            NavigationStack {
+                CardRecommendationsView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showCardRecommendations = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showInvestmentPortfolio) {
+            NavigationStack {
+                InvestmentPortfolioView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showInvestmentPortfolio = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showMerchantIntelligence) {
+            NavigationStack {
+                MerchantIntelligenceView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showMerchantIntelligence = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showLifeIntegration) {
+            NavigationStack {
+                LifeIntegrationView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showLifeIntegration = false }
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+            }
+            .presentationBackground(Color.furgCharcoal)
         }
     }
 

@@ -238,7 +238,6 @@ struct ChatView: View {
             .animation(.spring(response: 0.3), value: messageText.isEmpty)
         }
         .padding(.horizontal, 20)
-        .padding(.bottom, 100) // Tab bar space
     }
 
     // MARK: - Actions

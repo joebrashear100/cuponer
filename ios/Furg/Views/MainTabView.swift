@@ -2,137 +2,104 @@
 //  MainTabView.swift
 //  Furg
 //
-//  Modern glassmorphism tab navigation
+//  Side drawer navigation with floating action button
 //
 
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedTab = 0
-    @Namespace private var tabAnimation
+    @StateObject private var navigationState = NavigationState()
+    @EnvironmentObject var financeManager: FinanceManager
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Clean Copilot-inspired background
+        ZStack {
+            // Background
             CopilotBackground()
 
-            // Content
-            Group {
-                switch selectedTab {
-                case 0:
-                    BalanceView()
-                case 1:
-                    ChatView()
-                case 2:
-                    TransactionsListView()
-                case 3:
-                    AccountsView()
-                case 4:
-                    SettingsView()
-                default:
-                    BalanceView()
+            // Main Content with Top Bar
+            VStack(spacing: 0) {
+                TopNavigationBar(
+                    navigationState: navigationState,
+                    onRefresh: handleRefresh,
+                    onNotifications: handleNotifications
+                )
+
+                // Selected View Content
+                selectedViewContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            // Side Drawer (slides from left)
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    SideDrawer(navigationState: navigationState, financeManager: financeManager)
+                        .offset(x: navigationState.isDrawerOpen ? 0 : -280)
+
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                // Dimmed overlay when drawer is open
+                if navigationState.isDrawerOpen {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            navigationState.toggleDrawer()
+                        }
                 }
             }
 
-            // Custom Tab Bar
-            CustomTabBar(selectedTab: $selectedTab, namespace: tabAnimation)
+            // Floating Action Button (bottom right)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    FloatingActionButton()
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
+                }
+            }
         }
+        .gesture(
+            DragGesture()
+                .onEnded { gesture in
+                    // Swipe from left edge to open drawer
+                    if gesture.startLocation.x < 50 && gesture.translation.width > 100 {
+                        navigationState.toggleDrawer()
+                    }
+                    // Swipe right to close drawer
+                    else if navigationState.isDrawerOpen && gesture.translation.width < -100 {
+                        navigationState.toggleDrawer()
+                    }
+                }
+        )
         .ignoresSafeArea(.keyboard)
     }
-}
 
-struct CustomTabBar: View {
-    @Binding var selectedTab: Int
-    var namespace: Namespace.ID
-
-    let tabs: [(icon: String, label: String)] = [
-        ("house.fill", "Home"),
-        ("message.fill", "Chat"),
-        ("list.bullet.rectangle", "Activity"),
-        ("chart.pie.fill", "Accounts"),
-        ("gearshape.fill", "Settings")
-    ]
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(tabs.indices, id: \.self) { index in
-                TabBarButton(
-                    icon: tabs[index].icon,
-                    label: tabs[index].label,
-                    isSelected: selectedTab == index,
-                    namespace: namespace
-                ) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedTab = index
-                    }
-                }
-            }
+    @ViewBuilder
+    private var selectedViewContent: some View {
+        switch navigationState.selectedView {
+        case .dashboard:
+            BalanceView()
+        case .chat:
+            ChatView()
+        case .activity:
+            TransactionsListView()
+        case .accounts:
+            AccountsView()
+        case .settings:
+            SettingsView()
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 12)
-        .padding(.bottom, 28)
-        .background(
-            Color(red: 0.08, green: 0.08, blue: 0.12).opacity(0.95)
-        )
-        .clipShape(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-        )
-        .shadow(color: Color.black.opacity(0.3), radius: 20, y: -5)
-        .padding(.horizontal, 12)
-        .padding(.bottom, -20)
     }
-}
 
-struct TabBarButton: View {
-    let icon: String
-    let label: String
-    let isSelected: Bool
-    var namespace: Namespace.ID
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack {
-                    if isSelected {
-                        Circle()
-                            .fill(Color.furgMint.opacity(0.2))
-                            .frame(width: 48, height: 48)
-                            .matchedGeometryEffect(id: "tabBackground", in: namespace)
-                    }
-
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
-                        .foregroundColor(isSelected ? .furgMint : .white.opacity(0.4))
-                        .scaleEffect(isSelected ? 1.1 : 1.0)
-                }
-                .frame(width: 48, height: 48)
-
-                Text(label)
-                    .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? .furgMint : .white.opacity(0.4))
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(AccessibleTabButtonStyle(isSelected: isSelected))
-        // Accessibility
-        .accessibilityLabel(label)
-        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to switch to \(label)")
-        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : [.isButton])
-        .accessibilityRemoveTraits(isSelected ? [] : [.isSelected])
+    private func handleRefresh() {
+        // TODO: Implement refresh logic
+        print("Refresh tapped")
     }
-}
 
-// MARK: - Accessible Button Style
-/// Custom button style that provides visual feedback while maintaining accessibility
-private struct AccessibleTabButtonStyle: ButtonStyle {
-    let isSelected: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
-            .opacity(configuration.isPressed ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    private func handleNotifications() {
+        // TODO: Navigate to notifications view
+        print("Notifications tapped")
     }
 }
 

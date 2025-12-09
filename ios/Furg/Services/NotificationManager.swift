@@ -266,12 +266,12 @@ class NotificationManager: ObservableObject {
     }
 
     func cancelBillReminders(for billName: String) {
-        center.getPendingNotificationRequests { requests in
+        center.getPendingNotificationRequests { [weak self] requests in
             let identifiers = requests
                 .filter { $0.identifier.starts(with: "bill_\(billName)") }
                 .map { $0.identifier }
 
-            self.center.removePendingNotificationRequests(withIdentifiers: identifiers)
+            self?.center.removePendingNotificationRequests(withIdentifiers: identifiers)
         }
     }
 

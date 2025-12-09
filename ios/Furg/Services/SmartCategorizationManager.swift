@@ -8,6 +8,9 @@
 import Foundation
 import SwiftUI
 import Combine
+import os.log
+
+private let logger = Logger(subsystem: "com.furg.app", category: "SmartCategorization")
 
 // MARK: - Models
 
@@ -114,6 +117,7 @@ struct CategoryPattern: Codable {
 
 // MARK: - Smart Categorization Manager
 
+@MainActor
 class SmartCategorizationManager: ObservableObject {
     static let shared = SmartCategorizationManager()
 

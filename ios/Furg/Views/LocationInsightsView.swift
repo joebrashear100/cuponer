@@ -131,7 +131,7 @@ struct LocationInsightsView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -353,7 +353,7 @@ struct SpendingAreaRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -458,7 +458,7 @@ struct NearbyMerchantCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -561,7 +561,7 @@ struct LocationInsightCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(insightColor.opacity(0.3), lineWidth: 1)

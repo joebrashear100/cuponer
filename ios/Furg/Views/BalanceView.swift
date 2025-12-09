@@ -2,624 +2,358 @@
 //  BalanceView.swift
 //  Furg
 //
-//  Modern glassmorphism balance dashboard
+//  Redesigned with Copilot Money aesthetic - clean, elegant, intuitive
 //
 
 import SwiftUI
+import Charts
 
 struct BalanceView: View {
     @EnvironmentObject var financeManager: FinanceManager
-    @State private var showHideSheet = false
-    @State private var hideAmount = ""
     @State private var animate = false
+    @State private var selectedTimeRange: TimeRange = .month
 
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Good \(greeting)")
-                            .font(.furgBody)
-                            .foregroundColor(.white.opacity(0.6))
-                        Text("Your Balance")
-                            .font(.furgLargeTitle)
-                            .foregroundColor(.white)
-                    }
-                    Spacer()
-                    Button {
-                        Task { await financeManager.refreshAll() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.title3)
-                            .foregroundColor(.furgMint)
-                            .padding(12)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
-                    }
-                }
-                .padding(.top, 60)
-
-                // Main balance card
-                MainBalanceCard(balance: financeManager.balance, animate: animate)
-                    .offset(y: animate ? 0 : 20)
-                    .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
-
-                // Quick stats
-                if let balance = financeManager.balance {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        MiniStatCard(
-                            title: "Safety Buffer",
-                            value: "$\(Int(balance.safetyBuffer))",
-                            icon: "shield.lefthalf.filled",
-                            color: .furgSuccess
-                        )
-
-                        MiniStatCard(
-                            title: "Pending",
-                            value: "$\(Int(balance.pendingBalance))",
-                            icon: "clock.fill",
-                            color: .furgInfo
-                        )
-                    }
-                    .offset(y: animate ? 0 : 20)
-                    .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
-                }
-
-                // Action buttons
-                HStack(spacing: 16) {
-                    ActionButton(
-                        icon: "eye.slash.fill",
-                        label: "Hide",
-                        color: .furgMint
-                    ) {
-                        showHideSheet = true
-                    }
-
-                    ActionButton(
-                        icon: "eye.fill",
-                        label: "Reveal",
-                        color: .furgSeafoam
-                    ) {
-                        // Reveal action
-                    }
-
-                    ActionButton(
-                        icon: "plus",
-                        label: "Add",
-                        color: .furgPistachio
-                    ) {
-                        // Add bank action
-                    }
-                }
-                .offset(y: animate ? 0 : 20)
-                .opacity(animate ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
-
-                // Upcoming bills section
-                if let upcoming = financeManager.upcomingBills, !upcoming.bills.isEmpty {
-                    UpcomingBillsCard(upcoming: upcoming)
-                        .offset(y: animate ? 0 : 20)
-                        .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
-                }
-
-                // Demo mode indicator
-                if !financeManager.hasBankConnected {
-                    DemoModeCard()
-                        .offset(y: animate ? 0 : 20)
-                        .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
-                }
-
-                // Hidden accounts
-                if let balance = financeManager.balance, let accounts = balance.hiddenAccounts, !accounts.isEmpty {
-                    HiddenAccountsSection(accounts: accounts)
-                        .offset(y: animate ? 0 : 20)
-                        .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.5), value: animate)
-                }
-
-                Spacer(minLength: 120)
-            }
-            .padding(.horizontal, 20)
-        }
-        .task {
-            await financeManager.loadBalance()
-            await financeManager.loadUpcomingBills()
-        }
-        .onAppear {
-            withAnimation { animate = true }
-        }
-        .sheet(isPresented: $showHideSheet) {
-            HideMoneySheet(financeManager: financeManager)
-        }
+    enum TimeRange: String, CaseIterable {
+        case week = "Week"
+        case month = "Month"
+        case year = "Year"
     }
 
-    var greeting: String {
+    private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 5..<12: return "Morning"
-        case 12..<17: return "Afternoon"
-        case 17..<21: return "Evening"
-        default: return "Night"
-        }
+        if hour < 12 { return "Morning" }
+        if hour < 18 { return "Afternoon" }
+        return "Evening"
     }
-}
-
-// MARK: - Main Balance Card
-
-struct MainBalanceCard: View {
-    let balance: BalanceSummary?
-    let animate: Bool
 
     var body: some View {
-        VStack(spacing: 20) {
-            if let balance = balance {
-                // Balance amount
-                VStack(spacing: 8) {
-                    Text("AVAILABLE")
-                        .font(.furgCaption)
-                        .foregroundColor(.white.opacity(0.5))
-                        .tracking(2)
+        ZStack {
+            // Clean background - no mesh, just subtle gradient
+            LinearGradient(
+                colors: [
+                    Color(red: 0.05, green: 0.05, blue: 0.08),
+                    Color(red: 0.08, green: 0.08, blue: 0.12)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("$")
-                            .font(.system(size: 32, weight: .medium, design: .rounded))
-                            .foregroundColor(.furgMint)
-
-                        Text("\(Int(balance.availableBalance))")
-                            .font(.system(size: 56, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                    }
-
-                    // Hidden indicator
-                    if balance.hiddenBalance > 0 {
-                        HStack(spacing: 6) {
-                            Image(systemName: "eye.slash.fill")
-                                .font(.caption)
-                            Text("$\(Int(balance.hiddenBalance)) hidden from view")
-                                .font(.furgCaption)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 28) {
+                    // Minimal header
+                    HStack {
+                        Text(greeting)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        Spacer()
+                        Button {
+                            Task { await financeManager.refreshAll() }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.7))
                         }
-                        .foregroundColor(.furgMint.opacity(0.8))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.furgMint.opacity(0.15))
-                        .clipShape(Capsule())
                     }
-                }
-
-                // Divider
-                Rectangle()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(height: 1)
+                    .padding(.top, 60)
                     .padding(.horizontal, 20)
 
-                // Total balance row
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    // Hero Balance - Big, bold, clear
+                    VStack(spacing: 8) {
                         Text("Total Balance")
-                            .font(.furgCaption)
+                            .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.white.opacity(0.5))
-                        Text("$\(Int(balance.totalBalance))")
-                            .font(.furgTitle2)
-                            .foregroundColor(.white)
+
+                        if let balance = financeManager.balance {
+                            Text(formatCurrency(balance.totalBalance))
+                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                                .minimumScaleFactor(0.8)
+
+                            // Change indicator - GREEN up (demo data)
+                            let monthChange = 450.0
+                            HStack(spacing: 6) {
+                                Image(systemName: monthChange >= 0 ? "arrow.up" : "arrow.down")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text("$\(Int(abs(monthChange))) this month")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundColor(monthChange >= 0 ? .chartIncome : .chartSpending)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background((monthChange >= 0 ? Color.chartIncome : Color.chartSpending).opacity(0.15))
+                            .clipShape(Capsule())
+                        } else {
+                            Text("$0")
+                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                                .foregroundColor(.white.opacity(0.3))
+                        }
                     }
-                    Spacer()
-                    Image(systemName: "building.columns.fill")
-                        .font(.title2)
-                        .foregroundColor(.furgMint.opacity(0.6))
+                    .padding(.vertical, 20)
+                    .opacity(animate ? 1 : 0)
+                    .offset(y: animate ? 0 : -10)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animate)
+
+                    // Balance trend chart - SIMPLE & BEAUTIFUL
+                    if let balance = financeManager.balance {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Balance Trend")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundColor(.white)
+
+                            // Time range picker
+                            HStack(spacing: 12) {
+                                ForEach(TimeRange.allCases, id: \.self) { range in
+                                    Button {
+                                        withAnimation(.spring(response: 0.3)) {
+                                            selectedTimeRange = range
+                                        }
+                                    } label: {
+                                        Text(range.rawValue)
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(selectedTimeRange == range ? .white : .white.opacity(0.4))
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                selectedTimeRange == range
+                                                ? Color.white.opacity(0.15)
+                                                : Color.clear
+                                            )
+                                            .clipShape(Capsule())
+                                    }
+                                }
+                                Spacer()
+                            }
+
+                            // Beautiful line chart
+                            BalanceTrendChart(data: generateBalanceData(), selectedRange: selectedTimeRange)
+                                .frame(height: 200)
+                        }
+                        .padding(20)
+                        .background(Color.white.opacity(0.03))
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 20)
+                        .opacity(animate ? 1 : 0)
+                        .offset(y: animate ? 0 : 20)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animate)
+                    }
+
+                    // Cash flow summary - CLEAN INDICATORS
+                    HStack(spacing: 16) {
+                        // Income - GREEN
+                        CashFlowIndicator(
+                            title: "Income",
+                            amount: 4200,
+                            isPositive: true,
+                            icon: "arrow.down"
+                        )
+
+                        // Spending - RED
+                        CashFlowIndicator(
+                            title: "Spending",
+                            amount: 3150,
+                            isPositive: false,
+                            icon: "arrow.up"
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .opacity(animate ? 1 : 0)
+                    .offset(y: animate ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animate)
+
+                    // Accounts - MINIMAL CARDS
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Accounts")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+
+                        VStack(spacing: 8) {
+                            BalanceAccountRow(name: "Chase Checking", balance: 2450, change: 120)
+                            BalanceAccountRow(name: "Discover Savings", balance: 8900, change: 250)
+                            BalanceAccountRow(name: "Amex Credit", balance: -1200, change: -80)
+                        }
+                    }
+                    .opacity(animate ? 1 : 0)
+                    .offset(y: animate ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animate)
+
+                    Spacer(minLength: 100)
                 }
-                .padding(.horizontal, 8)
-
-            } else {
-                // Empty state
-                VStack(spacing: 16) {
-                    Image(systemName: "banknote")
-                        .font(.system(size: 40))
-                        .foregroundColor(.furgMint.opacity(0.5))
-
-                    Text("Connect a bank account")
-                        .font(.furgHeadline)
-                        .foregroundColor(.white.opacity(0.7))
-
-                    Text("Link your bank to see your balance and track spending")
-                        .font(.furgCaption)
-                        .foregroundColor(.white.opacity(0.4))
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.vertical, 20)
             }
         }
-        .padding(24)
-        .glassCard()
+        .onAppear {
+            animate = true
+            Task {
+                await financeManager.refreshAll()
+            }
+        }
+    }
+
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: value)) ?? "$0"
+    }
+
+    private func generateBalanceData() -> [BalanceDataPoint] {
+        let calendar = Calendar.current
+        let today = Date()
+        var data: [BalanceDataPoint] = []
+
+        let days = selectedTimeRange == .week ? 7 : (selectedTimeRange == .month ? 30 : 365)
+
+        for i in 0..<days {
+            if let date = calendar.date(byAdding: .day, value: -days + i, to: today) {
+                // Generate realistic trending data
+                let baseBalance = 10000.0
+                let trend = Double(i) * 15
+                let variance = Double.random(in: -200...300)
+                let balance = baseBalance + trend + variance
+                data.append(BalanceDataPoint(date: date, balance: balance))
+            }
+        }
+
+        return data
     }
 }
 
-// MARK: - Mini Stat Card
+// MARK: - Balance Data Model
+struct BalanceDataPoint: Identifiable {
+    let id = UUID()
+    let date: Date
+    let balance: Double
+}
 
-struct MiniStatCard: View {
+// MARK: - Balance Trend Chart
+struct BalanceTrendChart: View {
+    let data: [BalanceDataPoint]
+    let selectedRange: BalanceView.TimeRange
+
+    var body: some View {
+        Chart(data) { point in
+            LineMark(
+                x: .value("Date", point.date),
+                y: .value("Balance", point.balance)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [Color.chartIncome.opacity(0.8), Color.chartIncome.opacity(0.5)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+
+            AreaMark(
+                x: .value("Date", point.date),
+                y: .value("Balance", point.balance)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [Color.chartIncome.opacity(0.3), Color.chartIncome.opacity(0.05)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic) { value in
+                AxisValueLabel()
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisValueLabel()
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYScale(domain: .automatic(includesZero: false))
+    }
+}
+
+// MARK: - Cash Flow Indicator
+struct CashFlowIndicator: View {
     let title: String
-    let value: String
+    let amount: Double
+    let isPositive: Bool
     let icon: String
-    let color: Color
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundColor(color)
-                Spacer()
+                    .font(.system(size: 14, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
             }
+            .foregroundColor(.white.opacity(0.6))
 
-            Text(value)
-                .font(.furgTitle2)
-                .foregroundColor(.white)
-
-            Text(title)
-                .font(.furgCaption)
-                .foregroundColor(.white.opacity(0.5))
+            Text("$\(Int(amount))")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(isPositive ? .chartIncome : .chartSpending)
         }
-        .padding(16)
-        .glassCard(cornerRadius: 20, opacity: 0.08)
-    }
-}
-
-// MARK: - Action Button
-
-struct ActionButton: View {
-    let icon: String
-    let label: String
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.2))
-                        .frame(width: 56, height: 56)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(color)
-                }
-
-                Text(label)
-                    .font(.furgCaption)
-                    .foregroundColor(.white.opacity(0.7))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .glassCard(cornerRadius: 20, opacity: 0.08)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Upcoming Bills Card
-
-struct UpcomingBillsCard: View {
-    let upcoming: UpcomingBillsResponse
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Upcoming Bills")
-                    .font(.furgHeadline)
-                    .foregroundColor(.white)
-
-                Spacer()
-
-                Text("\(upcoming.daysAhead ?? 30) days")
-                    .font(.furgCaption)
-                    .foregroundColor(.white.opacity(0.5))
-            }
-
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("$\(Int(upcoming.totalAmount))")
-                        .font(.furgTitle)
-                        .foregroundColor(.furgWarning)
-
-                    Text("\(upcoming.bills.count) bills due")
-                        .font(.furgCaption)
-                        .foregroundColor(.white.opacity(0.5))
-                }
-
-                Spacer()
-
-                ZStack {
-                    Circle()
-                        .fill(Color.furgWarning.opacity(0.15))
-                        .frame(width: 50, height: 50)
-
-                    Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.title2)
-                        .foregroundColor(.furgWarning)
-                }
-            }
-
-            // Bill list preview
-            if !upcoming.bills.isEmpty {
-                VStack(spacing: 8) {
-                    ForEach(upcoming.bills.prefix(3)) { bill in
-                        HStack {
-                            Text(bill.merchant)
-                                .font(.furgBody)
-                                .foregroundColor(.white.opacity(0.8))
-                            Spacer()
-                            Text(bill.formattedAmount)
-                                .font(.furgBody)
-                                .foregroundColor(.white)
-                            Text(bill.nextDue)
-                                .font(.furgCaption)
-                                .foregroundColor(.white.opacity(0.5))
-                        }
-                    }
-                }
-                .padding(.top, 8)
-            }
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .glassCard(cornerRadius: 20, opacity: 0.08)
+        .background(Color.white.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }
 
-// MARK: - Demo Mode Card
+// MARK: - Balance Account Row (renamed to avoid conflict)
+private struct BalanceAccountRow: View {
+    let name: String
+    let balance: Double
+    let change: Double
 
-struct DemoModeCard: View {
     var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color.furgInfo.opacity(0.2))
-                    .frame(width: 44, height: 44)
+        HStack {
+            // Account icon
+            Circle()
+                .fill(Color.white.opacity(0.08))
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Image(systemName: balance < 0 ? "creditcard.fill" : "banknote.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.white.opacity(0.6))
+                )
 
-                Image(systemName: "sparkles")
-                    .font(.title3)
-                    .foregroundColor(.furgInfo)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Demo Mode")
-                    .font(.furgHeadline)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(name)
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
 
-                Text("Connect a bank to see real data")
-                    .font(.furgCaption)
-                    .foregroundColor(.white.opacity(0.5))
+                // Change indicator - GREEN up, RED down
+                HStack(spacing: 4) {
+                    Image(systemName: change >= 0 ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 10, weight: .bold))
+                    Text("$\(Int(abs(change)))")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundColor(change >= 0 ? .chartIncome : .chartSpending)
             }
 
             Spacer()
 
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.3))
+            Text("$\(Int(abs(balance)))")
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundColor(balance >= 0 ? .white : .chartSpending)
         }
-        .padding(16)
-        .glassCard(cornerRadius: 16, opacity: 0.08)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(Color.white.opacity(0.02))
     }
-}
-
-// MARK: - Hidden Accounts Section
-
-struct HiddenAccountsSection: View {
-    let accounts: [ShadowAccount]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Image(systemName: "eye.slash.fill")
-                    .foregroundColor(.furgMint)
-                Text("Hidden Savings")
-                    .font(.furgHeadline)
-                    .foregroundColor(.white)
-                Spacer()
-            }
-
-            ForEach(accounts) { account in
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(account.purpose.replacingOccurrences(of: "_", with: " ").capitalized)
-                            .font(.furgBody)
-                            .foregroundColor(.white.opacity(0.9))
-
-                        Text(account.createdAt)
-                            .font(.furgCaption)
-                            .foregroundColor(.white.opacity(0.4))
-                    }
-
-                    Spacer()
-
-                    Text("$\(Int(account.balance))")
-                        .font(.furgTitle2)
-                        .foregroundColor(.furgMint)
-                }
-                .padding(16)
-                .background(Color.white.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-        }
-        .padding(20)
-        .glassCard(cornerRadius: 20, opacity: 0.08)
-    }
-}
-
-// MARK: - Hide Money Sheet
-
-struct HideMoneySheet: View {
-    @Environment(\.dismiss) var dismiss
-    let financeManager: FinanceManager
-    @State private var hideAmount = ""
-    @State private var purpose = "forced_savings"
-    @State private var showResult = false
-    @State private var resultMessage = ""
-    @State private var isProcessing = false
-
-    let purposes = [
-        ("forced_savings", "Forced Savings", "piggybank.fill"),
-        ("savings_goal", "Savings Goal", "target"),
-        ("emergency", "Emergency Fund", "cross.case.fill")
-    ]
-
-    var body: some View {
-        ZStack {
-            AnimatedMeshBackground()
-
-            VStack(spacing: 24) {
-                // Header
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.title3)
-                            .foregroundColor(.white.opacity(0.7))
-                            .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
-                    }
-                    Spacer()
-                    Text("Hide Money")
-                        .font(.furgTitle2)
-                        .foregroundColor(.white)
-                    Spacer()
-                    Color.clear.frame(width: 44)
-                }
-                .padding(.top, 20)
-
-                Spacer()
-
-                // Amount input
-                VStack(spacing: 12) {
-                    Text("AMOUNT")
-                        .font(.furgCaption)
-                        .foregroundColor(.white.opacity(0.5))
-                        .tracking(2)
-
-                    HStack(alignment: .center, spacing: 4) {
-                        Text("$")
-                            .font(.system(size: 40, weight: .medium, design: .rounded))
-                            .foregroundColor(.furgMint)
-
-                        TextField("0", text: $hideAmount)
-                            .font(.system(size: 56, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 200)
-                    }
-                }
-                .padding(32)
-                .glassCard()
-
-                // Purpose selection
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("PURPOSE")
-                        .font(.furgCaption)
-                        .foregroundColor(.white.opacity(0.5))
-                        .tracking(2)
-
-                    ForEach(purposes, id: \.0) { id, label, icon in
-                        Button {
-                            purpose = id
-                        } label: {
-                            HStack(spacing: 16) {
-                                Image(systemName: icon)
-                                    .font(.title3)
-                                    .foregroundColor(purpose == id ? .furgMint : .white.opacity(0.4))
-                                    .frame(width: 24)
-
-                                Text(label)
-                                    .font(.furgBody)
-                                    .foregroundColor(.white)
-
-                                Spacer()
-
-                                if purpose == id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.furgMint)
-                                }
-                            }
-                            .padding(16)
-                            .background(purpose == id ? Color.furgMint.opacity(0.1) : Color.white.opacity(0.05))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(purpose == id ? Color.furgMint.opacity(0.3) : Color.clear, lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                Spacer()
-
-                // Hide button
-                Button {
-                    Task { await hideMoneyAction() }
-                } label: {
-                    HStack {
-                        if isProcessing {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .furgCharcoal))
-                        } else {
-                            Image(systemName: "eye.slash.fill")
-                            Text("Hide Money")
-                        }
-                    }
-                    .font(.furgHeadline)
-                    .foregroundColor(.furgCharcoal)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(FurgGradients.mintGradient)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .disabled(hideAmount.isEmpty || isProcessing)
-                .opacity(hideAmount.isEmpty || isProcessing ? 0.6 : 1)
-                .padding(.bottom, 20)
-            }
-            .padding(.horizontal, 20)
-        }
-        .alert("Result", isPresented: $showResult) {
-            Button("OK") {
-                if resultMessage.contains("Successfully") {
-                    dismiss()
-                }
-            }
-        } message: {
-            Text(resultMessage)
-        }
-    }
-
-    private func hideMoneyAction() async {
-        guard let amount = Double(hideAmount), amount > 0 else {
-            resultMessage = "Please enter a valid amount"
-            showResult = true
-            return
-        }
-
-        isProcessing = true
-        let success = await financeManager.hideAmount(amount, purpose: purpose)
-        isProcessing = false
-
-        if success {
-            resultMessage = "Successfully hidden $\(String(format: "%.2f", amount))!"
-        } else {
-            resultMessage = financeManager.errorMessage ?? "Failed to hide money"
-        }
-
-        showResult = true
-    }
-}
-
-#Preview {
-    ZStack {
-        AnimatedMeshBackground()
-        BalanceView()
-    }
-    .environmentObject(FinanceManager())
 }

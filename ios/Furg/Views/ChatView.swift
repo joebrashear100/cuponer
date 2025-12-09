@@ -19,7 +19,7 @@ struct ChatView: View {
     var body: some View {
         ZStack {
             // Animated gradient background
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 0) {
                 // Premium header
@@ -92,39 +92,97 @@ struct ChatView: View {
     // MARK: - Header
 
     private var chatHeader: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("FURG")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+        VStack(spacing: 12) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("FURG")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
 
-                Text("Your financial assistant")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.furgSuccess)
+                            .frame(width: 6, height: 6)
+                        Text("Online • Ready to help")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+
+                Spacer()
+
+                // Quick actions
+                HStack(spacing: 10) {
+                    Button {
+                        // Voice input (placeholder)
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: 36, height: 36)
+
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+                    }
+
+                    // Menu button
+                    Menu {
+                        Button(action: { chatManager.clearHistory() }) {
+                            Label("Clear Chat", systemImage: "trash")
+                        }
+                        Button(action: {}) {
+                            Label("Export Chat", systemImage: "square.and.arrow.up")
+                        }
+                        Button(action: {}) {
+                            Label("Voice Mode", systemImage: "waveform")
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: 36, height: 36)
+
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                    }
+                }
             }
 
-            Spacer()
-
-            // Menu button
-            Menu {
-                Button(action: { chatManager.clearHistory() }) {
-                    Label("Clear Chat", systemImage: "trash")
-                }
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 36, height: 36)
-
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.8))
-                }
+            // Quick action pills (when no messages)
+            if chatManager.messages.isEmpty {
+                quickActionPills
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 8)
+    }
+
+    private var quickActionPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                QuickActionPill(icon: "chart.bar.fill", text: "Spending Report", color: .purple) {
+                    messageText = "Give me a spending report"
+                    sendMessage()
+                }
+                QuickActionPill(icon: "bell.fill", text: "Bill Alerts", color: .furgWarning) {
+                    messageText = "What bills are due soon?"
+                    sendMessage()
+                }
+                QuickActionPill(icon: "target", text: "Goal Check", color: .furgMint) {
+                    messageText = "How are my savings goals?"
+                    sendMessage()
+                }
+                QuickActionPill(icon: "sparkles", text: "Daily Tip", color: .yellow) {
+                    messageText = "Give me a financial tip"
+                    sendMessage()
+                }
+            }
+        }
     }
 
     // MARK: - Floating Input Bar (No Background)
@@ -144,7 +202,7 @@ struct ChatView: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -210,16 +268,43 @@ struct ChatView: View {
 
 private struct EmptyStateView: View {
     var onSuggestionTap: (String) -> Void
+    @State private var selectedCategory = 0
 
-    let suggestions = [
-        ("How am I doing?", "chart.line.uptrend.xyaxis"),
-        ("Spending tips", "lightbulb.fill"),
-        ("Can I afford $500?", "dollarsign.circle"),
-        ("Bill summary", "doc.text.fill")
+    let categories = ["Quick", "Budget", "Goals", "Analytics"]
+
+    let suggestionsByCategory: [[SuggestionItem]] = [
+        // Quick
+        [
+            SuggestionItem(text: "How am I doing?", icon: "chart.line.uptrend.xyaxis", color: .furgMint),
+            SuggestionItem(text: "Can I afford $500?", icon: "dollarsign.circle", color: .furgSuccess),
+            SuggestionItem(text: "What's my spending power?", icon: "creditcard.fill", color: .blue),
+            SuggestionItem(text: "Surprise me with a tip", icon: "lightbulb.fill", color: .yellow)
+        ],
+        // Budget
+        [
+            SuggestionItem(text: "Create a budget for me", icon: "chart.pie.fill", color: .purple),
+            SuggestionItem(text: "Where am I overspending?", icon: "exclamationmark.triangle.fill", color: .furgWarning),
+            SuggestionItem(text: "How to save $500/month?", icon: "banknote.fill", color: .furgMint),
+            SuggestionItem(text: "Review my subscriptions", icon: "repeat", color: .indigo)
+        ],
+        // Goals
+        [
+            SuggestionItem(text: "Help me save for vacation", icon: "airplane", color: .cyan),
+            SuggestionItem(text: "Emergency fund advice", icon: "shield.fill", color: .furgSuccess),
+            SuggestionItem(text: "Debt payoff strategy", icon: "creditcard.trianglebadge.exclamationmark.fill", color: .furgDanger),
+            SuggestionItem(text: "Investment suggestions", icon: "chart.bar.fill", color: .purple)
+        ],
+        // Analytics
+        [
+            SuggestionItem(text: "Analyze my spending habits", icon: "magnifyingglass", color: .blue),
+            SuggestionItem(text: "Compare to last month", icon: "calendar", color: .orange),
+            SuggestionItem(text: "My financial health score", icon: "heart.fill", color: .red),
+            SuggestionItem(text: "Predict next month's spending", icon: "wand.and.stars", color: .furgMint)
+        ]
     ]
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 28) {
             // Animated icon
             ZStack {
                 // Outer glow
@@ -232,12 +317,12 @@ private struct EmptyStateView: View {
                             endRadius: 80
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 140, height: 140)
 
                 // Glass circle
                 Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 88, height: 88)
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 80, height: 80)
                     .overlay(
                         Circle()
                             .stroke(
@@ -251,8 +336,8 @@ private struct EmptyStateView: View {
                     )
 
                 // Icon
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 32))
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 28))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.furgMint, .furgSeafoam],
@@ -263,34 +348,133 @@ private struct EmptyStateView: View {
             }
 
             // Text
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("Chat with FURG")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
 
                 Text("Your brutally honest financial AI")
-                    .font(.system(size: 15))
+                    .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.5))
             }
 
-            // Suggestion chips
-            VStack(spacing: 12) {
-                Text("Try asking")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.4))
-                    .textCase(.uppercase)
-                    .tracking(1)
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(suggestions, id: \.0) { suggestion, icon in
-                        SuggestionChip(text: suggestion, icon: icon) {
-                            onSuggestionTap(suggestion)
+            // Category tabs
+            HStack(spacing: 6) {
+                ForEach(Array(categories.enumerated()), id: \.offset) { index, category in
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            selectedCategory = index
                         }
+                    } label: {
+                        Text(category)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(selectedCategory == index ? .furgCharcoal : .white.opacity(0.6))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(selectedCategory == index ? Color.furgMint : Color.white.opacity(0.08))
+                            )
                     }
                 }
             }
+
+            // Suggestion chips based on category
+            VStack(spacing: 10) {
+                ForEach(suggestionsByCategory[selectedCategory], id: \.text) { suggestion in
+                    RichSuggestionChip(item: suggestion) {
+                        onSuggestionTap(suggestion.text)
+                    }
+                }
+            }
+
+            // Quick stats footer
+            HStack(spacing: 24) {
+                QuickStatBadge(icon: "checkmark.circle.fill", value: "24/7", label: "Available", color: .furgSuccess)
+                QuickStatBadge(icon: "bolt.fill", value: "< 1s", label: "Response", color: .furgWarning)
+                QuickStatBadge(icon: "lock.fill", value: "100%", label: "Private", color: .furgMint)
+            }
+            .padding(.top, 8)
         }
-        .padding(.vertical, 40)
+        .padding(.vertical, 32)
+    }
+}
+
+// MARK: - Suggestion Item
+
+private struct SuggestionItem {
+    let text: String
+    let icon: String
+    let color: Color
+}
+
+// MARK: - Rich Suggestion Chip
+
+private struct RichSuggestionChip: View {
+    let item: SuggestionItem
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(item.color.opacity(0.2))
+                        .frame(width: 36, height: 36)
+
+                    Image(systemName: item.icon)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(item.color)
+                }
+
+                Text(item.text)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.white.opacity(0.06))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                    )
+            )
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+}
+
+// MARK: - Quick Stat Badge
+
+private struct QuickStatBadge: View {
+    let icon: String
+    let value: String
+    let label: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(color)
+
+            Text(value)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
+
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundColor(.white.opacity(0.4))
+        }
     }
 }
 
@@ -317,7 +501,7 @@ private struct SuggestionChip: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.furgMint.opacity(0.2), lineWidth: 0.5)
@@ -531,6 +715,40 @@ private struct TypingIndicator: View {
         }
         .accessibilityLabel("FURG is typing")
         .accessibilityAddTraits(.updatesFrequently)
+    }
+}
+
+// MARK: - Quick Action Pill
+
+private struct QuickActionPill: View {
+    let icon: String
+    let text: String
+    let color: Color
+    var onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(color)
+
+                Text(text)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(color.opacity(0.15))
+                    .overlay(
+                        Capsule()
+                            .stroke(color.opacity(0.3), lineWidth: 0.5)
+                    )
+            )
+        }
+        .buttonStyle(ScaleButtonStyle())
     }
 }
 

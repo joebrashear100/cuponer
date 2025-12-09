@@ -115,7 +115,7 @@ struct CategoriesView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 24) {
@@ -266,7 +266,7 @@ struct CategoriesView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -322,7 +322,7 @@ struct CategoriesView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -384,7 +384,7 @@ struct CategoriesView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -472,7 +472,7 @@ private struct CategoryRow: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.08), lineWidth: 0.5)

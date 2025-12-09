@@ -117,31 +117,25 @@ class AuthManager: NSObject, ObservableObject {
     }
 
     #if DEBUG
-    /// Debug login for testing - requires DEBUG_USER_ID and DEBUG_JWT_TOKEN environment variables
-    /// Set these in your Xcode scheme to enable debug login
-    /// SECURITY: Never commit actual tokens to source code
-    func debugBypassLogin(skipOnboarding: Bool = true) {
-        guard let debugUserId = ProcessInfo.processInfo.environment["DEBUG_USER_ID"],
-              let debugToken = ProcessInfo.processInfo.environment["DEBUG_JWT_TOKEN"] else {
-            logger.warning("Debug login requires DEBUG_USER_ID and DEBUG_JWT_TOKEN environment variables")
-            errorMessage = "Debug login not configured. Set environment variables in Xcode scheme."
-            return
-        }
-
-        token = debugToken
-        storedUserId = debugUserId
-
-        self.userID = debugUserId
+    /// Debug login for testing - completely bypasses authentication
+    /// SECURITY: This is only available in DEBUG builds
+    func debugBypassLogin(skipOnboarding: Bool = false) {
+        // Set state directly without touching keychain (avoids simulator issues)
+        self.userID = "demo-user-12345"
         self.isAuthenticated = true
         self.errorMessage = nil
+        self.isLoading = false
 
-        // Skip onboarding for debug users by default
+        // Don't skip onboarding by default so user can see the flow
         if skipOnboarding {
             UserDefaults.standard.set(true, forKey: onboardingKey)
             self.hasCompletedOnboarding = true
+        } else {
+            // Ensure onboarding will show
+            self.hasCompletedOnboarding = false
         }
 
-        logger.info("Debug login successful for user: \(debugUserId.prefix(8))...")
+        logger.info("Debug login successful - demo mode active")
     }
     #endif
 

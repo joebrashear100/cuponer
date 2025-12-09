@@ -33,7 +33,7 @@ struct DashboardView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
@@ -157,9 +157,13 @@ struct DashboardView: View {
             }
             .presentationBackground(Color.furgCharcoal)
         }
+        // TODO: Add FinancialHealthView to Xcode project
         .sheet(isPresented: $showFinancialHealth) {
             NavigationStack {
-                FinancialHealthView()
+                Text("Financial Health - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showFinancialHealth = false }
@@ -255,7 +259,7 @@ struct DashboardView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24))
                 .background(
                     RoundedRectangle(cornerRadius: 24)
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.white.opacity(0.03))
                         .overlay(
                             RoundedRectangle(cornerRadius: 24)
                                 .stroke(
@@ -362,7 +366,7 @@ struct DashboardView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -448,7 +452,7 @@ struct DashboardView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -561,7 +565,7 @@ private struct QuickInsightCard: View {
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)

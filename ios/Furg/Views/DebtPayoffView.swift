@@ -262,7 +262,7 @@ struct DebtPayoffView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -649,7 +649,7 @@ struct DebtDetailView: View {
                         .padding(20)
                         .background(
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(.ultraThinMaterial)
+                                .fill(Color.white.opacity(0.03))
                         )
 
                         // Details Grid

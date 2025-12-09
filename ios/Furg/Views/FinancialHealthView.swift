@@ -127,7 +127,7 @@ struct FinancialHealthView: View {
         .padding(24)
         .background(
             RoundedRectangle(cornerRadius: 24)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(healthManager.healthGrade.color.opacity(0.3), lineWidth: 1)
@@ -199,7 +199,7 @@ struct FinancialHealthView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -334,7 +334,7 @@ struct ComponentRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(isSelected ? component.status.color.opacity(0.5) : Color.white.opacity(0.1), lineWidth: isSelected ? 2 : 0.5)
@@ -383,7 +383,7 @@ struct RecommendationRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)

@@ -14,6 +14,11 @@ struct SpendingDashboardView: View {
     @State private var selectedTimeframe: Timeframe = .month
     @State private var selectedCategory: SpendingCategoryData?
 
+    // Currency formatter since Formatters.swift isn't in project
+    private func formatCurrency(_ value: Double) -> String {
+        return String(format: "$%.0f", value)
+    }
+
     enum Timeframe: String, CaseIterable {
         case week = "Week"
         case month = "Month"
@@ -156,7 +161,7 @@ struct SpendingDashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             OverviewMetricCard(
                 title: "Total Spent",
-                value: CurrencyFormatter.formatCompact(totalSpending),
+                value: formatCurrency(totalSpending),
                 subtitle: "\(Int((totalSpending/budgetLimit) * 100))% of budget",
                 icon: "creditcard.fill",
                 color: .furgWarning
@@ -164,7 +169,7 @@ struct SpendingDashboardView: View {
 
             OverviewMetricCard(
                 title: "Daily Avg",
-                value: CurrencyFormatter.formatCompact(avgDailySpend),
+                value: formatCurrency(avgDailySpend),
                 subtitle: "per day",
                 icon: "calendar",
                 color: .furgMint
@@ -173,7 +178,7 @@ struct SpendingDashboardView: View {
             OverviewMetricCard(
                 title: "Top Category",
                 value: "Housing",
-                subtitle: CurrencyFormatter.formatCompact(1500),
+                subtitle: formatCurrency(1500),
                 icon: "house.fill",
                 color: .blue
             )
@@ -181,7 +186,7 @@ struct SpendingDashboardView: View {
             OverviewMetricCard(
                 title: "Top Merchant",
                 value: topMerchant,
-                subtitle: CurrencyFormatter.formatCompact(topMerchantAmount),
+                subtitle: formatCurrency(topMerchantAmount),
                 icon: "storefront.fill",
                 color: .purple
             )
@@ -281,13 +286,13 @@ struct SpendingDashboardView: View {
             .frame(height: 16)
 
             HStack {
-                Text(CurrencyFormatter.formatCompact(totalSpending))
+                Text(formatCurrency(totalSpending))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
 
                 Spacer()
 
-                Text("of \(CurrencyFormatter.formatCompact(budgetLimit))")
+                Text("of \(formatCurrency(budgetLimit))")
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.5))
             }
@@ -298,8 +303,8 @@ struct SpendingDashboardView: View {
                     .foregroundColor(budgetLimit > totalSpending ? .furgSuccess : .furgDanger)
 
                 Text(budgetLimit > totalSpending
-                     ? "\(CurrencyFormatter.formatCompact(budgetLimit - totalSpending)) remaining"
-                     : "\(CurrencyFormatter.formatCompact(totalSpending - budgetLimit)) over budget")
+                     ? "\(formatCurrency(budgetLimit - totalSpending)) remaining"
+                     : "\(formatCurrency(totalSpending - budgetLimit)) over budget")
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.7))
             }
@@ -436,6 +441,10 @@ private struct OverviewMetricCard: View {
 private struct CategorySpendRow: View {
     let category: SpendingCategoryData
 
+    private func formatCurrency(_ value: Double) -> String {
+        return String(format: "$%.0f", value)
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             HStack {
@@ -462,7 +471,7 @@ private struct CategorySpendRow: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(CurrencyFormatter.formatCompact(category.amount))
+                    Text(formatCurrency(category.amount))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
 

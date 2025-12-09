@@ -48,7 +48,7 @@ struct FinancingCalculatorView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 20) {
@@ -169,7 +169,7 @@ struct GlassPriceInputSection: View {
                     .foregroundColor(.furgCharcoal)
             }
             .padding()
-            .glassCard()
+            .copilotCard()
         }
         .padding(.horizontal)
     }
@@ -263,7 +263,7 @@ struct GlassCustomFinancingSection: View {
             }
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -296,7 +296,7 @@ struct GlassFinancingOptionsSection: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .glassCard()
+                .copilotCard()
                 .padding(.horizontal)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -483,7 +483,7 @@ struct GlassCalculationResultSection: View {
             .cornerRadius(12)
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -656,7 +656,7 @@ struct GlassComparisonTableSection: View {
             .cornerRadius(12)
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }

@@ -40,8 +40,93 @@ class FinanceManager: ObservableObject {
         [
             Bill(id: "1", merchant: "Netflix", amount: 15.99, frequency: "monthly", nextDue: "Dec 15", category: "Entertainment", confidence: 0.95),
             Bill(id: "2", merchant: "Spotify", amount: 9.99, frequency: "monthly", nextDue: "Dec 18", category: "Entertainment", confidence: 0.92),
-            Bill(id: "3", merchant: "Electric Company", amount: 125.00, frequency: "monthly", nextDue: "Dec 20", category: "Utilities", confidence: 0.88)
+            Bill(id: "3", merchant: "Electric Company", amount: 125.00, frequency: "monthly", nextDue: "Dec 20", category: "Utilities", confidence: 0.88),
+            Bill(id: "4", merchant: "Gym Membership", amount: 49.99, frequency: "monthly", nextDue: "Dec 22", category: "Health", confidence: 0.90),
+            Bill(id: "5", merchant: "Internet Provider", amount: 79.99, frequency: "monthly", nextDue: "Dec 25", category: "Utilities", confidence: 0.95)
         ]
+    }
+
+    var demoTransactions: [Transaction] {
+        let formatter = ISO8601DateFormatter()
+        let today = Date()
+        return [
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 0)), amount: -42.50, merchant: "Whole Foods", category: "Groceries"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 0)), amount: -15.99, merchant: "Netflix", category: "Entertainment"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 1)), amount: -28.75, merchant: "Shell Gas Station", category: "Transportation"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 1)), amount: -65.00, merchant: "Target", category: "Shopping"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 2)), amount: -12.50, merchant: "Starbucks", category: "Food"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 2)), amount: -89.99, merchant: "Amazon", category: "Shopping"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 3)), amount: 2500.00, merchant: "Direct Deposit - Payroll", category: "Income"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 3)), amount: -35.00, merchant: "Chipotle", category: "Food"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 4)), amount: -125.00, merchant: "Electric Company", category: "Utilities"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 4)), amount: -18.99, merchant: "Hulu", category: "Entertainment"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 5)), amount: -55.00, merchant: "Uber", category: "Transportation"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 5)), amount: -78.50, merchant: "Trader Joe's", category: "Groceries"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 6)), amount: -9.99, merchant: "Spotify", category: "Entertainment"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 6)), amount: -45.00, merchant: "CVS Pharmacy", category: "Health"),
+            Transaction(date: formatter.string(from: today.addingTimeInterval(-86400 * 7)), amount: -220.00, merchant: "Best Buy", category: "Shopping")
+        ]
+    }
+
+    /// Computed category spending from transactions
+    var categorySpending: [String: Double] {
+        let expenses = (transactions.isEmpty ? demoTransactions : transactions).filter { $0.amount < 0 }
+        var spending: [String: Double] = [:]
+        for tx in expenses {
+            spending[tx.category, default: 0] += abs(tx.amount)
+        }
+        return spending
+    }
+
+    /// Weekly spending totals
+    var weeklySpending: [(day: String, amount: Double)] {
+        let calendar = Calendar.current
+        let today = Date()
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "EEE"
+
+        return (0..<7).reversed().map { daysAgo in
+            let date = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
+            let dayStr = dayFormatter.string(from: date)
+
+            // Sum transactions for this day
+            let txs = (transactions.isEmpty ? demoTransactions : transactions)
+            let dayTotal = txs.filter { tx in
+                guard let txDate = ISO8601DateFormatter().date(from: tx.date) else { return false }
+                return calendar.isDate(txDate, inSameDayAs: date) && tx.amount < 0
+            }.reduce(0.0) { $0 + abs($1.amount) }
+
+            return (dayStr, dayTotal)
+        }
+    }
+
+    /// Total spent this month
+    var monthlySpending: Double {
+        let expenses = (transactions.isEmpty ? demoTransactions : transactions).filter { $0.amount < 0 }
+        return expenses.reduce(0.0) { $0 + abs($1.amount) }
+    }
+
+    /// Financial health score (0-100)
+    var financialHealthScore: Int {
+        let bal = balance ?? demoBalance
+        var score = 50 // Base score
+
+        // Savings ratio bonus (up to +20)
+        let savingsRatio = bal.hiddenBalance / max(1, bal.totalBalance)
+        score += Int(min(20, savingsRatio * 100))
+
+        // Available balance bonus (up to +15)
+        if bal.availableBalance > 1000 { score += 15 }
+        else if bal.availableBalance > 500 { score += 10 }
+        else if bal.availableBalance > 200 { score += 5 }
+
+        // Spending trend bonus (up to +15)
+        let avgDaily = monthlySpending / 30
+        if avgDaily < 50 { score += 15 }
+        else if avgDaily < 100 { score += 10 }
+        else if avgDaily < 150 { score += 5 }
+
+        return min(100, max(0, score))
     }
 
     // MARK: - Balance
@@ -113,9 +198,13 @@ class FinanceManager: ObservableObject {
         } catch {
             // Load from local storage if API fails
             logger.warning("Failed to load transactions from API: \(error.localizedDescription)")
-            if let saved = loadLocalTransactions() {
+            if let saved = loadLocalTransactions(), !saved.isEmpty {
                 transactions = saved
                 logger.info("Loaded \(saved.count) transactions from local storage")
+            } else {
+                // Use demo transactions
+                transactions = demoTransactions
+                logger.info("Using demo transactions")
             }
         }
     }

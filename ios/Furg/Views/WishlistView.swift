@@ -76,20 +76,26 @@ struct WishlistView: View {
                 }
                 .offset(y: animate ? 0 : 20)
                 .opacity(animate ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
+                .animation(.easeOut(duration: 0.5), value: animate)
 
                 // Filter tabs
-                PillTabBar(selectedIndex: $selectedFilter, tabs: filters)
-                    .offset(y: animate ? 0 : 20)
-                    .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+                Picker("Filter", selection: $selectedFilter) {
+                    ForEach(0..<filters.count, id: \.self) { index in
+                        Text(filters[index]).tag(index)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5), value: animate)
 
                 // Items list
                 if filteredItems.isEmpty {
                     EmptyWishlistState(filter: selectedFilter)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+                        .animation(.easeOut(duration: 0.5), value: animate)
                 } else {
                     LazyVStack(spacing: 16) {
                         ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
@@ -102,7 +108,7 @@ struct WishlistView: View {
                             )
                             .offset(y: animate ? 0 : 20)
                             .opacity(animate ? 1 : 0)
-                            .animation(.easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.05), value: animate)
+                            .animation(.easeOut(duration: 0.4), value: animate)
                         }
                     }
                 }
@@ -147,7 +153,7 @@ struct WishlistStatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .glassCard(cornerRadius: 20, opacity: 0.08)
+        .copilotCard(cornerRadius: 20, opacity: 0.08)
     }
 }
 
@@ -189,7 +195,7 @@ struct EmptyWishlistState: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -346,7 +352,7 @@ struct ModernWishlistCard: View {
             }
         }
         .padding(20)
-        .glassCard(cornerRadius: 24, opacity: 0.1)
+        .copilotCard(cornerRadius: 24, opacity: 0.1)
         .confirmationDialog("Delete Item", isPresented: $showDeleteConfirm) {
             Button("Delete", role: .destructive, action: onDelete)
             Button("Cancel", role: .cancel) { }
@@ -370,7 +376,7 @@ struct ModernAddItemSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -381,7 +387,7 @@ struct ModernAddItemSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.white.opacity(0.7))
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                         Spacer()
                         Text("Add Item")
@@ -403,7 +409,7 @@ struct ModernAddItemSheet: View {
                             .font(.furgBody)
                             .foregroundColor(.white)
                             .padding(16)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Price input
@@ -424,7 +430,7 @@ struct ModernAddItemSheet: View {
                                 .keyboardType(.decimalPad)
                         }
                         .padding(16)
-                        .glassCard(cornerRadius: 14, opacity: 0.1)
+                        .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Priority
@@ -471,7 +477,7 @@ struct ModernAddItemSheet: View {
                             .foregroundColor(.white)
                             .lineLimit(3...6)
                             .padding(16)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     Spacer(minLength: 20)
@@ -548,7 +554,7 @@ struct ModernEditItemSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -559,7 +565,7 @@ struct ModernEditItemSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.white.opacity(0.7))
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                         Spacer()
                         Text("Edit Item")
@@ -581,7 +587,7 @@ struct ModernEditItemSheet: View {
                             .font(.furgBody)
                             .foregroundColor(.white)
                             .padding(16)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Price input
@@ -602,7 +608,7 @@ struct ModernEditItemSheet: View {
                                 .keyboardType(.decimalPad)
                         }
                         .padding(16)
-                        .glassCard(cornerRadius: 14, opacity: 0.1)
+                        .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Priority
@@ -649,7 +655,7 @@ struct ModernEditItemSheet: View {
                             .foregroundColor(.white)
                             .lineLimit(3...6)
                             .padding(16)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     Spacer(minLength: 20)
@@ -752,7 +758,7 @@ struct CategoryChip: View {
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         WishlistView()
     }
     .environmentObject(WishlistManager())

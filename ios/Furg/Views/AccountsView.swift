@@ -31,6 +31,8 @@ struct Account: Identifiable {
         return ((balance - prev) / abs(prev)) * 100
     }
 
+    // TODO: Add AccountDetailView.swift to Xcode project
+    /*
     /// Convert to AccountInfo for AccountDetailView
     func toAccountInfo() -> AccountInfo {
         let accountType: AccountInfo.AccountType
@@ -55,6 +57,7 @@ struct Account: Identifiable {
             icon: icon
         )
     }
+    */
 }
 
 // MARK: - Credit Card Details
@@ -409,9 +412,72 @@ struct AccountsView: View {
     var totalLiabilities: Double { accounts.filter { !$0.isAsset }.reduce(0) { $0 + abs($1.balance) } }
     var netWorth: Double { totalAssets - totalLiabilities }
 
+    // MARK: - Account Performance Summary
+
+    private var accountPerformanceSummary: some View {
+        let performingAccounts = accounts.filter { $0.balanceChange != nil }
+        let topGainers = performingAccounts.sorted { ($0.balanceChange ?? 0) > ($1.balanceChange ?? 0) }.prefix(3)
+        let topLosers = performingAccounts.sorted { ($0.balanceChange ?? 0) < ($1.balanceChange ?? 0) }.prefix(2)
+
+        return VStack(spacing: 16) {
+            HStack {
+                Image(systemName: "chart.bar.fill")
+                    .foregroundColor(.furgMint)
+                Text("Account Performance")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            if !topGainers.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Top Growth")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        Spacer()
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.furgSuccess)
+                    }
+
+                    ForEach(Array(topGainers), id: \.id) { account in
+                        PerformanceAccountRow(account: account, isPositive: true)
+                    }
+                }
+            }
+
+            if !topLosers.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Needs Attention")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        Spacer()
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.furgError)
+                    }
+
+                    ForEach(Array(topLosers), id: \.id) { account in
+                        PerformanceAccountRow(account: account, isPositive: false)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                )
+        )
+    }
+
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
@@ -448,11 +514,14 @@ struct AccountsView: View {
         .sheet(isPresented: $showAddAccount) {
             AddAccountSheet()
         }
+        // TODO: Add AccountDetailView.swift to Xcode project
+        /*
         .sheet(isPresented: $showAccountDetail) {
             if let account = selectedAccount {
                 AccountDetailView(account: account.toAccountInfo())
             }
         }
+        */
     }
 
     // MARK: - Helper to convert Account to AccountInfo
@@ -526,7 +595,7 @@ struct AccountsView: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
         )
     }
 
@@ -595,7 +664,7 @@ struct AccountsView: View {
             .padding(24)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(
@@ -673,7 +742,7 @@ struct AccountsView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -682,6 +751,12 @@ struct AccountsView: View {
             .offset(y: animate ? 0 : 20)
             .opacity(animate ? 1 : 0)
             .animation(.spring(response: 0.6).delay(0.2), value: animate)
+
+            // Account Performance Summary
+            accountPerformanceSummary
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.spring(response: 0.6).delay(0.35), value: animate)
 
             // Asset allocation
             VStack(alignment: .leading, spacing: 16) {
@@ -725,7 +800,7 @@ struct AccountsView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -734,7 +809,215 @@ struct AccountsView: View {
             .offset(y: animate ? 0 : 20)
             .opacity(animate ? 1 : 0)
             .animation(.spring(response: 0.6).delay(0.3), value: animate)
+
+            // Debt Payoff Tracker
+            debtPayoffSection
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.spring(response: 0.6).delay(0.4), value: animate)
+
+            // Financial Insights
+            financialInsightsSection
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.spring(response: 0.6).delay(0.5), value: animate)
         }
+    }
+
+    // MARK: - Debt Payoff Section
+
+    private var debtPayoffSection: some View {
+        let debtAccounts = accounts.filter { $0.type.isLiability && $0.loanDetails != nil }
+
+        return Group {
+            if !debtAccounts.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Image(systemName: "chart.line.downtrend.xyaxis")
+                            .foregroundColor(.furgMint)
+                        Text("Debt Payoff Progress")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Spacer()
+
+                        Text("\(Int(totalDebtPaidPercent))% paid")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.furgMint)
+                    }
+
+                    ForEach(debtAccounts) { account in
+                        if let loan = account.loanDetails {
+                            DebtProgressRow(account: account, loan: loan)
+                        }
+                    }
+
+                    // Summary stats
+                    HStack(spacing: 20) {
+                        VStack(spacing: 4) {
+                            Text("Total Debt")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text(formatCurrency(totalLiabilities))
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.furgDanger)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        VStack(spacing: 4) {
+                            Text("Monthly Payments")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text(formatCurrency(totalMonthlyPayments))
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        VStack(spacing: 4) {
+                            Text("Debt-Free Date")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text(debtFreeDate)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.furgSuccess)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.white.opacity(0.03))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                        )
+                )
+            }
+        }
+    }
+
+    private var totalDebtPaidPercent: Double {
+        let debtAccounts = accounts.filter { $0.type.isLiability && $0.loanDetails != nil }
+        guard !debtAccounts.isEmpty else { return 0 }
+        let totalOriginal = debtAccounts.compactMap { $0.loanDetails?.originalAmount }.reduce(0, +)
+        let totalRemaining = debtAccounts.compactMap { $0.loanDetails?.remainingBalance }.reduce(0, +)
+        guard totalOriginal > 0 else { return 0 }
+        return ((totalOriginal - totalRemaining) / totalOriginal) * 100
+    }
+
+    private var totalMonthlyPayments: Double {
+        accounts.filter { $0.type.isLiability && $0.loanDetails != nil }
+            .compactMap { $0.loanDetails?.monthlyPayment }
+            .reduce(0, +)
+    }
+
+    private var debtFreeDate: String {
+        let debtAccounts = accounts.filter { $0.type.isLiability && $0.loanDetails != nil }
+        guard let latestPayoff = debtAccounts.compactMap({ $0.loanDetails?.payoffDate }).max() else {
+            return "N/A"
+        }
+        return latestPayoff.formatted(.dateTime.month(.abbreviated).year())
+    }
+
+    // MARK: - Financial Insights Section
+
+    private var financialInsightsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(.furgMint)
+                Text("Financial Insights")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            // Generate insights based on data
+            ForEach(generateInsights(), id: \.title) { insight in
+                InsightRow(insight: insight)
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                )
+        )
+    }
+
+    private func generateInsights() -> [AccountInsight] {
+        var insights: [AccountInsight] = []
+
+        // Emergency fund check
+        let liquidAssets = accounts.filter { $0.type == .checking || $0.type == .savings }
+            .reduce(0) { $0 + $1.balance }
+        let monthlyExpenses = totalMonthlyPayments + 2500 // Estimate
+
+        if liquidAssets < monthlyExpenses * 3 {
+            insights.append(AccountInsight(
+                icon: "exclamationmark.shield.fill",
+                iconColor: .furgWarning,
+                title: "Emergency Fund Low",
+                description: "You have \(formatCurrency(liquidAssets)) in liquid assets. Aim for 3-6 months of expenses (\(formatCurrency(monthlyExpenses * 3))-\(formatCurrency(monthlyExpenses * 6))).",
+                actionLabel: "Build Savings"
+            ))
+        }
+
+        // Credit utilization check
+        if let ccAccount = accounts.first(where: { $0.creditCardDetails != nil }),
+           let cc = ccAccount.creditCardDetails,
+           cc.utilization > 30 {
+            insights.append(AccountInsight(
+                icon: "creditcard.trianglebadge.exclamationmark.fill",
+                iconColor: .furgDanger,
+                title: "High Credit Utilization",
+                description: "Your credit utilization is \(Int(cc.utilization))%. Keeping it below 30% helps your credit score.",
+                actionLabel: "Pay Down Balance"
+            ))
+        }
+
+        // Investment diversification
+        let investmentBalance = accounts.filter { $0.type == .investment || $0.type == .retirement }
+            .reduce(0) { $0 + $1.balance }
+        if investmentBalance > 50000 {
+            insights.append(AccountInsight(
+                icon: "chart.pie.fill",
+                iconColor: .furgSuccess,
+                title: "Strong Investment Portfolio",
+                description: "You've built \(formatCurrency(investmentBalance)) in investments. Consider rebalancing annually.",
+                actionLabel: "Review Allocation"
+            ))
+        }
+
+        // Property equity
+        if let propertyAccount = accounts.first(where: { $0.propertyDetails != nil }),
+           let property = propertyAccount.propertyDetails {
+            insights.append(AccountInsight(
+                icon: "house.fill",
+                iconColor: .cyan,
+                title: "Home Equity: \(formatCurrency(property.equity))",
+                description: "Your property has appreciated \(String(format: "%.1f", property.appreciationPercent))% since purchase.",
+                actionLabel: "View Details"
+            ))
+        }
+
+        // Net worth milestone
+        if netWorth > 100000 {
+            insights.append(AccountInsight(
+                icon: "star.fill",
+                iconColor: .furgMint,
+                title: "Net Worth Milestone",
+                description: "Congratulations! You've crossed \(formatCurrency(Double(Int(netWorth / 50000) * 50000))) in net worth.",
+                actionLabel: nil
+            ))
+        }
+
+        return insights
     }
 
     // MARK: - Accounts Section
@@ -845,7 +1128,7 @@ struct AccountsView: View {
             .padding(24)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -867,7 +1150,7 @@ struct AccountsView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -1064,7 +1347,7 @@ private struct AccountRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.08), lineWidth: 0.5)
@@ -1202,6 +1485,199 @@ private struct AddAccountSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Performance Account Row
+
+private struct PerformanceAccountRow: View {
+    let account: Account
+    let isPositive: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(account.color.opacity(0.2))
+                    .frame(width: 36, height: 36)
+
+                Image(systemName: account.type.icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(account.color)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(account.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
+
+                Text(account.institution)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+
+            Spacer()
+
+            if let change = account.balanceChange {
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                            .font(.system(size: 10, weight: .bold))
+                        Text(String(format: "%.1f%%", abs(change)))
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundColor(isPositive ? .furgSuccess : .furgError)
+
+                    Text(formatCurrency(account.balance))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+            }
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func formatCurrency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
+    }
+}
+
+// MARK: - Account Insight Model
+
+private struct AccountInsight {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let description: String
+    let actionLabel: String?
+}
+
+// MARK: - Debt Progress Row
+
+private struct DebtProgressRow: View {
+    let account: Account
+    let loan: LoanDetails
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(account.color.opacity(0.2))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: account.type.icon)
+                            .font(.system(size: 12))
+                            .foregroundColor(account.color)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(account.name)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
+                        Text("\(loan.monthsRemaining) months remaining")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(formatCurrency(loan.remainingBalance))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                    Text("\(String(format: "%.1f", loan.percentPaid))% paid")
+                        .font(.system(size: 10))
+                        .foregroundColor(.furgMint)
+                }
+            }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.white.opacity(0.1))
+                        .frame(height: 6)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(
+                            LinearGradient(
+                                colors: [.furgMint, .furgSeafoam],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * CGFloat(loan.percentPaid / 100), height: 6)
+                }
+            }
+            .frame(height: 6)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+
+    private func formatCurrency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
+    }
+}
+
+// MARK: - Insight Row
+
+private struct InsightRow: View {
+    let insight: AccountInsight
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(insight.iconColor.opacity(0.2))
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: insight.icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(insight.iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(insight.title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Text(insight.description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            if let action = insight.actionLabel {
+                Button {
+                    // Action
+                } label: {
+                    Text(action)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.furgMint)
+                }
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.05))
+        )
     }
 }
 

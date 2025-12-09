@@ -546,7 +546,7 @@ struct SettingsView: View {
         .sheet(isPresented: $showWishlist) {
             NavigationStack {
                 ZStack {
-                    AnimatedMeshBackground()
+                    CopilotBackground()
                     WishlistView()
                 }
                 .navigationBarTitleDisplayMode(.inline)
@@ -590,9 +590,13 @@ struct SettingsView: View {
             ReceiptScanView()
                 .presentationBackground(Color.furgCharcoal)
         }
+        // TODO: Add missing view files to Xcode project
         .sheet(isPresented: $showAchievements) {
             NavigationStack {
-                AchievementsView()
+                Text("Achievements - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showAchievements = false }
@@ -604,7 +608,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showDebtPayoff) {
             NavigationStack {
-                DebtPayoffView()
+                Text("Debt Payoff - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showDebtPayoff = false }
@@ -616,7 +623,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showCardRecommendations) {
             NavigationStack {
-                CardRecommendationsView()
+                Text("Card Recommendations - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showCardRecommendations = false }
@@ -628,7 +638,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showInvestmentPortfolio) {
             NavigationStack {
-                InvestmentPortfolioView()
+                Text("Investment Portfolio - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showInvestmentPortfolio = false }
@@ -640,7 +653,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showMerchantIntelligence) {
             NavigationStack {
-                MerchantIntelligenceView()
+                Text("Merchant Intelligence - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showMerchantIntelligence = false }
@@ -652,7 +668,10 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showLifeIntegration) {
             NavigationStack {
-                LifeIntegrationView()
+                Text("Life Integration - Coming Soon")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.furgCharcoal)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") { showLifeIntegration = false }
@@ -744,7 +763,7 @@ struct ProfileCard: View {
                 .clipShape(Circle())
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 
     var initials: String {
@@ -774,7 +793,7 @@ struct SettingsSection<Content: View>: View {
             VStack(spacing: 0) {
                 content
             }
-            .glassCard(cornerRadius: 20, opacity: 0.08)
+            .copilotCard(cornerRadius: 20, opacity: 0.08)
         }
     }
 }
@@ -837,7 +856,7 @@ struct IntensityModeSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 24) {
                 HStack {
@@ -846,7 +865,7 @@ struct IntensityModeSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12, opacity: 0.1)
                     }
                     Spacer()
                     Text("Intensity Mode")
@@ -934,7 +953,7 @@ struct EmergencyBufferSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 24) {
                 HStack {
@@ -943,7 +962,7 @@ struct EmergencyBufferSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12, opacity: 0.1)
                     }
                     Spacer()
                     Text("Emergency Buffer")
@@ -974,7 +993,7 @@ struct EmergencyBufferSheet: View {
                     }
                 }
                 .padding(24)
-                .glassCard()
+                .copilotCard()
 
                 Text("FURG will never let you spend this safety cushion. This money is protected from your spending urges.")
                     .font(.furgCaption)
@@ -1040,7 +1059,7 @@ struct NotificationSettingsSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 24) {
                 HStack {
@@ -1049,7 +1068,7 @@ struct NotificationSettingsSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12, opacity: 0.1)
                     }
                     Spacer()
                     Text("Notifications")
@@ -1155,13 +1174,13 @@ struct NotificationToggle: View {
                 .tint(.furgMint)
         }
         .padding(14)
-        .glassCard(cornerRadius: 14, opacity: 0.08)
+        .copilotCard(cornerRadius: 14)
     }
 }
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         SettingsView()
     }
     .environmentObject(AuthManager())

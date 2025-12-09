@@ -92,7 +92,7 @@ struct PurchasePlanView: View {
                             .foregroundColor(.furgMint)
                     }
                     .padding()
-                    .glassCard()
+                    .copilotCard()
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal)
@@ -213,7 +213,7 @@ struct GlassSummaryCard: View {
                 .foregroundColor(.furgCharcoal.opacity(0.6))
         }
         .padding()
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -262,7 +262,7 @@ struct GlassBudgetQuickView: View {
             }
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -316,7 +316,7 @@ struct GlassTimelineSection: View {
             }
         }
         .padding(.vertical)
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -440,7 +440,7 @@ struct GlassPurchaseOrderTable: View {
             .cornerRadius(12)
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -527,7 +527,7 @@ struct GlassEmptyTimelineView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -576,7 +576,7 @@ struct GlassNoBudgetWarningView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal)
     }
 }
@@ -612,7 +612,7 @@ struct GlassBudgetSettingsSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -660,7 +660,7 @@ struct GlassBudgetSettingsSheet: View {
                                 text: $monthlyExpenses
                             )
                         }
-                        .glassCard()
+                        .copilotCard()
                         .padding(.horizontal)
                     }
 
@@ -689,7 +689,7 @@ struct GlassBudgetSettingsSheet: View {
                                 text: $currentSavings
                             )
                         }
-                        .glassCard()
+                        .copilotCard()
                         .padding(.horizontal)
                     }
 
@@ -721,7 +721,7 @@ struct GlassBudgetSettingsSheet: View {
                             )
                         }
                         .padding()
-                        .glassCard()
+                        .copilotCard()
                         .padding(.horizontal)
                     }
 
@@ -806,7 +806,7 @@ typealias BudgetSettingsSheet = GlassBudgetSettingsSheet
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         PurchasePlanView()
             .environmentObject(WishlistManager())
     }

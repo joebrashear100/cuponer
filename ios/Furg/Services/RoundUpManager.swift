@@ -192,32 +192,69 @@ class RoundUpManager: ObservableObject {
 
 extension APIClient {
     func getRoundUpConfig() async throws -> RoundUpConfig {
-        return try await get("/roundups/config")
+        return try await get("/round-ups/config")
     }
 
     func updateRoundUpConfig(_ config: RoundUpConfig) async throws {
-        try await postVoid("/roundups/config", body: config)
+        try await postVoid("/round-ups/config", body: config)
     }
 
     func getRoundUpSummary() async throws -> RoundUpSummary {
-        return try await get("/roundups/summary")
+        return try await get("/round-ups/summary")
     }
 
     func getPendingRoundUps() async throws -> [RoundUpTransaction] {
-        let response: RoundUpsResponse = try await get("/roundups/pending")
-        return response.roundUps
+        let response: PendingRoundUpsResponse = try await get("/round-ups/pending")
+        return response.pending.map { pendingItem in
+            RoundUpTransaction(
+                id: pendingItem.id ?? UUID().uuidString,
+                sourceTransactionId: pendingItem.transactionId ?? "",
+                originalAmount: pendingItem.originalAmount ?? 0,
+                roundedAmount: (pendingItem.originalAmount ?? 0) + (pendingItem.roundupAmount ?? 0),
+                roundUpAmount: pendingItem.roundupAmount ?? 0,
+                multipliedAmount: pendingItem.roundupAmount ?? 0,
+                status: .pending,
+                transferId: nil,
+                createdAt: Date()
+            )
+        }
     }
 
     func transferRoundUps() async throws {
-        try await postVoid("/roundups/transfer", body: EmptyBody())
+        // Get the linked goal ID from config first
+        let config = try await getRoundUpConfig()
+        guard let goalId = config.goalId else {
+            throw NSError(domain: "RoundUp", code: 400, userInfo: [NSLocalizedDescriptionKey: "No goal linked for round-ups"])
+        }
+        try await postVoid("/round-ups/transfer", body: TransferRoundUpsRequest(goalId: goalId))
     }
 }
 
-struct RoundUpsResponse: Codable {
-    let roundUps: [RoundUpTransaction]
+struct PendingRoundUpsResponse: Codable {
+    let pending: [PendingRoundUpItem]
+    let total: Double
+    let count: Int
+}
+
+struct PendingRoundUpItem: Codable {
+    let id: String?
+    let transactionId: String?
+    let originalAmount: Decimal?
+    let roundupAmount: Decimal?
 
     enum CodingKeys: String, CodingKey {
-        case roundUps = "round_ups"
+        case id
+        case transactionId = "transaction_id"
+        case originalAmount = "original_amount"
+        case roundupAmount = "roundup_amount"
+    }
+}
+
+struct TransferRoundUpsRequest: Codable {
+    let goalId: String
+
+    enum CodingKeys: String, CodingKey {
+        case goalId = "goal_id"
     }
 }
 

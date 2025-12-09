@@ -21,11 +21,8 @@
 		F10000010000000000000010 /* WishlistManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000010 /* WishlistManager.swift */; };
 		F10000010000000000000011 /* BalanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000011 /* BalanceView.swift */; };
 		F10000010000000000000012 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000012 /* ChatView.swift */; };
-		F10000010000000000000013 /* FinancingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000013 /* FinancingCalculatorView.swift */; };
 		F10000010000000000000014 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000014 /* MainTabView.swift */; };
-		F10000010000000000000015 /* PurchasePlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000015 /* PurchasePlanView.swift */; };
 		F10000010000000000000016 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000016 /* SettingsView.swift */; };
-		F10000010000000000000017 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000017 /* TransactionsView.swift */; };
 		F10000010000000000000018 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000018 /* WelcomeView.swift */; };
 		F10000010000000000000019 /* WishlistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000019 /* WishlistView.swift */; };
 		F10000010000000000000020 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000020 /* Assets.xcassets */; };
@@ -42,7 +39,6 @@
 		F10000010000000000000031 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000031 /* HomeView.swift */; };
 		F10000010000000000000032 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000032 /* OnboardingView.swift */; };
 		F10000010000000000000033 /* RoundUpSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000033 /* RoundUpSettingsView.swift */; };
-		F10000010000000000000034 /* SpendingAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000034 /* SpendingAnalyticsView.swift */; };
 		F10000010000000000000035 /* SpendingLimitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000035 /* SpendingLimitsView.swift */; };
 		F10000010000000000000036 /* SubscriptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000036 /* SubscriptionsView.swift */; };
 		F10000010000000000000037 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000037 /* ClaudeService.swift */; };
@@ -56,7 +52,6 @@
 		F10000010000000000000045 /* ConnectBankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000045 /* ConnectBankView.swift */; };
 		F10000010000000000000046 /* FinanceKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000046 /* FinanceKitManager.swift */; };
 		F10000010000000000000047 /* AppleWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000047 /* AppleWalletView.swift */; };
-		F10000010000000000000048 /* SpendingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000049 /* SpendingDashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -75,11 +70,8 @@
 		F20000010000000000000010 /* WishlistManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WishlistManager.swift; sourceTree = "<group>"; };
 		F20000010000000000000011 /* BalanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceView.swift; sourceTree = "<group>"; };
 		F20000010000000000000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
-		F20000010000000000000013 /* FinancingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancingCalculatorView.swift; sourceTree = "<group>"; };
 		F20000010000000000000014 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		F20000010000000000000015 /* PurchasePlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchasePlanView.swift; sourceTree = "<group>"; };
 		F20000010000000000000016 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		F20000010000000000000017 /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000018 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		F20000010000000000000019 /* WishlistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WishlistView.swift; sourceTree = "<group>"; };
 		F20000010000000000000020 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -96,7 +88,6 @@
 		F20000010000000000000031 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		F20000010000000000000032 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		F20000010000000000000033 /* RoundUpSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundUpSettingsView.swift; sourceTree = "<group>"; };
-		F20000010000000000000034 /* SpendingAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingAnalyticsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000035 /* SpendingLimitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000036 /* SubscriptionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000037 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
@@ -111,7 +102,6 @@
 		F20000010000000000000046 /* FinanceKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinanceKitManager.swift; sourceTree = "<group>"; };
 		F20000010000000000000047 /* AppleWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleWalletView.swift; sourceTree = "<group>"; };
 		F20000010000000000000048 /* Furg.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Furg.entitlements; sourceTree = "<group>"; };
-		F20000010000000000000049 /* SpendingDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingDashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -201,21 +191,16 @@
 				F20000010000000000000045 /* ConnectBankView.swift */,
 				B53721311D391AF148076C67 /* ReceiptScanView.swift */,
 				F20000010000000000000041 /* DashboardView.swift */,
-				F20000010000000000000013 /* FinancingCalculatorView.swift */,
 				F20000010000000000000029 /* ForecastView.swift */,
 				F20000010000000000000030 /* GoalsView.swift */,
 				F20000010000000000000031 /* HomeView.swift */,
 				F20000010000000000000014 /* MainTabView.swift */,
 				F20000010000000000000042 /* OffersView.swift */,
 				F20000010000000000000032 /* OnboardingView.swift */,
-				F20000010000000000000015 /* PurchasePlanView.swift */,
 				F20000010000000000000033 /* RoundUpSettingsView.swift */,
 				F20000010000000000000016 /* SettingsView.swift */,
-				F20000010000000000000034 /* SpendingAnalyticsView.swift */,
-				F20000010000000000000049 /* SpendingDashboardView.swift */,
 				F20000010000000000000035 /* SpendingLimitsView.swift */,
 				F20000010000000000000036 /* SubscriptionsView.swift */,
-				F20000010000000000000017 /* TransactionsView.swift */,
 				F20000010000000000000040 /* TransactionsListView.swift */,
 				F20000010000000000000018 /* WelcomeView.swift */,
 				F20000010000000000000019 /* WishlistView.swift */,
@@ -329,19 +314,15 @@
 				F10000010000000000000010 /* WishlistManager.swift in Sources */,
 				F10000010000000000000011 /* BalanceView.swift in Sources */,
 				F10000010000000000000012 /* ChatView.swift in Sources */,
-				F10000010000000000000013 /* FinancingCalculatorView.swift in Sources */,
 				F10000010000000000000029 /* ForecastView.swift in Sources */,
 				F10000010000000000000030 /* GoalsView.swift in Sources */,
 				F10000010000000000000031 /* HomeView.swift in Sources */,
 				F10000010000000000000014 /* MainTabView.swift in Sources */,
 				F10000010000000000000032 /* OnboardingView.swift in Sources */,
-				F10000010000000000000015 /* PurchasePlanView.swift in Sources */,
 				F10000010000000000000033 /* RoundUpSettingsView.swift in Sources */,
 				F10000010000000000000016 /* SettingsView.swift in Sources */,
-				F10000010000000000000034 /* SpendingAnalyticsView.swift in Sources */,
 				F10000010000000000000035 /* SpendingLimitsView.swift in Sources */,
 				F10000010000000000000036 /* SubscriptionsView.swift in Sources */,
-				F10000010000000000000017 /* TransactionsView.swift in Sources */,
 				F10000010000000000000018 /* WelcomeView.swift in Sources */,
 				F10000010000000000000019 /* WishlistView.swift in Sources */,
 				F10000010000000000000038 /* CashFlowView.swift in Sources */,
@@ -356,7 +337,6 @@
 				9365284A0E6420D70BD4DB1F /* ReceiptScanner.swift in Sources */,
 				E0B53F40ABE30579431C9F5F /* ReceiptScanView.swift in Sources */,
 				F10000010000000000000047 /* AppleWalletView.swift in Sources */,
-				F10000010000000000000048 /* SpendingDashboardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -3,26 +3,93 @@
 //  Furg
 //
 //  App configuration and constants
+//  SECURITY: API keys and secrets should be loaded from environment or Keychain
 //
 
 import Foundation
+import os.log
+
+private let configLogger = Logger(subsystem: "com.furg.app", category: "Config")
 
 struct Config {
     // MARK: - Backend Configuration
 
-    #if DEBUG
-    static let baseURL = "http://10.0.0.126:8000"  // Your Mac's IP address
-    #else
-    static let baseURL = "https://api.furg.app" // Update with your production URL
-    #endif
+    /// Base URL loaded from environment or defaults
+    /// Set FURG_API_URL environment variable in scheme for custom URL
+    static var baseURL: String {
+        if let envURL = ProcessInfo.processInfo.environment["FURG_API_URL"] {
+            return envURL
+        }
+        #if DEBUG
+        // Use localhost for simulator, configure your IP in scheme environment variables
+        return "http://localhost:8000"
+        #else
+        return "https://api.furg.app"
+        #endif
+    }
 
     // MARK: - Claude AI Configuration
 
     struct Claude {
-        static let apiKey = "YOUR_CLAUDE_API_KEY_HERE" // Replace with actual key
+        /// API key loaded from Keychain or environment
+        /// NEVER hardcode API keys in source code
+        static var apiKey: String {
+            // Try Keychain first (set during onboarding or settings)
+            if let keychainKey = KeychainService.shared.getStringOptional(for: .claudeApiKey) {
+                return keychainKey
+            }
+            // Try environment variable (for development)
+            if let envKey = ProcessInfo.processInfo.environment["CLAUDE_API_KEY"] {
+                return envKey
+            }
+            // Return empty - will fail gracefully at runtime
+            configLogger.warning("Claude API key not configured. Set CLAUDE_API_KEY env var or configure in Keychain.")
+            return ""
+        }
+
         static let baseURL = "https://api.anthropic.com/v1/messages"
         static let model = "claude-sonnet-4-20250514"
         static let maxTokens = 1024
+
+        /// Check if Claude is properly configured
+        static var isConfigured: Bool {
+            !apiKey.isEmpty
+        }
+    }
+
+    // MARK: - Configuration Validation
+
+    /// Validates configuration at app startup
+    /// Call this early in app lifecycle to catch misconfigurations
+    static func validate() -> [ConfigurationError] {
+        var errors: [ConfigurationError] = []
+
+        if Claude.apiKey.isEmpty {
+            errors.append(.missingClaudeApiKey)
+        }
+
+        if URL(string: baseURL) == nil {
+            errors.append(.invalidBaseURL)
+        }
+
+        return errors
+    }
+
+    enum ConfigurationError: Error, CustomStringConvertible {
+        case missingClaudeApiKey
+        case invalidBaseURL
+        case missingPlaidConfig
+
+        var description: String {
+            switch self {
+            case .missingClaudeApiKey:
+                return "Claude API key not configured. AI features will be disabled."
+            case .invalidBaseURL:
+                return "Invalid API base URL configured."
+            case .missingPlaidConfig:
+                return "Plaid configuration missing. Bank linking will be disabled."
+            }
+        }
     }
 
     // MARK: - API Endpoints

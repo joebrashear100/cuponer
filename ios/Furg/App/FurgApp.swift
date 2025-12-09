@@ -7,29 +7,65 @@
 
 import SwiftUI
 import UserNotifications
+import os.log
+
+private let appLogger = Logger(subsystem: "com.furg.app", category: "App")
+
+// MARK: - App Container
+/// Consolidates app dependencies for better memory management and testability
+/// Managers are created on-demand rather than all at startup
+@MainActor
+final class AppContainer: ObservableObject {
+    // Core managers (always needed)
+    let authManager: AuthManager
+    let apiClient: APIClient
+
+    // Feature managers (lazy initialization)
+    lazy var chatManager = ChatManager()
+    lazy var financeManager = FinanceManager()
+    lazy var plaidManager = PlaidManager()
+    lazy var wishlistManager = WishlistManager()
+    lazy var goalsManager = GoalsManager()
+    lazy var subscriptionManager = SubscriptionManager()
+    lazy var roundUpManager = RoundUpManager()
+    lazy var forecastingManager = ForecastingManager()
+    lazy var spendingLimitsManager = SpendingLimitsManager()
+
+    // Singleton managers
+    let healthKitManager = HealthKitManager.shared
+    let notificationManager = NotificationManager.shared
+
+    init() {
+        self.authManager = AuthManager()
+        self.apiClient = APIClient()
+
+        // Validate configuration at startup
+        let configErrors = Config.validate()
+        for error in configErrors {
+            appLogger.warning("Configuration issue: \(error.description)")
+        }
+    }
+
+    /// Initialize app after authentication
+    func initializePostAuth() async {
+        await notificationManager.requestAuthorization()
+        notificationManager.setupNotificationCategories()
+        notificationManager.scheduleDailySummary()
+        notificationManager.scheduleWeeklySummary()
+        appLogger.info("App initialized for authenticated user")
+    }
+}
 
 @main
 struct FurgApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var authManager = AuthManager()
-    @StateObject private var apiClient = APIClient()
-    @StateObject private var chatManager = ChatManager()
-    @StateObject private var financeManager = FinanceManager()
-    @StateObject private var plaidManager = PlaidManager()
-    @StateObject private var wishlistManager = WishlistManager()
-    @StateObject private var goalsManager = GoalsManager()
-    @StateObject private var subscriptionManager = SubscriptionManager()
-    @StateObject private var roundUpManager = RoundUpManager()
-    @StateObject private var forecastingManager = ForecastingManager()
-    @StateObject private var spendingLimitsManager = SpendingLimitsManager()
-    @StateObject private var healthKitManager = HealthKitManager.shared
-    @StateObject private var notificationManager = NotificationManager.shared
+    @StateObject private var container = AppContainer()
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if authManager.isAuthenticated {
-                    if authManager.hasCompletedOnboarding {
+                if container.authManager.isAuthenticated {
+                    if container.authManager.hasCompletedOnboarding {
                         MainTabView()
                     } else {
                         OnboardingView()
@@ -38,27 +74,24 @@ struct FurgApp: App {
                     WelcomeView()
                 }
             }
-            .environmentObject(authManager)
-            .environmentObject(apiClient)
-            .environmentObject(chatManager)
-            .environmentObject(financeManager)
-            .environmentObject(plaidManager)
-            .environmentObject(wishlistManager)
-            .environmentObject(goalsManager)
-            .environmentObject(subscriptionManager)
-            .environmentObject(roundUpManager)
-            .environmentObject(forecastingManager)
-            .environmentObject(spendingLimitsManager)
-            .environmentObject(healthKitManager)
-            .environmentObject(notificationManager)
+            // Core managers
+            .environmentObject(container.authManager)
+            .environmentObject(container.apiClient)
+            // Feature managers (accessed lazily)
+            .environmentObject(container.chatManager)
+            .environmentObject(container.financeManager)
+            .environmentObject(container.plaidManager)
+            .environmentObject(container.wishlistManager)
+            .environmentObject(container.goalsManager)
+            .environmentObject(container.subscriptionManager)
+            .environmentObject(container.roundUpManager)
+            .environmentObject(container.forecastingManager)
+            .environmentObject(container.spendingLimitsManager)
+            // Singleton managers
+            .environmentObject(container.healthKitManager)
+            .environmentObject(container.notificationManager)
             .task {
-                // Request notification permissions on launch
-                await notificationManager.requestAuthorization()
-                notificationManager.setupNotificationCategories()
-
-                // Set up daily/weekly summaries if enabled
-                notificationManager.scheduleDailySummary()
-                notificationManager.scheduleWeeklySummary()
+                await container.initializePostAuth()
             }
         }
     }

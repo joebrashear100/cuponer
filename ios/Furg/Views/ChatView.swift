@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ChatView: View {
     @EnvironmentObject var chatManager: ChatManager
@@ -469,8 +470,7 @@ private struct MessageBubbleShape: Shape {
 
 private struct TypingIndicator: View {
     @State private var phase = 0
-
-    let timer = Timer.publish(every: 0.4, on: .main, in: .common).autoconnect()
+    @State private var timerCancellable: AnyCancellable?
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -514,11 +514,23 @@ private struct TypingIndicator: View {
 
             Spacer()
         }
-        .onReceive(timer) { _ in
-            withAnimation(.easeInOut(duration: 0.3)) {
-                phase = (phase + 1) % 3
-            }
+        .onAppear {
+            // Start timer only when view appears
+            timerCancellable = Timer.publish(every: 0.4, on: .main, in: .common)
+                .autoconnect()
+                .sink { _ in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        phase = (phase + 1) % 3
+                    }
+                }
         }
+        .onDisappear {
+            // CRITICAL: Cancel timer when view disappears to prevent memory leak
+            timerCancellable?.cancel()
+            timerCancellable = nil
+        }
+        .accessibilityLabel("FURG is typing")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 

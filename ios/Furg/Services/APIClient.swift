@@ -3,9 +3,13 @@
 //  Furg
 //
 //  Central API client for all backend communication
+//  SECURITY: Tokens retrieved from Keychain via KeychainService
 //
 
 import Foundation
+import os.log
+
+private let apiLogger = Logger(subsystem: "com.furg.app", category: "APIClient")
 
 // Empty response for void POST calls
 struct EmptyAPIResponse: Decodable {}
@@ -15,9 +19,9 @@ class APIClient: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    // Shared token storage - set by AuthManager
+    /// Auth token retrieved securely from Keychain
     static var authToken: String? {
-        get { UserDefaults.standard.string(forKey: Config.Keys.jwtToken) }
+        get { KeychainService.shared.getStringOptional(for: .jwtToken) }
     }
 
     // MARK: - Helper Methods

@@ -237,7 +237,9 @@ struct SpendingSummaryResponse: Codable {
 // MARK: - Bill Models
 
 struct Bill: Codable, Identifiable {
-    let id: String?
+    /// Non-optional ID required for Identifiable conformance
+    /// Uses API-provided ID or generates UUID if not provided
+    let id: String
     let merchant: String
     let amount: Double
     let frequency: String?
@@ -257,8 +259,22 @@ struct Bill: Codable, Identifiable {
         case category
     }
 
-    init(id: String?, merchant: String, amount: Double, frequency: String? = nil, frequencyDays: Int? = nil, nextDue: String, category: String?, confidence: Double) {
-        self.id = id
+    /// Custom decoder to handle optional ID from API
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Generate UUID if id not provided by API
+        id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+        merchant = try container.decode(String.self, forKey: .merchant)
+        amount = try container.decode(Double.self, forKey: .amount)
+        frequency = try container.decodeIfPresent(String.self, forKey: .frequency)
+        frequencyDays = try container.decodeIfPresent(Int.self, forKey: .frequencyDays)
+        nextDue = try container.decode(String.self, forKey: .nextDue)
+        confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0.0
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+    }
+
+    init(id: String? = nil, merchant: String, amount: Double, frequency: String? = nil, frequencyDays: Int? = nil, nextDue: String, category: String?, confidence: Double) {
+        self.id = id ?? UUID().uuidString
         self.merchant = merchant
         self.amount = amount
         self.frequency = frequency

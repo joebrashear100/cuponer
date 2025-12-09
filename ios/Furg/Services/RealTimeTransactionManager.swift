@@ -105,11 +105,21 @@ class RealTimeTransactionManager: ObservableObject {
         setupNotificationCategories()
     }
 
+    deinit {
+        // CRITICAL: Clean up timer to prevent memory leaks
+        pollingTimer?.invalidate()
+        pollingTimer = nil
+        cancellables.removeAll()
+    }
+
     // MARK: - Monitoring Control
 
     func startMonitoring() {
         guard !isMonitoring else { return }
         isMonitoring = true
+
+        // Invalidate any existing timer first
+        pollingTimer?.invalidate()
 
         // Poll for new transactions every 30 seconds
         pollingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in

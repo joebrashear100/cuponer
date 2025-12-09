@@ -49,13 +49,67 @@ struct HomeView: View {
                 .opacity(animate ? 1 : 0)
                 .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
 
+                // Financial Health Score Card
+                FinancialHealthCard(score: financeManager.financialHealthScore)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.25), value: animate)
+
+                // Weekly Spending Chart
+                WeeklySpendingSection(weeklyData: financeManager.weeklySpending, totalSpent: financeManager.monthlySpending)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+
+                // Category Breakdown
+                CategoryBreakdownSection(categorySpending: financeManager.categorySpending)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.35), value: animate)
+
                 // Goal Progress Cards (horizontal scroll)
                 if !goalsManager.goals.isEmpty {
                     GoalProgressSection(goals: goalsManager.goals)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.3), value: animate)
+                        .animation(.easeOut(duration: 0.5).delay(0.4), value: animate)
                 }
+
+                // Upcoming Bills Timeline
+                UpcomingBillsSection(bills: financeManager.bills)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.45), value: animate)
+
+                // Savings Rate Card
+                SavingsRateCard(
+                    balance: financeManager.balance ?? financeManager.demoBalance,
+                    monthlySpending: financeManager.monthlySpending
+                )
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.48), value: animate)
+
+                // Spending Trends
+                SpendingTrendsCard(weeklyData: financeManager.weeklySpending, monthlySpending: financeManager.monthlySpending)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.51), value: animate)
+
+                // Top Merchants
+                TopMerchantsCard(transactions: financeManager.transactions)
+                    .offset(y: animate ? 0 : 20)
+                    .opacity(animate ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5).delay(0.54), value: animate)
+
+                // Smart Budget Alerts
+                SmartAlertsCard(
+                    balance: financeManager.balance ?? financeManager.demoBalance,
+                    monthlySpending: financeManager.monthlySpending
+                )
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5).delay(0.57), value: animate)
 
                 // AI Insights Feed
                 AIInsightsFeed(
@@ -99,7 +153,11 @@ struct HomeView: View {
             withAnimation { animate = true }
         }
         .sheet(isPresented: $showHideSheet) {
-            HideMoneySheet(financeManager: financeManager)
+            // HideMoneySheet(financeManager: financeManager)
+            Text("Hide Money Sheet - Coming Soon")
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black)
         }
         .sheet(isPresented: $showAddTransactionSheet) {
             AddTransactionSheet()
@@ -151,7 +209,7 @@ struct HomeHeader: View {
                             .font(.title3)
                             .foregroundColor(.furgMint)
                             .padding(12)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14)
 
                         // Notification badge
                         Circle()
@@ -258,7 +316,7 @@ struct SpendingPowerCard: View {
             }
         }
         .padding(24)
-        .glassCard()
+        .copilotCard(padding: 0)
     }
 }
 
@@ -336,7 +394,7 @@ struct QuickActionButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .glassCard(cornerRadius: 16, opacity: 0.08)
+            .copilotCard(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }
@@ -433,7 +491,7 @@ struct GoalProgressCard: View {
         }
         .padding(16)
         .frame(width: 160)
-        .glassCard(cornerRadius: 16, opacity: 0.08)
+        .copilotCard(cornerRadius: 16)
     }
 }
 
@@ -581,7 +639,7 @@ struct AIInsightCard: View {
             Spacer()
         }
         .padding(14)
-        .glassCard(cornerRadius: 14, opacity: 0.08)
+        .copilotCard(cornerRadius: 14)
     }
 }
 
@@ -627,7 +685,7 @@ struct RecentActivitySection: View {
                     .padding(.vertical, 30)
                     Spacer()
                 }
-                .glassCard(cornerRadius: 14, opacity: 0.08)
+                .copilotCard(cornerRadius: 14)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(recentTransactions.enumerated()), id: \.element.id) { index, transaction in
@@ -639,7 +697,7 @@ struct RecentActivitySection: View {
                         }
                     }
                 }
-                .glassCard(cornerRadius: 14, opacity: 0.08)
+                .copilotCard(cornerRadius: 14)
             }
         }
     }
@@ -748,11 +806,349 @@ struct SubscriptionAlertCard: View {
                 .foregroundColor(.white.opacity(0.3))
         }
         .padding(16)
-        .glassCard(cornerRadius: 16, opacity: 0.08)
+        .copilotCard(cornerRadius: 16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.furgWarning.opacity(0.3), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Financial Health Card
+
+struct FinancialHealthCard: View {
+    let score: Int
+
+    var scoreColor: Color {
+        if score >= 80 { return .furgSuccess }
+        else if score >= 60 { return .furgMint }
+        else if score >= 40 { return .furgWarning }
+        else { return .furgError }
+    }
+
+    var scoreLabel: String {
+        if score >= 80 { return "Excellent" }
+        else if score >= 60 { return "Good" }
+        else if score >= 40 { return "Fair" }
+        else { return "Needs Work" }
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Financial Health")
+                        .font(.furgHeadline)
+                        .foregroundColor(.white)
+                    Text(scoreLabel)
+                        .font(.furgCaption)
+                        .foregroundColor(scoreColor)
+                }
+
+                Spacer()
+
+                // Circular progress
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.1), lineWidth: 8)
+                        .frame(width: 60, height: 60)
+
+                    Circle()
+                        .trim(from: 0, to: CGFloat(score) / 100)
+                        .stroke(scoreColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        .frame(width: 60, height: 60)
+                        .rotationEffect(.degrees(-90))
+
+                    Text("\(score)")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            }
+
+            // Tips
+            HStack(spacing: 12) {
+                HealthTip(icon: "arrow.up.circle.fill", text: "Savings up 12%", color: .furgSuccess)
+                HealthTip(icon: "chart.line.downtrend.xyaxis", text: "Spending down", color: .furgMint)
+                HealthTip(icon: "clock.fill", text: "Bills on time", color: .furgInfo)
+            }
+        }
+        .padding(20)
+        .copilotCard(cornerRadius: 16)
+    }
+}
+
+struct HealthTip: View {
+    let icon: String
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(color)
+            Text(text)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.white.opacity(0.7))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.15))
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Weekly Spending Section
+
+struct WeeklySpendingSection: View {
+    let weeklyData: [(day: String, amount: Double)]
+    let totalSpent: Double
+
+    var maxAmount: Double {
+        weeklyData.map { $0.amount }.max() ?? 1
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("This Week")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Text("$\(Int(totalSpent)) spent")
+                    .font(.furgCaption)
+                    .foregroundColor(.furgMint)
+            }
+
+            // Bar chart
+            HStack(alignment: .bottom, spacing: 12) {
+                ForEach(Array(weeklyData.enumerated()), id: \.offset) { index, data in
+                    VStack(spacing: 8) {
+                        // Bar
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.furgMint.opacity(0.8), .furgSeafoam.opacity(0.6)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(height: max(4, CGFloat(data.amount / maxAmount) * 80))
+                            .frame(maxWidth: .infinity)
+
+                        // Day label
+                        Text(data.day)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+
+                        // Amount
+                        Text("$\(Int(data.amount))")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                }
+            }
+            .frame(height: 120)
+        }
+        .padding(20)
+        .copilotCard(cornerRadius: 16)
+    }
+}
+
+// MARK: - Category Breakdown Section
+
+struct CategoryBreakdownSection: View {
+    let categorySpending: [String: Double]
+
+    var sortedCategories: [(category: String, amount: Double)] {
+        categorySpending.map { ($0.key, $0.value) }.sorted { $0.1 > $1.1 }
+    }
+
+    var totalSpending: Double {
+        categorySpending.values.reduce(0, +)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Spending by Category")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                NavigationLink {
+                    CategoriesView()
+                } label: {
+                    Text("Details")
+                        .font(.furgCaption)
+                        .foregroundColor(.furgMint)
+                }
+            }
+
+            // Category bars
+            ForEach(Array(sortedCategories.prefix(5).enumerated()), id: \.offset) { index, item in
+                CategoryBar(
+                    category: item.category,
+                    amount: item.amount,
+                    percentage: totalSpending > 0 ? item.amount / totalSpending : 0,
+                    color: categoryColor(for: item.category)
+                )
+            }
+        }
+        .padding(20)
+        .copilotCard(cornerRadius: 16)
+    }
+
+    func categoryColor(for category: String) -> Color {
+        switch category.lowercased() {
+        case "shopping": return .pink
+        case "food", "dining": return .orange
+        case "groceries": return .green
+        case "transportation": return .blue
+        case "entertainment": return .purple
+        case "utilities": return .yellow
+        case "health": return .red
+        default: return .furgMint
+        }
+    }
+}
+
+struct CategoryBar: View {
+    let category: String
+    let amount: Double
+    let percentage: Double
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 8, height: 8)
+                    Text(category)
+                        .font(.furgCaption)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+
+                Spacer()
+
+                Text("$\(Int(amount))")
+                    .font(.furgCaption.bold())
+                    .foregroundColor(.white)
+
+                Text("(\(Int(percentage * 100))%)")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.white.opacity(0.1))
+                        .frame(height: 4)
+
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color)
+                        .frame(width: geo.size.width * CGFloat(percentage), height: 4)
+                }
+            }
+            .frame(height: 4)
+        }
+    }
+}
+
+// MARK: - Upcoming Bills Section
+
+struct UpcomingBillsSection: View {
+    let bills: [Bill]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Upcoming Bills")
+                    .font(.furgHeadline)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Text("\(bills.count) bills")
+                    .font(.furgCaption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
+
+            if bills.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.furgSuccess.opacity(0.5))
+                        Text("No upcoming bills")
+                            .font(.furgCaption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                    .padding(.vertical, 20)
+                    Spacer()
+                }
+            } else {
+                // Timeline view
+                VStack(spacing: 0) {
+                    ForEach(Array(bills.prefix(4).enumerated()), id: \.element.id) { index, bill in
+                        BillTimelineRow(bill: bill, isLast: index == min(3, bills.count - 1))
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .copilotCard(cornerRadius: 16)
+    }
+}
+
+struct BillTimelineRow: View {
+    let bill: Bill
+    let isLast: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            // Timeline dot and line
+            VStack(spacing: 0) {
+                Circle()
+                    .fill(Color.furgWarning)
+                    .frame(width: 10, height: 10)
+
+                if !isLast {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 2)
+                        .frame(maxHeight: .infinity)
+                }
+            }
+            .frame(width: 10)
+
+            // Bill info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(bill.merchant)
+                    .font(.furgBody)
+                    .foregroundColor(.white)
+
+                Text(bill.nextDue)
+                    .font(.furgCaption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
+
+            Spacer()
+
+            // Amount
+            Text("$\(String(format: "%.2f", bill.amount))")
+                .font(.furgBody.bold())
+                .foregroundColor(.furgWarning)
+        }
+        .padding(.vertical, 12)
     }
 }
 
@@ -782,7 +1178,7 @@ struct AddTransactionSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 24) {
                 // Header
@@ -792,7 +1188,7 @@ struct AddTransactionSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12)
                     }
                     Spacer()
                     Text("Add Transaction")
@@ -834,7 +1230,7 @@ struct AddTransactionSheet: View {
                     }
                 }
                 .padding(4)
-                .glassCard(cornerRadius: 14, opacity: 0.1)
+                .copilotCard(cornerRadius: 14)
 
                 // Amount
                 VStack(spacing: 8) {
@@ -863,7 +1259,7 @@ struct AddTransactionSheet: View {
                     }
                 }
                 .padding(24)
-                .glassCard()
+                .copilotCard()
 
                 // Merchant
                 VStack(alignment: .leading, spacing: 8) {
@@ -876,7 +1272,7 @@ struct AddTransactionSheet: View {
                         .font(.furgBody)
                         .foregroundColor(.white)
                         .padding(16)
-                        .glassCard(cornerRadius: 12, opacity: 0.1)
+                        .copilotCard(cornerRadius: 12)
                 }
 
                 // Category
@@ -1040,7 +1436,7 @@ struct NotificationsListSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 20) {
                 // Header
@@ -1050,7 +1446,7 @@ struct NotificationsListSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12)
                     }
 
                     Spacer()
@@ -1149,9 +1545,353 @@ struct NotificationRow: View {
     }
 }
 
+// MARK: - Savings Rate Card
+
+struct SavingsRateCard: View {
+    let balance: BalanceSummary
+    let monthlySpending: Double
+
+    var savingsRate: Double {
+        let monthlyIncome = monthlySpending + balance.availableBalance
+        guard monthlyIncome > 0 else { return 0 }
+        return (balance.hiddenBalance / monthlyIncome) * 100
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Savings Rate")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white.opacity(0.6))
+                    Text("\(String(format: "%.1f", savingsRate))%")
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: savingsRate >= 20 ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                            .font(.system(size: 12))
+                        Text(savingsRate >= 20 ? "On Track" : "Below Target")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(savingsRate >= 20 ? .furgSuccess : .furgWarning)
+
+                    Text("Target: 20%")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.4))
+                }
+            }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.white.opacity(0.1))
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(
+                            LinearGradient(
+                                colors: savingsRate >= 20 ? [.furgSuccess, .furgMint] : [.furgWarning, .furgError],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * min(CGFloat(savingsRate) / 30, 1.0))
+                }
+            }
+            .frame(height: 8)
+
+            HStack(spacing: 20) {
+                VStack(spacing: 4) {
+                    Text("Saved This Month")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.5))
+                    Text("$\(Int(balance.hiddenBalance))")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.furgMint)
+                }
+
+                Spacer()
+
+                VStack(spacing: 4) {
+                    Text("Monthly Burn")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.5))
+                    Text("$\(Int(monthlySpending))")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.furgError)
+                }
+            }
+        }
+        .padding(16)
+        .copilotCard(cornerRadius: 20)
+    }
+}
+
+// MARK: - Spending Trends Card
+
+struct SpendingTrendsCard: View {
+    let weeklyData: [(day: String, amount: Double)]
+    let monthlySpending: Double
+
+    var avgDaily: Double { monthlySpending / 30 }
+    var maxDay: Double { weeklyData.map { $0.amount }.max() ?? 0 }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Spending Trends")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.furgSuccess)
+                    Text("-8% vs last week")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.furgSuccess)
+                }
+            }
+
+            // Mini bar chart
+            HStack(alignment: .bottom, spacing: 4) {
+                ForEach(Array(weeklyData.suffix(7)), id: \.day) { item in
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(
+                                item.amount > avgDaily * 1.2 ? Color.furgWarning.opacity(0.7) :
+                                item.amount > avgDaily ? Color.furgMint.opacity(0.7) : Color.furgSuccess.opacity(0.7)
+                            )
+                            .frame(height: CGFloat((item.amount / max(maxDay, avgDaily * 1.5)) * 60))
+
+                        Text(item.day)
+                            .font(.system(size: 9))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: 100)
+
+            // Stats row
+            HStack(spacing: 16) {
+                TrendStat(label: "Daily Avg", value: "$\(Int(avgDaily))", trend: "-5%", color: .furgSuccess)
+                TrendStat(label: "Peak Day", value: "$\(Int(maxDay))", trend: "Mon", color: .furgWarning)
+                TrendStat(label: "Monthly", value: "$\(Int(monthlySpending))", trend: "+12%", color: .furgError)
+            }
+        }
+        .padding(16)
+        .copilotCard(cornerRadius: 20)
+    }
+}
+
+// MARK: - Smart Alerts Card
+
+struct SmartAlertsCard: View {
+    let balance: BalanceSummary
+    let monthlySpending: Double
+
+    var alerts: [SmartAlert] {
+        var list: [SmartAlert] = []
+
+        // Low liquid assets alert
+        if balance.availableBalance < 1500 {
+            list.append(SmartAlert(
+                icon: "exclamationmark.circle.fill",
+                title: "Low Liquid Assets",
+                message: "You have only $\(Int(balance.availableBalance)) available",
+                severity: .warning,
+                action: "Top Up"
+            ))
+        }
+
+        // High spending alert
+        if monthlySpending > 3500 {
+            list.append(SmartAlert(
+                icon: "chart.line.uptrend.xyaxis.circle.fill",
+                title: "Spending Spike Detected",
+                message: "Spending is 25% above your average",
+                severity: .warning,
+                action: "Review"
+            ))
+        }
+
+        // Positive: good savings
+        if balance.hiddenBalance > 2000 {
+            list.append(SmartAlert(
+                icon: "star.circle.fill",
+                title: "Great Savings Progress",
+                message: "You've saved $\(Int(balance.hiddenBalance)) this period!",
+                severity: .success,
+                action: nil
+            ))
+        }
+
+        return list.isEmpty ? [
+            SmartAlert(
+                icon: "checkmark.circle.fill",
+                title: "All Good!",
+                message: "Your finances are on track. Keep up the good work!",
+                severity: .success,
+                action: nil
+            )
+        ] : list
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundColor(.furgWarning)
+                Text("Smart Alerts")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            ForEach(Array(alerts.prefix(2)), id: \.title) { alert in
+                SmartAlertRow(alert: alert)
+            }
+        }
+        .padding(16)
+        .copilotCard(cornerRadius: 20)
+    }
+}
+
+// MARK: - Supporting Components
+
+struct TrendStat: View {
+    let label: String
+    let value: String
+    let trend: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundColor(.white.opacity(0.5))
+            Text(value)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+            Text(trend)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct MerchantRow: View {
+    let rank: Int
+    let name: String
+    let total: Double
+    let count: Int
+    let percentage: Double
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("\(rank)")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white.opacity(0.5))
+                .frame(width: 20)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(name)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text("$\(Int(total))")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white)
+                }
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.white.opacity(0.1))
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.furgMint)
+                            .frame(width: geo.size.width * min(percentage, 1.0))
+                    }
+                }
+                .frame(height: 4)
+
+                Text("\(count) transactions")
+                    .font(.system(size: 9))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+        }
+    }
+}
+
+struct SmartAlert {
+    let icon: String
+    let title: String
+    let message: String
+    let severity: AlertSeverity
+    let action: String?
+
+    enum AlertSeverity {
+        case warning, success, info
+
+        var color: Color {
+            switch self {
+            case .warning: return .furgWarning
+            case .success: return .furgSuccess
+            case .info: return .furgMint
+            }
+        }
+    }
+}
+
+struct SmartAlertRow: View {
+    let alert: SmartAlert
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: alert.icon)
+                .font(.system(size: 14))
+                .foregroundColor(alert.severity.color)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(alert.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white)
+                Text(alert.message)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            if let action = alert.action {
+                Text(action)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(alert.severity.color)
+            }
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         HomeView()
     }
     .environmentObject(FinanceManager())

@@ -13,14 +13,14 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Background
-            AnimatedMeshBackground()
+            // Clean Copilot-inspired background
+            CopilotBackground()
 
             // Content
             Group {
                 switch selectedTab {
                 case 0:
-                    DashboardView()
+                    BalanceView()
                 case 1:
                     ChatView()
                 case 2:
@@ -30,7 +30,7 @@ struct MainTabView: View {
                 case 4:
                     SettingsView()
                 default:
-                    DashboardView()
+                    BalanceView()
                 }
             }
 
@@ -72,32 +72,7 @@ struct CustomTabBar: View {
         .padding(.top, 12)
         .padding(.bottom, 28)
         .background(
-            ZStack {
-                // Blur background
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-
-                // Gradient overlay
-                LinearGradient(
-                    colors: [
-                        Color.furgCharcoal.opacity(0.8),
-                        Color.furgCharcoal.opacity(0.95)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                // Top border glow
-                VStack {
-                    LinearGradient(
-                        colors: [Color.furgMint.opacity(0.3), Color.furgMint.opacity(0)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 1)
-                    Spacer()
-                }
-            }
+            Color(red: 0.08, green: 0.08, blue: 0.12).opacity(0.95)
         )
         .clipShape(
             RoundedRectangle(cornerRadius: 30, style: .continuous)

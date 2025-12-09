@@ -26,7 +26,7 @@ struct EnhancedOnboardingView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 0) {
                 // Progress indicator

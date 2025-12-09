@@ -40,6 +40,10 @@ struct CashFlowView: View {
     @State private var shareText = ""
     @State private var showSpendingDashboard = false
 
+    private func formatCurrency(_ value: Double) -> String {
+        return String(format: "$%.0f", value)
+    }
+
     enum TimePeriod: String, CaseIterable {
         case week = "Week"
         case month = "Month"
@@ -289,7 +293,7 @@ struct CashFlowView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.white.opacity(0.03))
                         .frame(width: 40, height: 40)
 
                     Image(systemName: "square.and.arrow.up")
@@ -326,7 +330,7 @@ struct CashFlowView: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
         )
     }
 
@@ -577,7 +581,7 @@ struct CashFlowView: View {
 
                 MetricCard(
                     title: "Avg Daily Spend",
-                    value: CurrencyFormatter.formatCompact(totalSpending / 30),
+                    value: formatCurrency(totalSpending / 30),
                     subtitle: "per day",
                     icon: "calendar",
                     color: .furgWarning
@@ -586,7 +590,7 @@ struct CashFlowView: View {
                 MetricCard(
                     title: "Largest Expense",
                     value: "Housing",
-                    subtitle: CurrencyFormatter.formatCompact(1500),
+                    subtitle: formatCurrency(1500),
                     icon: "house.fill",
                     color: .blue
                 )
@@ -621,6 +625,10 @@ private struct CashFlowSummaryCard: View {
     let trendUp: Bool
     let color: Color
 
+    private func formatCurrency(_ value: Double) -> String {
+        return String(format: "$%.0f", value)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -640,7 +648,7 @@ private struct CashFlowSummaryCard: View {
                 .foregroundColor(trendUp ? .furgSuccess : .furgDanger)
             }
 
-            Text(CurrencyFormatter.formatCompact(amount))
+            Text(formatCurrency(amount))
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
 

@@ -25,15 +25,16 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 0) {
                 // Progress bar
                 ProgressBar(current: currentStep, total: totalSteps)
                     .padding(.horizontal, 24)
                     .padding(.top, 20)
+                    .padding(.bottom, 16)
 
-                // Content
+                // Content - with maximum height to keep nav visible
                 TabView(selection: $currentStep) {
                     WelcomeStep(name: $name)
                         .tag(0)
@@ -57,58 +58,62 @@ struct OnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: currentStep)
 
-                // Navigation buttons
-                HStack(spacing: 16) {
-                    if currentStep > 0 {
-                        Button {
-                            withAnimation {
-                                currentStep -= 1
-                            }
-                        } label: {
-                            HStack {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                            .font(.furgHeadline)
-                            .foregroundColor(.white.opacity(0.7))
-                        }
-                        .glassButton()
-                    }
+                Spacer(minLength: 20)
 
-                    Spacer()
-
-                    if currentStep < totalSteps - 1 {
-                        Button {
-                            withAnimation {
-                                currentStep += 1
-                            }
-                        } label: {
-                            HStack {
-                                Text(currentStep == 0 && name.isEmpty ? "Skip" : "Continue")
-                                Image(systemName: "chevron.right")
-                            }
-                            .font(.furgHeadline)
-                            .foregroundColor(.furgDarkBg)
-                        }
-                        .primaryButton()
-                    } else {
-                        Button {
-                            completeOnboarding()
-                        } label: {
-                            if isCompleting {
-                                ProgressView()
-                                    .tint(.furgDarkBg)
-                            } else {
+                // Navigation buttons - always visible
+                VStack(spacing: 16) {
+                    HStack(spacing: 16) {
+                        if currentStep > 0 {
+                            Button {
+                                withAnimation {
+                                    currentStep -= 1
+                                }
+                            } label: {
                                 HStack {
-                                    Text("Get Started")
-                                    Image(systemName: "sparkles")
+                                    Image(systemName: "chevron.left")
+                                    Text("Back")
+                                }
+                                .font(.furgHeadline)
+                                .foregroundColor(.white.opacity(0.7))
+                            }
+                            .copilotSecondaryButton()
+                        }
+
+                        Spacer()
+
+                        if currentStep < totalSteps - 1 {
+                            Button {
+                                withAnimation {
+                                    currentStep += 1
+                                }
+                            } label: {
+                                HStack {
+                                    Text(currentStep == 0 && name.isEmpty ? "Skip" : "Continue")
+                                    Image(systemName: "chevron.right")
                                 }
                                 .font(.furgHeadline)
                                 .foregroundColor(.furgDarkBg)
                             }
+                            .copilotPrimaryButton()
+                        } else {
+                            Button {
+                                completeOnboarding()
+                            } label: {
+                                if isCompleting {
+                                    ProgressView()
+                                        .tint(.furgDarkBg)
+                                } else {
+                                    HStack {
+                                        Text("Get Started")
+                                        Image(systemName: "sparkles")
+                                    }
+                                    .font(.furgHeadline)
+                                    .foregroundColor(.furgDarkBg)
+                                }
+                            }
+                            .copilotPrimaryButton()
+                            .disabled(isCompleting)
                         }
-                        .primaryButton()
-                        .disabled(isCompleting)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -217,7 +222,7 @@ struct WelcomeStep: View {
                     .multilineTextAlignment(.center)
             }
 
-            FloatingCard(padding: 24) {
+            CopilotCard(padding: 24) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("What should I call you?")
                         .font(.furgHeadline)
@@ -273,7 +278,7 @@ struct IncomeStep: View {
                     .multilineTextAlignment(.center)
             }
 
-            FloatingCard(padding: 24) {
+            CopilotCard(padding: 24) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Annual salary (before taxes)")
                         .font(.furgHeadline)
@@ -353,7 +358,7 @@ struct GoalStep: View {
                 }
                 .padding(.top, 40)
 
-                FloatingCard(padding: 24) {
+                CopilotCard(padding: 24) {
                     VStack(spacing: 20) {
                         // Goal purpose
                         VStack(alignment: .leading, spacing: 12) {
@@ -584,7 +589,7 @@ struct ConnectBankStep: View {
                     .multilineTextAlignment(.center)
             }
 
-            FloatingCard(padding: 24) {
+            CopilotCard(padding: 24) {
                 VStack(spacing: 20) {
                     HStack(spacing: 12) {
                         Image(systemName: "lock.shield.fill")

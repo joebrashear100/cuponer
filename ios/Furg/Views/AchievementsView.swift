@@ -170,7 +170,7 @@ struct AchievementsView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
@@ -254,7 +254,7 @@ struct AchievementsView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.orange.opacity(0.3), lineWidth: 1)
@@ -340,7 +340,7 @@ struct AchievementsView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.furgWarning.opacity(0.3), lineWidth: 1)
@@ -441,7 +441,7 @@ struct AchievementsView: View {
             .padding(32)
             .background(
                 RoundedRectangle(cornerRadius: 28)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28)
                             .stroke(achievement.tier.color.opacity(0.5), lineWidth: 2)
@@ -543,7 +543,7 @@ struct AchievementCard: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(

@@ -229,15 +229,49 @@ struct TransactionsListView: View {
         (transactions.isEmpty ? demoTransactions : transactions).filter { $0.needsReview }.count
     }
 
+    // Computed spending stats
+    var totalSpending: Double {
+        let txs = transactions.isEmpty ? demoTransactions : transactions
+        return txs.filter { $0.amount < 0 }.reduce(0) { $0 + abs($1.amount) }
+    }
+
+    var totalIncome: Double {
+        let txs = transactions.isEmpty ? demoTransactions : transactions
+        return txs.filter { $0.amount > 0 }.reduce(0) { $0 + $1.amount }
+    }
+
+    var averageTransaction: Double {
+        let txs = transactions.isEmpty ? demoTransactions : transactions
+        let expenses = txs.filter { $0.amount < 0 }
+        guard !expenses.isEmpty else { return 0 }
+        return expenses.reduce(0) { $0 + abs($1.amount) } / Double(expenses.count)
+    }
+
+    var categoryBreakdown: [(TransactionCategory, Double, Int)] {
+        let txs = transactions.isEmpty ? demoTransactions : transactions
+        var breakdown: [TransactionCategory: (Double, Int)] = [:]
+        for tx in txs where tx.amount < 0 {
+            let current = breakdown[tx.category] ?? (0, 0)
+            breakdown[tx.category] = (current.0 + abs(tx.amount), current.1 + 1)
+        }
+        return breakdown.map { ($0.key, $0.value.0, $0.value.1) }
+            .sorted { $0.1 > $1.1 }
+    }
+
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
                     // Header
                     header
                         .offset(y: animate ? 0 : -20)
+                        .opacity(animate ? 1 : 0)
+
+                    // Spending Summary Card
+                    spendingSummaryCard
+                        .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
 
                     // AI Insights carousel
@@ -321,6 +355,8 @@ struct TransactionsListView: View {
                 }
             }
         }
+        // TODO: Add QuickTransactionView to Xcode project
+        /*
         .sheet(isPresented: $showQuickTransaction) {
             NavigationStack {
                 QuickTransactionView()
@@ -333,6 +369,7 @@ struct TransactionsListView: View {
             }
             .presentationBackground(Color.furgCharcoal)
         }
+        */
     }
 
     private func updateTransactionSubscription(transaction: EnhancedTransaction, isSubscription: Bool, frequency: SubscriptionFrequency?) {
@@ -399,6 +436,125 @@ struct TransactionsListView: View {
             }
         }
         .padding(.top, 16)
+    }
+
+    // MARK: - Spending Summary Card
+
+    private var spendingSummaryCard: some View {
+        VStack(spacing: 16) {
+            // Main stats row
+            HStack(spacing: 16) {
+                // Total Spending
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.furgError)
+                        Text("SPENT")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.5))
+                            .tracking(1)
+                    }
+                    Text("$\(Int(totalSpending))")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(14)
+                .background(Color.furgError.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                // Total Income
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.furgSuccess)
+                        Text("INCOME")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.5))
+                            .tracking(1)
+                    }
+                    Text("$\(Int(totalIncome))")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.furgSuccess)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(14)
+                .background(Color.furgSuccess.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            // Net flow indicator
+            HStack {
+                Text("Net Flow")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+
+                Spacer()
+
+                let netFlow = totalIncome - totalSpending
+                HStack(spacing: 6) {
+                    Image(systemName: netFlow >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("\(netFlow >= 0 ? "+" : "")$\(Int(netFlow))")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                }
+                .foregroundColor(netFlow >= 0 ? .furgSuccess : .furgError)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background((netFlow >= 0 ? Color.furgSuccess : Color.furgError).opacity(0.15))
+                .clipShape(Capsule())
+            }
+
+            // Category mini-chart
+            if !categoryBreakdown.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Top Categories")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.5))
+
+                    // Stacked bar showing category proportions
+                    GeometryReader { geo in
+                        HStack(spacing: 2) {
+                            ForEach(Array(categoryBreakdown.prefix(5).enumerated()), id: \.offset) { index, item in
+                                let proportion = totalSpending > 0 ? item.1 / totalSpending : 0
+                                RoundedRectangle(cornerRadius: index == 0 ? 4 : 2)
+                                    .fill(item.0.color)
+                                    .frame(width: max(8, geo.size.width * CGFloat(proportion)))
+                            }
+                        }
+                    }
+                    .frame(height: 8)
+
+                    // Category legend
+                    HStack(spacing: 16) {
+                        ForEach(Array(categoryBreakdown.prefix(3).enumerated()), id: \.offset) { index, item in
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(item.0.color)
+                                    .frame(width: 6, height: 6)
+                                Text(item.0.rawValue.split(separator: " ").first.map(String.init) ?? item.0.rawValue)
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.white.opacity(0.6))
+                                Text("$\(Int(item.1))")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Stats row
+            HStack(spacing: 20) {
+                StatBadge(label: "Transactions", value: "\(filteredTransactions.count)", icon: "list.bullet")
+                StatBadge(label: "Avg. Purchase", value: "$\(Int(averageTransaction))", icon: "chart.bar.fill")
+                StatBadge(label: "Categories", value: "\(categoryBreakdown.count)", icon: "folder.fill")
+            }
+        }
+        .padding(16)
+        .copilotCard(cornerRadius: 20)
     }
 
     // MARK: - AI Insights Section
@@ -468,7 +624,7 @@ struct TransactionsListView: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.white.opacity(0.08))
                 )
 
                 Menu {
@@ -486,7 +642,7 @@ struct TransactionsListView: View {
                 } label: {
                     ZStack {
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(.ultraThinMaterial)
+                            .fill(Color.white.opacity(0.08))
                             .frame(width: 48, height: 48)
 
                         Image(systemName: "line.3.horizontal.decrease.circle")
@@ -675,7 +831,7 @@ private struct InsightCard: View {
         .frame(width: 280)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.08))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(insight.type.color.opacity(0.3), lineWidth: 0.5)
@@ -691,6 +847,13 @@ private struct TransactionRow: View {
     var onTap: () -> Void
     var onCategoryTap: () -> Void
     var onSubscriptionTap: (() -> Void)?
+
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "$0"
+    }
 
     var body: some View {
         Button(action: onTap) {
@@ -765,7 +928,7 @@ private struct TransactionRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(transaction.amount > 0 ? CurrencyFormatter.formatSigned(transaction.amount) : CurrencyFormatter.format(transaction.amount))
+                Text(formatCurrency(transaction.amount))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(transaction.amount > 0 ? .furgSuccess : .white)
 
@@ -777,7 +940,7 @@ private struct TransactionRow: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.08))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.08), lineWidth: 0.5)
@@ -868,6 +1031,13 @@ private struct AICategoryPicker: View {
     @State private var aiSuggestion: TransactionCategory?
     @State private var isProcessing = false
 
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "$0"
+    }
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.6)
@@ -900,7 +1070,7 @@ private struct AICategoryPicker: View {
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.5))
 
-                    Text(CurrencyFormatter.format(transaction.amount))
+                    Text(formatCurrency(transaction.amount))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(transaction.amount > 0 ? .furgSuccess : .furgDanger)
                 }
@@ -1215,6 +1385,13 @@ private struct SubscriptionManagementSheet: View {
         _frequency = State(initialValue: transaction.subscriptionFrequency ?? .monthly)
     }
 
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "$0"
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -1237,7 +1414,7 @@ private struct SubscriptionManagementSheet: View {
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
 
-                        Text(CurrencyFormatter.format(abs(transaction.amount)))
+                        Text(formatCurrency(abs(transaction.amount)))
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -2023,6 +2200,31 @@ private struct DetailRow: View {
                 .multilineTextAlignment(.trailing)
         }
         .padding(16)
+    }
+}
+
+// MARK: - Stat Badge
+
+private struct StatBadge: View {
+    let label: String
+    let value: String
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.furgMint)
+
+            Text(value)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundColor(.white.opacity(0.5))
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

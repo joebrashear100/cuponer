@@ -20,7 +20,7 @@ struct RoundUpSettingsView: View {
                 .ignoresSafeArea()
 
             // Animated gradient overlay
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
@@ -203,7 +203,7 @@ struct RoundUpSummaryCard: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -265,7 +265,7 @@ struct RoundUpToggleCard: View {
                 .tint(.furgMint)
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -304,7 +304,7 @@ struct RoundUpAmountCard: View {
             }
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 
     func exampleText(for amount: RoundUpAmount) -> String {
@@ -356,7 +356,7 @@ struct MultiplierCard: View {
                 .foregroundColor(.white.opacity(0.5))
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -431,7 +431,7 @@ struct LinkedGoalCard: View {
             }
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
         .sheet(isPresented: $showGoalPicker) {
             GoalPickerSheet(goals: goals, selectedGoalId: goalId, onSelect: { goalId in
                 onSelectGoal(goalId)
@@ -450,7 +450,7 @@ struct GoalPickerSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 20) {
                 HStack {
@@ -459,7 +459,7 @@ struct GoalPickerSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12, opacity: 0.1)
                     }
 
                     Spacer()
@@ -586,7 +586,7 @@ struct PendingRoundUpsCard: View {
             }
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -639,13 +639,13 @@ struct EstimatedSavingsCard: View {
                 .foregroundColor(.white.opacity(0.4))
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         RoundUpSettingsView()
     }
     .environmentObject(RoundUpManager())

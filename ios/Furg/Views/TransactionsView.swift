@@ -193,7 +193,7 @@ struct TransactionSearchBar: View {
             }
         }
         .padding(14)
-        .glassCard(cornerRadius: 14, opacity: 0.1)
+        .copilotCard(cornerRadius: 14, opacity: 0.1)
     }
 }
 
@@ -318,7 +318,7 @@ struct TransactionSpendingSummaryCard: View {
             }
         }
         .padding(16)
-        .glassCard(cornerRadius: 14, opacity: 0.08)
+        .copilotCard(cornerRadius: 14, opacity: 0.08)
     }
 }
 
@@ -463,14 +463,14 @@ struct TransactionEmptyView: View {
                 .padding(.horizontal, 40)
         }
         .padding()
-        .glassCard()
+        .copilotCard()
         .padding(.horizontal, 20)
     }
 }
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         TransactionsView()
     }
     .environmentObject(FinanceManager())

@@ -608,3 +608,164 @@ struct SpendingPaceIndicator: View {
         .clipShape(Capsule())
     }
 }
+
+// MARK: - Copilot Money Aesthetic Components
+
+/// Clean dark gradient background - replaces AnimatedMeshBackground
+struct CopilotBackground: View {
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.05, green: 0.05, blue: 0.08),
+                Color(red: 0.08, green: 0.08, blue: 0.12)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+}
+
+/// Clean card component with subtle border - replaces GlassCard and FloatingCard
+struct CopilotCard<Content: View>: View {
+    let content: Content
+    var cornerRadius: CGFloat = 16
+    var padding: CGFloat = 20
+
+    init(cornerRadius: CGFloat = 16, padding: CGFloat = 20, @ViewBuilder content: () -> Content) {
+        self.content = content()
+        self.cornerRadius = cornerRadius
+        self.padding = padding
+    }
+
+    var body: some View {
+        content
+            .padding(padding)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+    }
+}
+
+/// View modifier extension for copilotCard
+extension View {
+    func copilotCard(cornerRadius: CGFloat = 16, padding: CGFloat = 20, opacity: CGFloat = 0.03) -> some View {
+        self.padding(padding)
+            .background(Color.white.opacity(opacity))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+    }
+}
+
+/// Directional change indicator with green/red semantic colors
+struct ChangeIndicator: View {
+    let value: Double
+    let isPositive: Bool  // true = increase is good (income, assets), false = increase is bad (expenses, debt)
+    let suffix: String
+
+    init(value: Double, isPositive: Bool = true, suffix: String = "") {
+        self.value = value
+        self.isPositive = isPositive
+        self.suffix = suffix
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: value >= 0 ? "arrow.up" : "arrow.down")
+                .font(.system(size: 14, weight: .bold))
+
+            Text("$\(Int(abs(value))) \(suffix)")
+                .font(.system(size: 14, weight: .semibold))
+        }
+        .foregroundColor(determineColor())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(determineColor().opacity(0.15))
+        .clipShape(Capsule())
+    }
+
+    private func determineColor() -> Color {
+        if isPositive {
+            // For positive context: up = green (good), down = red (bad)
+            return value >= 0 ? .chartIncome : .chartSpending
+        } else {
+            // For negative context: up = red (bad), down = green (good)
+            return value >= 0 ? .chartSpending : .chartIncome
+        }
+    }
+}
+
+/// Chart styling utilities for consistent Copilot-style charts
+struct CopilotChartStyles {
+    /// Line mark style with gradient
+    static func lineMarkStyle(color: Color = .chartIncome) -> some ShapeStyle {
+        LinearGradient(
+            colors: [color.opacity(0.8), color.opacity(0.5)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    /// Area mark style with gradient fade
+    static func areaMarkStyle(color: Color = .chartIncome) -> some ShapeStyle {
+        LinearGradient(
+            colors: [color.opacity(0.3), color.opacity(0.05)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    /// Standard axis label font
+    static var axisLabelFont: Font { .system(size: 11) }
+
+    /// Standard axis label color
+    static var axisLabelColor: Color { .white.opacity(0.4) }
+}
+
+/// Primary button style for Copilot aesthetic
+struct CopilotPrimaryButton: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                LinearGradient(
+                    colors: [.chartIncome, Color(red: 0.35, green: 0.75, blue: 0.55)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+/// Secondary button style for Copilot aesthetic
+struct CopilotSecondaryButton: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: 15, weight: .medium))
+            .foregroundColor(.white.opacity(0.7))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.white.opacity(0.08))
+            .clipShape(Capsule())
+    }
+}
+
+extension View {
+    func copilotPrimaryButton() -> some View {
+        modifier(CopilotPrimaryButton())
+    }
+
+    func copilotSecondaryButton() -> some View {
+        modifier(CopilotSecondaryButton())
+    }
+}

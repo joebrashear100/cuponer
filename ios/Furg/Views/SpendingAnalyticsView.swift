@@ -203,7 +203,7 @@ struct SpendingOverviewCard: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -300,7 +300,7 @@ struct CategoryBreakdownChart: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 
     func angleForIndex(_ index: Int) -> Angle {
@@ -455,7 +455,7 @@ struct DailySpendingTrendChart: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 
     func dayLabel(_ date: Date) -> String {
@@ -568,7 +568,7 @@ struct TopMerchantsCard: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -671,7 +671,7 @@ struct SpendingInsightsCard: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -684,7 +684,7 @@ struct SpendingInsight {
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         SpendingAnalyticsView()
     }
     .environmentObject(FinanceManager())

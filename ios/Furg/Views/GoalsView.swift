@@ -205,7 +205,7 @@ struct OverallProgressCard: View {
             }
         }
         .padding(24)
-        .glassCard()
+        .copilotCard()
     }
 
     private func formatCurrency(_ value: Decimal) -> String {
@@ -314,7 +314,7 @@ struct PrimaryGoalCard: View {
             }
         }
         .padding(24)
-        .glassCard()
+        .copilotCard()
         .overlay(
             RoundedRectangle(cornerRadius: 24)
                 .stroke(
@@ -389,7 +389,7 @@ struct GoalCard: View {
                 }
             }
             .padding(20)
-            .glassCard(cornerRadius: 20, opacity: 0.08)
+            .copilotCard(cornerRadius: 20, opacity: 0.08)
         }
         .buttonStyle(.plain)
     }
@@ -430,7 +430,7 @@ struct AchievedGoalCard: View {
                 .foregroundColor(.furgSuccess)
         }
         .padding(16)
-        .glassCard(cornerRadius: 16, opacity: 0.05)
+        .copilotCard(cornerRadius: 16, opacity: 0.05)
     }
 }
 
@@ -462,7 +462,7 @@ struct EmptyGoalsState: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -484,7 +484,7 @@ struct CreateGoalSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -495,7 +495,7 @@ struct CreateGoalSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.white.opacity(0.7))
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                         Spacer()
                         Text("New Goal")
@@ -536,7 +536,7 @@ struct CreateGoalSheet: View {
                             .font(.furgBody)
                             .foregroundColor(.white)
                             .padding(16)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Amount
@@ -557,7 +557,7 @@ struct CreateGoalSheet: View {
                                 .keyboardType(.decimalPad)
                         }
                         .padding(16)
-                        .glassCard(cornerRadius: 14, opacity: 0.1)
+                        .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
 
                     // Deadline Toggle
@@ -575,11 +575,11 @@ struct CreateGoalSheet: View {
                                 .tint(.furgMint)
                                 .colorScheme(.dark)
                                 .padding(16)
-                                .glassCard(cornerRadius: 14, opacity: 0.1)
+                                .copilotCard(cornerRadius: 14, opacity: 0.1)
                         }
                     }
                     .padding(16)
-                    .glassCard(cornerRadius: 14, opacity: 0.1)
+                    .copilotCard(cornerRadius: 14, opacity: 0.1)
 
                     // Auto-contribute Toggle
                     VStack(alignment: .leading, spacing: 12) {
@@ -611,11 +611,11 @@ struct CreateGoalSheet: View {
                                 .tint(.furgMint)
                             }
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.08)
+                            .copilotCard(cornerRadius: 12, opacity: 0.08)
                         }
                     }
                     .padding(16)
-                    .glassCard(cornerRadius: 14, opacity: 0.1)
+                    .copilotCard(cornerRadius: 14, opacity: 0.1)
 
                     Spacer(minLength: 20)
 
@@ -725,7 +725,7 @@ struct ContributeSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             VStack(spacing: 24) {
                 // Header
@@ -735,7 +735,7 @@ struct ContributeSheet: View {
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(12)
-                            .glassCard(cornerRadius: 12, opacity: 0.1)
+                            .copilotCard(cornerRadius: 12, opacity: 0.1)
                     }
                     Spacer()
                     Text("Add Funds")
@@ -784,14 +784,14 @@ struct ContributeSheet: View {
                     }
                 }
                 .padding(32)
-                .glassCard()
+                .copilotCard()
 
                 // Note
                 TextField("Add a note (optional)", text: $note)
                     .font(.furgBody)
                     .foregroundColor(.white)
                     .padding(16)
-                    .glassCard(cornerRadius: 14, opacity: 0.1)
+                    .copilotCard(cornerRadius: 14, opacity: 0.1)
 
                 Spacer()
 
@@ -857,7 +857,7 @@ struct GoalDetailSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -868,7 +868,7 @@ struct GoalDetailSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.white.opacity(0.7))
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                         Spacer()
                         Text(goal.name)
@@ -880,7 +880,7 @@ struct GoalDetailSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.furgDanger)
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                     }
                     .padding(.top, 20)
@@ -917,7 +917,7 @@ struct GoalDetailSheet: View {
                             .foregroundColor(.furgMint)
                     }
                     .padding(32)
-                    .glassCard()
+                    .copilotCard()
 
                     // Progress Details
                     if let progress = progress {
@@ -974,7 +974,7 @@ struct GoalDetailSheet: View {
                             }
                         }
                         .padding(20)
-                        .glassCard()
+                        .copilotCard()
                     }
 
                     // Milestones
@@ -1020,7 +1020,7 @@ struct GoalDetailSheet: View {
                             }
                         }
                         .padding(20)
-                        .glassCard()
+                        .copilotCard()
                     }
 
                     Spacer(minLength: 40)
@@ -1067,7 +1067,7 @@ struct GoalDetailSheet: View {
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         GoalsView()
     }
 }

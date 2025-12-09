@@ -32,8 +32,9 @@ final class AppContainer: ObservableObject {
     lazy var spendingLimitsManager = SpendingLimitsManager()
 
     // Singleton managers
-    let healthKitManager = HealthKitManager.shared
-    let notificationManager = NotificationManager.shared
+    // TODO: Add HealthKitManager and NotificationManager to Xcode project
+    // let healthKitManager = HealthKitManager.shared
+    // let notificationManager = NotificationManager.shared
 
     init() {
         self.authManager = AuthManager()
@@ -48,11 +49,32 @@ final class AppContainer: ObservableObject {
 
     /// Initialize app after authentication
     func initializePostAuth() async {
-        await notificationManager.requestAuthorization()
-        notificationManager.setupNotificationCategories()
-        notificationManager.scheduleDailySummary()
-        notificationManager.scheduleWeeklySummary()
+        // TODO: Add NotificationManager to Xcode project
+        // await notificationManager.requestAuthorization()
+        // notificationManager.setupNotificationCategories()
+        // notificationManager.scheduleDailySummary()
+        // notificationManager.scheduleWeeklySummary()
         appLogger.info("App initialized for authenticated user")
+    }
+}
+
+/// Root view that properly observes AuthManager changes
+/// SwiftUI doesn't auto-observe nested ObservableObjects, so we need this wrapper
+struct RootView: View {
+    @ObservedObject var authManager: AuthManager
+
+    var body: some View {
+        Group {
+            if authManager.isAuthenticated {
+                if authManager.hasCompletedOnboarding {
+                    MainTabView()
+                } else {
+                    OnboardingView()
+                }
+            } else {
+                WelcomeView()
+            }
+        }
     }
 }
 
@@ -63,36 +85,27 @@ struct FurgApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if container.authManager.isAuthenticated {
-                    if container.authManager.hasCompletedOnboarding {
-                        MainTabView()
-                    } else {
-                        OnboardingView()
-                    }
-                } else {
-                    WelcomeView()
+            RootView(authManager: container.authManager)
+                // Core managers
+                .environmentObject(container.authManager)
+                .environmentObject(container.apiClient)
+                // Feature managers (accessed lazily)
+                .environmentObject(container.chatManager)
+                .environmentObject(container.financeManager)
+                .environmentObject(container.plaidManager)
+                .environmentObject(container.wishlistManager)
+                .environmentObject(container.goalsManager)
+                .environmentObject(container.subscriptionManager)
+                .environmentObject(container.roundUpManager)
+                .environmentObject(container.forecastingManager)
+                .environmentObject(container.spendingLimitsManager)
+                // Singleton managers
+                // TODO: Add HealthKitManager and NotificationManager to Xcode project
+                // .environmentObject(container.healthKitManager)
+                // .environmentObject(container.notificationManager)
+                .task {
+                    await container.initializePostAuth()
                 }
-            }
-            // Core managers
-            .environmentObject(container.authManager)
-            .environmentObject(container.apiClient)
-            // Feature managers (accessed lazily)
-            .environmentObject(container.chatManager)
-            .environmentObject(container.financeManager)
-            .environmentObject(container.plaidManager)
-            .environmentObject(container.wishlistManager)
-            .environmentObject(container.goalsManager)
-            .environmentObject(container.subscriptionManager)
-            .environmentObject(container.roundUpManager)
-            .environmentObject(container.forecastingManager)
-            .environmentObject(container.spendingLimitsManager)
-            // Singleton managers
-            .environmentObject(container.healthKitManager)
-            .environmentObject(container.notificationManager)
-            .task {
-                await container.initializePostAuth()
-            }
         }
     }
 }

@@ -16,7 +16,7 @@ struct SpendingLimitsView: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -97,7 +97,7 @@ struct SpendingLimitsView: View {
         Button {
             showAlerts = true
         } label: {
-            GlassCard {
+            CopilotCard {
                 HStack(spacing: 16) {
                     ZStack {
                         Circle()
@@ -146,7 +146,7 @@ struct SpendingLimitsView: View {
     }
 
     private func overLimitCard(_ limit: SpendingLimit) -> some View {
-        GlassCard {
+        CopilotCard {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
@@ -197,7 +197,7 @@ struct SpendingLimitsView: View {
         Button {
             editingLimit = limit
         } label: {
-            GlassCard {
+            CopilotCard {
                 VStack(spacing: 16) {
                     HStack(spacing: 16) {
                         ZStack {
@@ -269,7 +269,7 @@ struct SpendingLimitsView: View {
         Button {
             showAddLimit = true
         } label: {
-            GlassCard {
+            CopilotCard {
                 HStack {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 22))
@@ -520,7 +520,7 @@ struct EditSpendingLimitSheet: View {
                     .padding(.top, 24)
 
                     // Current spending
-                    GlassCard {
+                    CopilotCard {
                         VStack(spacing: 8) {
                             Text("Current Spending")
                                 .font(.furgCaption)

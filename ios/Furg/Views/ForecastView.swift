@@ -171,7 +171,7 @@ struct ForecastHeader: View {
                     .font(.title3)
                     .foregroundColor(.furgMint)
                     .padding(12)
-                    .glassCard(cornerRadius: 14, opacity: 0.1)
+                    .copilotCard(cornerRadius: 14, opacity: 0.1)
             }
         }
         .padding(.top, 60)
@@ -254,7 +254,7 @@ struct ForecastSummaryCard: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -299,7 +299,7 @@ struct SafeToSpendCard: View {
             Spacer()
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -431,7 +431,7 @@ struct BalanceProjectionChart: View {
             }
         }
         .padding(20)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -525,7 +525,7 @@ struct ForecastAlertRow: View {
             }
         }
         .padding(14)
-        .glassCard(cornerRadius: 14, opacity: 0.08)
+        .copilotCard(cornerRadius: 14, opacity: 0.08)
     }
 }
 
@@ -597,13 +597,13 @@ struct UpcomingBillsForecast: View {
             }
         }
         .padding(16)
-        .glassCard()
+        .copilotCard()
     }
 }
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         ForecastView()
     }
     .environmentObject(ForecastingManager())

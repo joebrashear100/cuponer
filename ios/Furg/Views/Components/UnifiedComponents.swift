@@ -36,7 +36,7 @@ struct FurgCard<Content: View>: View {
             .padding(padding)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .stroke(showBorder ? borderColor : .clear, lineWidth: 0.5)
@@ -66,7 +66,7 @@ struct FurgAccentCard<Content: View>: View {
             .padding(padding)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
                             .stroke(
@@ -315,7 +315,7 @@ struct FurgAmountInput: View {
         .padding(24)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color.white.opacity(0.03))
         )
     }
 }
@@ -700,7 +700,7 @@ extension View {
             .padding(padding)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .stroke(Color.white.opacity(0.1), lineWidth: 0.5)

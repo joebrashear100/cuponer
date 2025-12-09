@@ -45,7 +45,7 @@ struct SubscriptionsView: View {
                             .font(.title3)
                             .foregroundColor(.furgMint)
                             .padding(12)
-                            .glassCard(cornerRadius: 14, opacity: 0.1)
+                            .copilotCard(cornerRadius: 14, opacity: 0.1)
                     }
                 }
                 .padding(.top, 60)
@@ -78,7 +78,7 @@ struct SubscriptionsView: View {
                 }
                 .offset(y: animate ? 0 : 20)
                 .opacity(animate ? 1 : 0)
-                .animation(.easeOut(duration: 0.5).delay(0.1), value: animate)
+                .animation(.easeOut(duration: 0.5), value: animate)
 
                 // Unused Alert
                 if !subscriptionManager.unusedSubscriptions.isEmpty {
@@ -88,14 +88,20 @@ struct SubscriptionsView: View {
                     )
                     .offset(y: animate ? 0 : 20)
                     .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.15), value: animate)
+                    .animation(.easeOut(duration: 0.5), value: animate)
                 }
 
                 // Filter Tabs
-                PillTabBar(selectedIndex: $selectedFilter, tabs: filters)
-                    .offset(y: animate ? 0 : 20)
-                    .opacity(animate ? 1 : 0)
-                    .animation(.easeOut(duration: 0.5).delay(0.2), value: animate)
+                Picker("Filter", selection: $selectedFilter) {
+                    ForEach(0..<filters.count, id: \.self) { index in
+                        Text(filters[index]).tag(index)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .offset(y: animate ? 0 : 20)
+                .opacity(animate ? 1 : 0)
+                .animation(.easeOut(duration: 0.5), value: animate)
 
                 // Subscriptions List
                 if subscriptionManager.isLoading {
@@ -106,7 +112,7 @@ struct SubscriptionsView: View {
                     EmptySubscriptionsState(filter: selectedFilter)
                         .offset(y: animate ? 0 : 20)
                         .opacity(animate ? 1 : 0)
-                        .animation(.easeOut(duration: 0.5).delay(0.25), value: animate)
+                        .animation(.easeOut(duration: 0.5), value: animate)
                 } else {
                     LazyVStack(spacing: 16) {
                         ForEach(Array(filteredSubscriptions.enumerated()), id: \.element.id) { index, subscription in
@@ -119,7 +125,7 @@ struct SubscriptionsView: View {
                             )
                             .offset(y: animate ? 0 : 20)
                             .opacity(animate ? 1 : 0)
-                            .animation(.easeOut(duration: 0.4).delay(0.25 + Double(index) * 0.05), value: animate)
+                            .animation(.easeOut(duration: 0.4), value: animate)
                         }
                     }
                 }
@@ -178,7 +184,7 @@ struct SubscriptionStatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .glassCard(cornerRadius: 20, opacity: 0.08)
+        .copilotCard(cornerRadius: 20, opacity: 0.08)
     }
 }
 
@@ -213,7 +219,7 @@ struct UnusedSubscriptionsAlert: View {
             Spacer()
         }
         .padding(16)
-        .glassCard(cornerRadius: 16, opacity: 0.1)
+        .copilotCard(cornerRadius: 16, opacity: 0.1)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.furgWarning.opacity(0.3), lineWidth: 1)
@@ -273,7 +279,7 @@ struct EmptySubscriptionsState: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity)
-        .glassCard()
+        .copilotCard()
     }
 }
 
@@ -432,7 +438,7 @@ struct SubscriptionCard: View {
             }
         }
         .padding(20)
-        .glassCard(cornerRadius: 24, opacity: subscription.isUnused ? 0.15 : 0.1)
+        .copilotCard(cornerRadius: 24, opacity: subscription.isUnused ? 0.15 : 0.1)
         .overlay(
             RoundedRectangle(cornerRadius: 24)
                 .stroke(subscription.isUnused ? Color.furgWarning.opacity(0.3) : Color.clear, lineWidth: 1)
@@ -490,7 +496,7 @@ struct CancellationGuideSheet: View {
 
     var body: some View {
         ZStack {
-            AnimatedMeshBackground()
+            CopilotBackground()
 
             ScrollView {
                 VStack(spacing: 24) {
@@ -501,7 +507,7 @@ struct CancellationGuideSheet: View {
                                 .font(.title3)
                                 .foregroundColor(.white.opacity(0.7))
                                 .padding(12)
-                                .glassCard(cornerRadius: 12, opacity: 0.1)
+                                .copilotCard(cornerRadius: 12, opacity: 0.1)
                         }
                         Spacer()
                         Text("Cancel Subscription")
@@ -537,7 +543,7 @@ struct CancellationGuideSheet: View {
                             .foregroundColor(.furgSuccess)
                     }
                     .padding(24)
-                    .glassCard()
+                    .copilotCard()
 
                     if isLoading {
                         ProgressView()
@@ -554,7 +560,7 @@ struct CancellationGuideSheet: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .glassCard(cornerRadius: 30, opacity: 0.15)
+                        .copilotCard(cornerRadius: 30, opacity: 0.15)
 
                         // Steps
                         VStack(alignment: .leading, spacing: 16) {
@@ -582,7 +588,7 @@ struct CancellationGuideSheet: View {
                             }
                         }
                         .padding(20)
-                        .glassCard()
+                        .copilotCard()
 
                         // Script (if available)
                         if let script = guide.script {
@@ -600,7 +606,7 @@ struct CancellationGuideSheet: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
                             .padding(20)
-                            .glassCard()
+                            .copilotCard()
                         }
 
                         // URL Button
@@ -614,7 +620,7 @@ struct CancellationGuideSheet: View {
                                 .foregroundColor(.furgMint)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .glassCard(cornerRadius: 16, opacity: 0.15)
+                                .copilotCard(cornerRadius: 16, opacity: 0.15)
                             }
                         }
 
@@ -638,7 +644,7 @@ struct CancellationGuideSheet: View {
                                 }
                             }
                             .padding(20)
-                            .glassCard()
+                            .copilotCard()
                         }
 
                         // Warnings
@@ -729,7 +735,7 @@ struct CancellationGuideSheet: View {
 
 #Preview {
     ZStack {
-        AnimatedMeshBackground()
+        CopilotBackground()
         SubscriptionsView()
     }
 }

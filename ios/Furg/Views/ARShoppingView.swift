@@ -386,7 +386,7 @@ struct ProductAnnotationCard: View {
             }
         }
         .padding(12)
-        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.03))
         .cornerRadius(12)
         .frame(width: 220)
         .shadow(radius: 8)
@@ -447,7 +447,7 @@ struct ARTopControlsView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.03))
                 .cornerRadius(20)
             }
 
@@ -462,7 +462,7 @@ struct ARTopControlsView: View {
                     .font(.title3)
                     .foregroundColor(.white)
                     .padding(10)
-                    .background(.ultraThinMaterial)
+                    .background(Color.white.opacity(0.03))
                     .clipShape(Circle())
             }
         }
@@ -488,7 +488,7 @@ struct ARBottomControlsView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.03))
                 .cornerRadius(16)
             }
 

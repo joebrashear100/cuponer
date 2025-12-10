@@ -57,6 +57,7 @@
 		F10000010000000000000046 /* FinanceKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000046 /* FinanceKitManager.swift */; };
 		F10000010000000000000047 /* AppleWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000047 /* AppleWalletView.swift */; };
 		F10000010000000000000048 /* SpendingDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000049 /* SpendingDashboardView.swift */; };
+		F10000010000000000000049 /* ToolsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000050 /* ToolsHubView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -112,6 +113,7 @@
 		F20000010000000000000047 /* AppleWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleWalletView.swift; sourceTree = "<group>"; };
 		F20000010000000000000048 /* Furg.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Furg.entitlements; sourceTree = "<group>"; };
 		F20000010000000000000049 /* SpendingDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingDashboardView.swift; sourceTree = "<group>"; };
+		F20000010000000000000050 /* ToolsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsHubView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +215,7 @@
 				F20000010000000000000016 /* SettingsView.swift */,
 				F20000010000000000000034 /* SpendingAnalyticsView.swift */,
 				F20000010000000000000049 /* SpendingDashboardView.swift */,
+				F20000010000000000000050 /* ToolsHubView.swift */,
 				F20000010000000000000035 /* SpendingLimitsView.swift */,
 				F20000010000000000000036 /* SubscriptionsView.swift */,
 				F20000010000000000000017 /* TransactionsView.swift */,

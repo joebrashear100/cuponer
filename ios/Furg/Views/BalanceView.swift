@@ -46,6 +46,7 @@ struct BalanceView: View {
                     balanceTrendSection
                     cashFlowSection
                     metricsSection
+                    premiumToolsSection
                     categoriesSection
                     accountsSection
                     quickActionsSection
@@ -225,6 +226,72 @@ struct BalanceView: View {
         .opacity(animate ? 1 : 0)
         .offset(y: animate ? 0 : 20)
         .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.35), value: animate)
+    }
+
+    // MARK: - Premium Tools Section
+    private var premiumToolsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Premium Tools")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                Spacer()
+                NavigationLink(destination: EmptyView()) {
+                    Text("See All")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.furgMint)
+                }
+            }
+            .padding(.horizontal, 20)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // Debt Payoff
+                    ToolQuickAccessCard(
+                        icon: "chart.line.downtrend.xyaxis",
+                        title: "Debt Payoff",
+                        metric: "$38,500",
+                        color: Color(red: 0.95, green: 0.4, blue: 0.4)
+                    ) { }
+
+                    // Card Optimizer
+                    ToolQuickAccessCard(
+                        icon: "creditcard.fill",
+                        title: "Card Match",
+                        metric: "95% match",
+                        color: Color(red: 0.6, green: 0.4, blue: 0.9)
+                    ) { }
+
+                    // Investments
+                    ToolQuickAccessCard(
+                        icon: "chart.pie.fill",
+                        title: "Portfolio",
+                        metric: "+$2,450",
+                        color: Color(red: 0.7, green: 0.4, blue: 0.9)
+                    ) { }
+
+                    // Merchant Intel
+                    ToolQuickAccessCard(
+                        icon: "building.2.fill",
+                        title: "Deals",
+                        metric: "5 active",
+                        color: Color(red: 0.4, green: 0.8, blue: 0.9)
+                    ) { }
+
+                    // Life Integration
+                    ToolQuickAccessCard(
+                        icon: "heart.text.square.fill",
+                        title: "Life",
+                        metric: "Risk: 45",
+                        color: Color(red: 0.9, green: 0.4, blue: 0.7)
+                    ) { }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.38), value: animate)
     }
 
     private var categoriesSection: some View {
@@ -555,5 +622,46 @@ private struct BalanceAccountRow: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(Color.white.opacity(0.02))
+    }
+}
+
+// MARK: - Tool Quick Access Card
+private struct ToolQuickAccessCard: View {
+    let icon: String
+    let title: String
+    let metric: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(color)
+                }
+
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
+
+                Text(metric)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(color)
+            }
+            .frame(width: 110, height: 120)
+            .padding(12)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(color.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }

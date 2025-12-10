@@ -772,180 +772,191 @@ extension View {
 
 // MARK: - Navigation State & Drawer Components
 
-/// Manages global navigation state for side drawer and view selection
+/// Manages global navigation state for gesture-based home hub navigation
 @MainActor
 class NavigationState: ObservableObject {
-    @Published var isDrawerOpen = false
-    @Published var selectedView: AppView = .dashboard
+    @Published var currentView: AppView = .hub
+    @Published var isHomeHub: Bool = true
 
-    enum AppView: String, CaseIterable {
+    enum AppView: String, CaseIterable, Identifiable {
+        case hub = "Home"
         case dashboard = "Dashboard"
         case chat = "Chat"
         case activity = "Activity"
         case accounts = "Accounts"
         case settings = "Settings"
 
+        var id: String { rawValue }
+
         var icon: String {
             switch self {
-            case .dashboard: return "house.fill"
+            case .hub: return "house.fill"
+            case .dashboard: return "chart.bar.fill"
             case .chat: return "message.fill"
             case .activity: return "list.bullet.rectangle"
-            case .accounts: return "chart.pie.fill"
+            case .accounts: return "creditcard.fill"
             case .settings: return "gearshape.fill"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .hub: return .furgMint
+            case .dashboard: return Color(red: 0.45, green: 0.85, blue: 0.65)
+            case .chat: return Color(red: 0.35, green: 0.75, blue: 0.95)
+            case .activity: return Color(red: 0.95, green: 0.65, blue: 0.35)
+            case .accounts: return Color(red: 0.75, green: 0.55, blue: 0.95)
+            case .settings: return Color(red: 0.55, green: 0.65, blue: 0.75)
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .hub: return "Your financial overview"
+            case .dashboard: return "Balance & insights"
+            case .chat: return "AI financial assistant"
+            case .activity: return "Transactions & spending"
+            case .accounts: return "All your accounts"
+            case .settings: return "App preferences"
             }
         }
     }
 
-    func toggleDrawer() {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            isDrawerOpen.toggle()
+    func navigateTo(_ view: AppView) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            currentView = view
+            isHomeHub = (view == .hub)
         }
     }
 
-    func selectView(_ view: AppView) {
-        selectedView = view
-        isDrawerOpen = false
+    func navigateToHub() {
+        navigateTo(.hub)
+    }
+
+    func swipeToNext() {
+        let views = AppView.allCases.filter { $0 != .hub }
+        guard let currentIndex = views.firstIndex(of: currentView) else { return }
+        let nextIndex = (currentIndex + 1) % views.count
+        navigateTo(views[nextIndex])
+    }
+
+    func swipeToPrevious() {
+        let views = AppView.allCases.filter { $0 != .hub }
+        guard let currentIndex = views.firstIndex(of: currentView) else { return }
+        let previousIndex = currentIndex == 0 ? views.count - 1 : currentIndex - 1
+        navigateTo(views[previousIndex])
     }
 }
 
-/// Premium side drawer with profile card and navigation items
-struct SideDrawer: View {
+/// Home hub with visual cards for navigation
+struct HomeHubView: View {
     @ObservedObject var navigationState: NavigationState
     @ObservedObject var financeManager: FinanceManager
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Profile Card
-            ProfileCardSection(financeManager: financeManager)
-                .padding(.horizontal, 20)
-                .padding(.top, 60)
-                .padding(.bottom, 30)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Greeting and balance summary
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Afternoon")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white.opacity(0.6))
 
-            // Navigation Items
-            VStack(spacing: 8) {
-                ForEach(NavigationState.AppView.allCases, id: \.self) { view in
-                    DrawerMenuItem(
-                        view: view,
-                        isSelected: navigationState.selectedView == view
-                    ) {
-                        navigationState.selectView(view)
+                        Text("Joe")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Total Balance")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.5))
+
+                        Text("$4,250")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.furgMint)
                     }
                 }
-            }
-            .padding(.horizontal, 12)
-
-            Spacer()
-
-            // App Version Footer
-            Text("Furg v1.0.0")
-                .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.3))
                 .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-        }
-        .frame(width: 280)
-        .background(
-            Color(red: 0.06, green: 0.06, blue: 0.09)
-        )
-        .overlay(
-            Rectangle()
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 1)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-        )
-    }
-}
+                .padding(.top, 20)
 
-/// Profile card section in drawer showing user info and balance
-struct ProfileCardSection: View {
-    @ObservedObject var financeManager: FinanceManager
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            profileAvatar
-            profileName
-            profileBalance
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.03))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
-    private var profileAvatar: some View {
-        Circle()
-            .fill(
-                LinearGradient(
-                    colors: [.furgMint, .furgSeafoam],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: 60, height: 60)
-            .overlay(
-                Text("JB")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-            )
-    }
-
-    private var profileName: some View {
-        Text("Joe Brashear")
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundColor(.white)
-    }
-
-    private var profileBalance: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Total Balance")
-                .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.5))
-
-            Text("$4,250")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.white)
+                // Navigation cards grid
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 16),
+                    GridItem(.flexible(), spacing: 16)
+                ], spacing: 16) {
+                    ForEach(NavigationState.AppView.allCases.filter { $0 != .hub }) { view in
+                        HubNavigationCard(
+                            view: view,
+                            action: { navigationState.navigateTo(view) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 100) // Space for FAB
+            }
         }
     }
 }
 
-/// Individual menu item in the drawer
-struct DrawerMenuItem: View {
+/// Large visual card for hub navigation
+struct HubNavigationCard: View {
     let view: NavigationState.AppView
-    let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: view.icon)
-                    .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? .furgMint : .white.opacity(0.6))
-                    .frame(width: 28)
+            VStack(spacing: 16) {
+                // Icon circle
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                view.color.opacity(0.8),
+                                view.color.opacity(0.5)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: view.icon)
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(.white)
+                    )
+                    .shadow(color: view.color.opacity(0.3), radius: 8, y: 4)
 
+                // Title
                 Text(view.rawValue)
-                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
 
-                Spacer()
-
-                if isSelected {
-                    Circle()
-                        .fill(Color.furgMint)
-                        .frame(width: 6, height: 6)
-                }
+                // Description
+                Text(view.description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.white.opacity(0.08) : Color.clear)
-            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 180)
+            .padding(20)
+            .copilotCard(cornerRadius: 20, padding: 0)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(HubCardButtonStyle())
+    }
+}
+
+/// Button style with scale animation
+struct HubCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 
@@ -1030,28 +1041,30 @@ struct FABMenuItem: View {
     }
 }
 
-/// Minimal top navigation bar with drawer toggle, logo, and quick actions
-struct TopNavigationBar: View {
+/// Ultra-minimal top bar without hamburger menu
+struct MinimalTopBar: View {
     @ObservedObject var navigationState: NavigationState
     let onRefresh: () -> Void
     let onNotifications: () -> Void
 
     var body: some View {
         HStack(spacing: 16) {
-            // Drawer Toggle (Hamburger Menu)
+            // Logo (tappable to return home)
             Button {
-                navigationState.toggleDrawer()
+                navigationState.navigateToHub()
             } label: {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
+                Text("FURG")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.furgMint)
             }
 
-            // Logo
-            Text("FURG")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.furgMint)
+            // Current view title (only show when not on hub)
+            if !navigationState.isHomeHub {
+                Text(navigationState.currentView.rawValue)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+                    .transition(.opacity)
+            }
 
             Spacer()
 

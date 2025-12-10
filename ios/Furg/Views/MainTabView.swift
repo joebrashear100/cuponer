@@ -2,7 +2,7 @@
 //  MainTabView.swift
 //  Furg
 //
-//  Side drawer navigation with floating action button
+//  Gesture-based home hub navigation with minimal top bar
 //
 
 import SwiftUI
@@ -16,37 +16,33 @@ struct MainTabView: View {
             // Background
             CopilotBackground()
 
-            // Main Content with Top Bar
+            // Main content area
             VStack(spacing: 0) {
-                TopNavigationBar(
+                // Minimal top bar
+                MinimalTopBar(
                     navigationState: navigationState,
                     onRefresh: handleRefresh,
                     onNotifications: handleNotifications
                 )
 
-                // Selected View Content
+                // View content with gesture navigation
                 selectedViewContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+                    .gesture(
+                        DragGesture(minimumDistance: 50)
+                            .onEnded { gesture in
+                                // Only enable swipes when not on hub
+                                guard !navigationState.isHomeHub else { return }
 
-            // Side Drawer (slides from left)
-            GeometryReader { geometry in
-                HStack(spacing: 0) {
-                    SideDrawer(navigationState: navigationState, financeManager: financeManager)
-                        .offset(x: navigationState.isDrawerOpen ? 0 : -280)
-
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                // Dimmed overlay when drawer is open
-                if navigationState.isDrawerOpen {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            navigationState.toggleDrawer()
-                        }
-                }
+                                if gesture.translation.width > 0 {
+                                    // Swipe right = previous
+                                    navigationState.swipeToPrevious()
+                                } else if gesture.translation.width < 0 {
+                                    // Swipe left = next
+                                    navigationState.swipeToNext()
+                                }
+                            }
+                    )
             }
 
             // Floating Action Button (bottom right)
@@ -60,35 +56,45 @@ struct MainTabView: View {
                 }
             }
         }
-        .gesture(
-            DragGesture()
-                .onEnded { gesture in
-                    // Swipe from left edge to open drawer
-                    if gesture.startLocation.x < 50 && gesture.translation.width > 100 {
-                        navigationState.toggleDrawer()
-                    }
-                    // Swipe right to close drawer
-                    else if navigationState.isDrawerOpen && gesture.translation.width < -100 {
-                        navigationState.toggleDrawer()
-                    }
-                }
-        )
         .ignoresSafeArea(.keyboard)
     }
 
     @ViewBuilder
     private var selectedViewContent: some View {
-        switch navigationState.selectedView {
+        switch navigationState.currentView {
+        case .hub:
+            HomeHubView(navigationState: navigationState, financeManager: financeManager)
+                .transition(.opacity)
         case .dashboard:
             BalanceView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         case .chat:
             ChatView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         case .activity:
             TransactionsListView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         case .accounts:
             AccountsView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         case .settings:
             SettingsView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         }
     }
 

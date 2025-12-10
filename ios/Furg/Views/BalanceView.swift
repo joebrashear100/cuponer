@@ -44,6 +44,8 @@ struct BalanceView: View {
                     headerSection
                     heroBalanceSection
                     balanceTrendSection
+                    spendingBreakdownChart
+                    weeklyComparisonChart
                     cashFlowSection
                     metricsSection
                     premiumToolsSection
@@ -166,6 +168,56 @@ struct BalanceView: View {
         }
     }
 
+    private var spendingBreakdownChart: some View {
+        Group {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Spending Breakdown")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+
+                SpendingBreakdownTechnicalChart(data: generateSpendingData())
+                    .frame(height: 220)
+            }
+            .padding(20)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .padding(.horizontal, 20)
+            .opacity(animate ? 1 : 0)
+            .offset(y: animate ? 0 : 20)
+            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.25), value: animate)
+        }
+    }
+
+    private var weeklyComparisonChart: some View {
+        Group {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Weekly Performance")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+
+                WeeklyComparisonTechnicalChart(data: generateWeeklyData())
+                    .frame(height: 220)
+            }
+            .padding(20)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+            .padding(.horizontal, 20)
+            .opacity(animate ? 1 : 0)
+            .offset(y: animate ? 0 : 20)
+            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animate)
+        }
+    }
+
     private var cashFlowSection: some View {
         HStack(spacing: 16) {
             CashFlowIndicator(
@@ -184,7 +236,7 @@ struct BalanceView: View {
         .padding(.horizontal, 20)
         .opacity(animate ? 1 : 0)
         .offset(y: animate ? 0 : 20)
-        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animate)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.35), value: animate)
     }
 
     private var metricsSection: some View {
@@ -396,6 +448,56 @@ struct BalanceView: View {
 
         return data
     }
+
+    private func generateSpendingData() -> [TechnicalCategoryData] {
+        let categories = [
+            ("Groceries", Color(red: 0.4, green: 0.8, blue: 0.4)),
+            ("Dining", Color(red: 0.8, green: 0.6, blue: 0.2)),
+            ("Transport", Color(red: 0.8, green: 0.4, blue: 0.4)),
+            ("Entertainment", Color(red: 0.6, green: 0.4, blue: 0.8)),
+            ("Shopping", Color(red: 0.9, green: 0.6, blue: 0.3)),
+            ("Other", Color(red: 0.5, green: 0.5, blue: 0.5))
+        ]
+
+        return categories.map { category, color in
+            let minAmount = Double.random(in: 50...150)
+            let openAmount = minAmount + Double.random(in: 50...200)
+            let maxAmount = openAmount + Double.random(in: 100...300)
+            let closeAmount = Double.random(in: openAmount...maxAmount)
+
+            return TechnicalCategoryData(
+                category: category,
+                minAmount: minAmount,
+                openAmount: openAmount,
+                closeAmount: closeAmount,
+                maxAmount: maxAmount,
+                color: color
+            )
+        }
+    }
+
+    private func generateWeeklyData() -> [WeeklyPerformanceData] {
+        let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        var baseBalance = 11500.0
+
+        return days.map { day in
+            let dailyChange = Double.random(in: -300...500)
+            let openBalance = baseBalance
+            let closeBalance = baseBalance + dailyChange
+            let lowBalance = min(openBalance, closeBalance) - Double.random(in: 50...200)
+            let highBalance = max(openBalance, closeBalance) + Double.random(in: 50...200)
+
+            baseBalance = closeBalance
+
+            return WeeklyPerformanceData(
+                day: day,
+                openBalance: openBalance,
+                closeBalance: closeBalance,
+                lowBalance: lowBalance,
+                highBalance: highBalance
+            )
+        }
+    }
 }
 
 // MARK: - Balance Data Model
@@ -403,27 +505,62 @@ struct BalanceDataPoint: Identifiable {
     let id = UUID()
     let date: Date
     let balance: Double
+    var lineColor: Color {
+        // Color based on spending category impact
+        let dayOfWeek = Calendar.current.component(.weekday, from: date)
+        let isWeekend = dayOfWeek == 1 || dayOfWeek == 7
+
+        if balance > 12500 {
+            return Color(red: 0.45, green: 0.85, blue: 0.65) // Green - good savings
+        } else if balance > 10000 {
+            return Color(red: 0.35, green: 0.75, blue: 0.95) // Blue - stable
+        } else if balance > 7500 {
+            return Color(red: 0.95, green: 0.75, blue: 0.3) // Yellow - moderate spending
+        } else {
+            return Color(red: 0.95, green: 0.4, blue: 0.4) // Red - high spending
+        }
+    }
 }
 
-// MARK: - Balance Trend Chart
+// MARK: - Technical Category Data Model
+struct TechnicalCategoryData: Identifiable {
+    let id = UUID()
+    let category: String
+    let minAmount: Double
+    let openAmount: Double
+    let closeAmount: Double
+    let maxAmount: Double
+    let color: Color
+}
+
+// MARK: - Weekly Performance Data Model
+struct WeeklyPerformanceData: Identifiable {
+    let id = UUID()
+    let day: String
+    let openBalance: Double
+    let closeBalance: Double
+    let lowBalance: Double
+    let highBalance: Double
+    var isPositiveDay: Bool {
+        closeBalance >= openBalance
+    }
+}
+
+// MARK: - Balance Trend Chart with Category Coloring
 struct BalanceTrendChart: View {
     let data: [BalanceDataPoint]
     let selectedRange: BalanceView.TimeRange
 
     var body: some View {
         Chart(data) { point in
+            let lineColor = point.lineColor
+
             LineMark(
                 x: .value("Date", point.date),
                 y: .value("Balance", point.balance)
             )
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [Color.chartIncome.opacity(0.8), Color.chartIncome.opacity(0.5)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+            .foregroundStyle(lineColor)
+            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
 
             AreaMark(
                 x: .value("Date", point.date),
@@ -431,7 +568,7 @@ struct BalanceTrendChart: View {
             )
             .foregroundStyle(
                 LinearGradient(
-                    colors: [Color.chartIncome.opacity(0.3), Color.chartIncome.opacity(0.05)],
+                    colors: [lineColor.opacity(0.25), lineColor.opacity(0.05)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -448,6 +585,98 @@ struct BalanceTrendChart: View {
             AxisMarks(position: .leading) { value in
                 AxisValueLabel()
                     .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYScale(domain: .automatic(includesZero: false))
+    }
+}
+
+// MARK: - Spending Breakdown Technical Chart
+struct SpendingBreakdownTechnicalChart: View {
+    let data: [TechnicalCategoryData]
+
+    var body: some View {
+        Chart(data) { item in
+            BarMark(
+                x: .value("Category", item.category),
+                yStart: .value("Min", item.minAmount),
+                yEnd: .value("Max", item.maxAmount)
+            )
+            .foregroundStyle(item.color)
+            .opacity(0.8)
+
+            BarMark(
+                x: .value("Category", item.category),
+                y: .value("Open", item.openAmount)
+            )
+            .foregroundStyle(item.color)
+            .lineStyle(StrokeStyle(lineWidth: 2))
+
+            PointMark(
+                x: .value("Category", item.category),
+                y: .value("Close", item.closeAmount)
+            )
+            .foregroundStyle(item.closeAmount > item.openAmount ? Color.chartSpending : Color.chartIncome)
+            .symbolSize(120)
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic) { value in
+                AxisValueLabel()
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisValueLabel()
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYScale(domain: .automatic(includesZero: true))
+    }
+}
+
+// MARK: - Weekly Performance Technical Chart
+struct WeeklyComparisonTechnicalChart: View {
+    let data: [WeeklyPerformanceData]
+
+    var body: some View {
+        Chart(data) { item in
+            RectangleMark(
+                x: .value("Day", item.day),
+                yStart: .value("Low", item.lowBalance),
+                yEnd: .value("High", item.highBalance)
+            )
+            .foregroundStyle(item.isPositiveDay ? Color.chartIncome.opacity(0.3) : Color.chartSpending.opacity(0.3))
+            .lineStyle(StrokeStyle(lineWidth: 1))
+
+            BarMark(
+                x: .value("Day", item.day),
+                y: .value("Open", item.openBalance)
+            )
+            .foregroundStyle(item.isPositiveDay ? Color.chartIncome : Color.chartSpending)
+            .opacity(0.7)
+
+            PointMark(
+                x: .value("Day", item.day),
+                y: .value("Close", item.closeBalance)
+            )
+            .foregroundStyle(item.isPositiveDay ? Color.chartIncome : Color.chartSpending)
+            .symbolSize(100)
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic) { value in
+                AxisValueLabel()
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisValueLabel()
+                    .font(.system(size: 10))
                     .foregroundStyle(Color.white.opacity(0.4))
             }
         }

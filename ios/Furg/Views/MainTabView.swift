@@ -2,7 +2,7 @@
 //  MainTabView.swift
 //  Furg
 //
-//  Gesture-based home hub navigation with minimal top bar
+//  Gesture-based navigation with pill indicator
 //
 
 import SwiftUI
@@ -18,12 +18,40 @@ struct MainTabView: View {
 
             // Main content area
             VStack(spacing: 0) {
-                // Minimal top bar
-                MinimalTopBar(
-                    navigationState: navigationState,
-                    onRefresh: handleRefresh,
-                    onNotifications: handleNotifications
-                )
+                // Top bar with FURG logo and actions
+                HStack(spacing: 16) {
+                    Text("FURG")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.furgMint)
+
+                    Spacer()
+
+                    // Refresh Button
+                    Button(action: handleRefresh) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .frame(width: 44, height: 44)
+                    }
+
+                    // Notifications
+                    Button(action: handleNotifications) {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell.fill")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.white.opacity(0.7))
+                                .frame(width: 44, height: 44)
+
+                            Circle()
+                                .fill(Color.chartSpending)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 2, y: 10)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color(red: 0.08, green: 0.08, blue: 0.12).opacity(0.95))
 
                 // View content with gesture navigation
                 selectedViewContent
@@ -31,9 +59,6 @@ struct MainTabView: View {
                     .gesture(
                         DragGesture(minimumDistance: 50)
                             .onEnded { gesture in
-                                // Only enable swipes when not on hub
-                                guard !navigationState.isHomeHub else { return }
-
                                 if gesture.translation.width > 0 {
                                     // Swipe right = previous
                                     navigationState.swipeToPrevious()
@@ -43,16 +68,19 @@ struct MainTabView: View {
                                 }
                             }
                     )
+
+                // Pill navigation at bottom
+                PillNavigation(navigationState: navigationState)
             }
 
-            // Floating Action Button (bottom right)
+            // Floating Action Button (bottom right, above pill nav)
             VStack {
                 Spacer()
                 HStack {
                     Spacer()
                     FloatingActionButton()
                         .padding(.trailing, 20)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 80) // Account for pill nav
                 }
             }
         }
@@ -62,9 +90,6 @@ struct MainTabView: View {
     @ViewBuilder
     private var selectedViewContent: some View {
         switch navigationState.currentView {
-        case .hub:
-            HomeHubView(navigationState: navigationState, financeManager: financeManager)
-                .transition(.opacity)
         case .dashboard:
             BalanceView()
                 .transition(.asymmetric(

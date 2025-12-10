@@ -772,14 +772,12 @@ extension View {
 
 // MARK: - Navigation State & Drawer Components
 
-/// Manages global navigation state for gesture-based home hub navigation
+/// Manages global navigation state for gesture-based navigation with pill indicator
 @MainActor
 class NavigationState: ObservableObject {
-    @Published var currentView: AppView = .hub
-    @Published var isHomeHub: Bool = true
+    @Published var currentView: AppView = .dashboard
 
     enum AppView: String, CaseIterable, Identifiable {
-        case hub = "Home"
         case dashboard = "Dashboard"
         case chat = "Chat"
         case activity = "Activity"
@@ -790,7 +788,6 @@ class NavigationState: ObservableObject {
 
         var icon: String {
             switch self {
-            case .hub: return "house.fill"
             case .dashboard: return "chart.bar.fill"
             case .chat: return "message.fill"
             case .activity: return "list.bullet.rectangle"
@@ -801,7 +798,6 @@ class NavigationState: ObservableObject {
 
         var color: Color {
             switch self {
-            case .hub: return .furgMint
             case .dashboard: return Color(red: 0.45, green: 0.85, blue: 0.65)
             case .chat: return Color(red: 0.35, green: 0.75, blue: 0.95)
             case .activity: return Color(red: 0.95, green: 0.65, blue: 0.35)
@@ -809,173 +805,92 @@ class NavigationState: ObservableObject {
             case .settings: return Color(red: 0.55, green: 0.65, blue: 0.75)
             }
         }
-
-        var description: String {
-            switch self {
-            case .hub: return "Your financial overview"
-            case .dashboard: return "Balance & insights"
-            case .chat: return "AI financial assistant"
-            case .activity: return "Transactions & spending"
-            case .accounts: return "All your accounts"
-            case .settings: return "App preferences"
-            }
-        }
     }
 
     func navigateTo(_ view: AppView) {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             currentView = view
-            isHomeHub = (view == .hub)
         }
     }
 
-    func navigateToHub() {
-        navigateTo(.hub)
-    }
-
     func swipeToNext() {
-        let views = AppView.allCases.filter { $0 != .hub }
+        let views = AppView.allCases
         guard let currentIndex = views.firstIndex(of: currentView) else { return }
         let nextIndex = (currentIndex + 1) % views.count
         navigateTo(views[nextIndex])
     }
 
     func swipeToPrevious() {
-        let views = AppView.allCases.filter { $0 != .hub }
+        let views = AppView.allCases
         guard let currentIndex = views.firstIndex(of: currentView) else { return }
         let previousIndex = currentIndex == 0 ? views.count - 1 : currentIndex - 1
         navigateTo(views[previousIndex])
     }
 }
 
-/// Home hub with visual cards for navigation
-struct HomeHubView: View {
+/// Pill-based navigation indicator with left/right navigation arrows
+struct PillNavigation: View {
     @ObservedObject var navigationState: NavigationState
-    @ObservedObject var financeManager: FinanceManager
-
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 5..<12: return "Good morning"
-        case 12..<17: return "Good afternoon"
-        case 17..<21: return "Good evening"
-        default: return "Good night"
-        }
-    }
-
-    private var formattedBalance: String {
-        let balance = financeManager.balance?.totalBalance ?? 4250.00
-        return String(format: "$%.2f", balance)
-    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Greeting and balance summary
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(greeting)
-                            .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.6))
-
-                        Text("Joe")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("Total Balance")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.5))
-
-                        Text(formattedBalance)
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.furgMint)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-
-                // Navigation cards grid (2x2 + 1 centered)
-                VStack {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 16),
-                        GridItem(.flexible(), spacing: 16)
-                    ], spacing: 16) {
-                        ForEach(NavigationState.AppView.allCases.filter { $0 != .hub }) { view in
-                            HubNavigationCard(
-                                view: view,
-                                action: { navigationState.navigateTo(view) }
-                            )
-                        }
-                    }
-                    .frame(maxWidth: 400) // Center the grid on larger screens
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 100) // Space for FAB
+        HStack(spacing: 12) {
+            // Left arrow button
+            Button {
+                navigationState.swipeToPrevious()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
+                    .frame(width: 32, height: 32)
+                    .background(Color.white.opacity(0.1))
+                    .clipShape(Circle())
             }
-        }
-    }
-}
 
-/// Large visual card for hub navigation
-struct HubNavigationCard: View {
-    let view: NavigationState.AppView
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 16) {
-                // Icon circle
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                view.color.opacity(0.8),
-                                view.color.opacity(0.5)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 60, height: 60)
-                    .overlay(
-                        Image(systemName: view.icon)
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(.white)
-                    )
-                    .shadow(color: view.color.opacity(0.3), radius: 8, y: 4)
-
-                // Title
-                Text(view.rawValue)
-                    .font(.system(size: 18, weight: .semibold))
+            // Current view pill
+            HStack(spacing: 8) {
+                Image(systemName: navigationState.currentView.icon)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
 
-                // Description
-                Text(view.description)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.5))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                Text(navigationState.currentView.rawValue)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white)
+
+                VStack(spacing: 3) {
+                    ForEach(0..<3, id: \.self) { index in
+                        Circle()
+                            .fill(Color.white.opacity(Double(index) * 0.3 + 0.2))
+                            .frame(height: 2)
+                    }
+                }
+                .frame(width: 2)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 180)
-            .padding(20)
-            .copilotCard(cornerRadius: 20, padding: 0)
-        }
-        .buttonStyle(HubCardButtonStyle())
-    }
-}
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .background(
+                Capsule()
+                    .fill(navigationState.currentView.color.opacity(0.2))
+                    .overlay(
+                        Capsule()
+                            .stroke(navigationState.currentView.color.opacity(0.4), lineWidth: 1)
+                    )
+            )
 
-/// Button style with scale animation
-struct HubCardButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+            // Right arrow button
+            Button {
+                navigationState.swipeToNext()
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
+                    .frame(width: 32, height: 32)
+                    .background(Color.white.opacity(0.1))
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
@@ -1060,61 +975,3 @@ struct FABMenuItem: View {
     }
 }
 
-/// Ultra-minimal top bar without hamburger menu
-struct MinimalTopBar: View {
-    @ObservedObject var navigationState: NavigationState
-    let onRefresh: () -> Void
-    let onNotifications: () -> Void
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Logo (tappable to return home)
-            Button {
-                navigationState.navigateToHub()
-            } label: {
-                Text("FURG")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.furgMint)
-            }
-
-            // Current view title (only show when not on hub)
-            if !navigationState.isHomeHub {
-                Text(navigationState.currentView.rawValue)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white.opacity(0.6))
-                    .transition(.opacity)
-            }
-
-            Spacer()
-
-            // Refresh Button
-            Button(action: onRefresh) {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
-                    .frame(width: 44, height: 44)
-            }
-
-            // Notifications
-            Button(action: onNotifications) {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: "bell.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                        .frame(width: 44, height: 44)
-
-                    // Notification badge
-                    Circle()
-                        .fill(Color.chartSpending)
-                        .frame(width: 8, height: 8)
-                        .offset(x: 2, y: 10)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(
-            Color(red: 0.08, green: 0.08, blue: 0.12).opacity(0.95)
-        )
-    }
-}

@@ -782,6 +782,7 @@ class NavigationState: ObservableObject {
         case chat = "Chat"
         case activity = "Activity"
         case accounts = "Accounts"
+        case tools = "Tools"
         case settings = "Settings"
 
         var id: String { rawValue }
@@ -792,6 +793,7 @@ class NavigationState: ObservableObject {
             case .chat: return "message.fill"
             case .activity: return "list.bullet.rectangle"
             case .accounts: return "creditcard.fill"
+            case .tools: return "square.grid.2x2.fill"
             case .settings: return "gearshape.fill"
             }
         }
@@ -802,6 +804,7 @@ class NavigationState: ObservableObject {
             case .chat: return Color(red: 0.35, green: 0.75, blue: 0.95)
             case .activity: return Color(red: 0.95, green: 0.65, blue: 0.35)
             case .accounts: return Color(red: 0.75, green: 0.55, blue: 0.95)
+            case .tools: return Color(red: 0.85, green: 0.45, blue: 0.85)
             case .settings: return Color(red: 0.55, green: 0.65, blue: 0.75)
             }
         }

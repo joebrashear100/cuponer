@@ -114,6 +114,12 @@ struct MainTabView: View {
                     insertion: .move(edge: .trailing),
                     removal: .move(edge: .leading)
                 ))
+        case .tools:
+            EmptyView()
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
         case .settings:
             SettingsView()
                 .transition(.asymmetric(

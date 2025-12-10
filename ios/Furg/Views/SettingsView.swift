@@ -608,76 +608,131 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showDebtPayoff) {
             NavigationStack {
-                Text("Debt Payoff - Coming Soon")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.furgCharcoal)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { showDebtPayoff = false }
-                                .foregroundColor(.furgMint)
+                ZStack {
+                    Color.furgCharcoal.ignoresSafeArea()
+                    VStack {
+                        HStack {
+                            Text("Debt Payoff")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button("Done") {
+                                showDebtPayoff = false
+                            }
+                            .foregroundColor(.furgMint)
                         }
+                        .padding()
+
+                        Spacer()
+                        Text("Debt Payoff View - Coming Soon")
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
                     }
+                }
             }
             .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showCardRecommendations) {
             NavigationStack {
-                Text("Card Recommendations - Coming Soon")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.furgCharcoal)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { showCardRecommendations = false }
-                                .foregroundColor(.furgMint)
+                ZStack {
+                    Color.furgCharcoal.ignoresSafeArea()
+                    VStack {
+                        HStack {
+                            Text("Card Recommendations")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button("Done") {
+                                showCardRecommendations = false
+                            }
+                            .foregroundColor(.furgMint)
                         }
+                        .padding()
+
+                        Spacer()
+                        Text("Card Recommendations View - Coming Soon")
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
                     }
+                }
             }
             .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showInvestmentPortfolio) {
             NavigationStack {
-                Text("Investment Portfolio - Coming Soon")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.furgCharcoal)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { showInvestmentPortfolio = false }
-                                .foregroundColor(.furgMint)
+                ZStack {
+                    Color.furgCharcoal.ignoresSafeArea()
+                    VStack {
+                        HStack {
+                            Text("Investment Portfolio")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button("Done") {
+                                showInvestmentPortfolio = false
+                            }
+                            .foregroundColor(.furgMint)
                         }
+                        .padding()
+
+                        Spacer()
+                        Text("Investment Portfolio View - Coming Soon")
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
                     }
+                }
             }
             .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showMerchantIntelligence) {
             NavigationStack {
-                Text("Merchant Intelligence - Coming Soon")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.furgCharcoal)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { showMerchantIntelligence = false }
-                                .foregroundColor(.furgMint)
+                ZStack {
+                    Color.furgCharcoal.ignoresSafeArea()
+                    VStack {
+                        HStack {
+                            Text("Merchant Intelligence")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button("Done") {
+                                showMerchantIntelligence = false
+                            }
+                            .foregroundColor(.furgMint)
                         }
+                        .padding()
+
+                        Spacer()
+                        Text("Merchant Intelligence View - Coming Soon")
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
                     }
+                }
             }
             .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showLifeIntegration) {
             NavigationStack {
-                Text("Life Integration - Coming Soon")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.furgCharcoal)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { showLifeIntegration = false }
-                                .foregroundColor(.furgMint)
+                ZStack {
+                    Color.furgCharcoal.ignoresSafeArea()
+                    VStack {
+                        HStack {
+                            Text("Life Integration")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                            Spacer()
+                            Button("Done") {
+                                showLifeIntegration = false
+                            }
+                            .foregroundColor(.furgMint)
                         }
+                        .padding()
+
+                        Spacer()
+                        Text("Life Integration View - Coming Soon")
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
                     }
+                }
             }
             .presentationBackground(Color.furgCharcoal)
         }

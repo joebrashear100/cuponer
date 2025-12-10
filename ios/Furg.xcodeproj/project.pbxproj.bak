@@ -207,11 +207,6 @@
 				F20000010000000000000044 /* KeychainService.swift */,
 				80935E0B7FAACE298118A68A /* ReceiptScanner.swift */,
 				F20000010000000000000010 /* WishlistManager.swift */,
-			F20000010000000000000056 /* DebtPayoffManager.swift */,
-			F20000010000000000000057 /* CardOptimizer.swift */,
-			F20000010000000000000058 /* InvestmentPortfolioManager.swift */,
-			F20000010000000000000059 /* MerchantIntelligenceManager.swift */,
-			F20000010000000000000060 /* LifeContextManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -355,11 +350,6 @@
 				F10000010000000000000024 /* ForecastingManager.swift in Sources */,
 				F10000010000000000000025 /* GoalsManager.swift in Sources */,
 				F10000010000000000000009 /* PlaidManager.swift in Sources */,
-			F10000010000000000000055 /* DebtPayoffManager.swift in Sources */,
-			F10000010000000000000056 /* CardOptimizer.swift in Sources */,
-			F10000010000000000000057 /* InvestmentPortfolioManager.swift in Sources */,
-			F10000010000000000000058 /* MerchantIntelligenceManager.swift in Sources */,
-			F10000010000000000000059 /* LifeContextManager.swift in Sources */,
 				F10000010000000000000026 /* RoundUpManager.swift in Sources */,
 				F10000010000000000000027 /* SpendingLimitsManager.swift in Sources */,
 				F10000010000000000000028 /* SubscriptionManager.swift in Sources */,

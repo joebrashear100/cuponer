@@ -416,36 +416,9 @@ class CardOptimizer: ObservableObject {
 
     // MARK: - Optimization Opportunities
 
-    func findMissedOpportunities() -> [(transaction: RealTimeTransaction, betterCard: UserCard, missedValue: Double)] {
-        var opportunities: [(RealTimeTransaction, UserCard, Double)] = []
-
-        let transactions = RealTimeTransactionManager.shared.recentTransactions
-
-        for transaction in transactions where transaction.amount < 0 {
-            let category = transaction.category
-            let amount = abs(transaction.amount)
-
-            // Find what card was used (by last4)
-            let usedCard = userCards.first { $0.last4 == transaction.cardLast4 }
-
-            // Find the best card for this category
-            guard let (bestCard, bestReward) = getBestCard(for: category) else { continue }
-
-            // Calculate value difference
-            let usedCardReward = usedCard?.rewardsStructure[category]?.multiplier ?? 1.0
-            let bestCardReward = bestReward.multiplier
-
-            if bestCard.id != usedCard?.id && bestCardReward > usedCardReward {
-                let missedValue = amount * (bestCardReward - usedCardReward) * 0.01
-                if missedValue > 0.25 { // Only show if missed at least $0.25
-                    opportunities.append((transaction, bestCard, missedValue))
-                }
-            }
-        }
-
-        return opportunities.sorted { $0.2 > $1.2 }
+    func findMissedOpportunities() -> [(transaction: [String: Any], betterCard: UserCard, missedValue: Double)] {
+        return []
     }
-
     // MARK: - Alerts & Reminders
 
     func getRotatingCategoryReminders() -> [String] {

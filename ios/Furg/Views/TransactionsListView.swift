@@ -2078,17 +2078,17 @@ private struct TransactionDetailSheet: View {
 
                         // Details card
                         VStack(spacing: 0) {
-                            DetailRow(label: "Date", value: transaction.date.formatted(date: .long, time: .shortened))
+                            DetailRowTransactions(label: "Date", value: transaction.date.formatted(date: .long, time: .shortened))
                             Divider().background(Color.white.opacity(0.1))
-                            DetailRow(label: "Category", value: transaction.category.rawValue, color: transaction.category.color)
+                            DetailRowTransactions(label: "Category", value: transaction.category.rawValue, color: transaction.category.color)
                             Divider().background(Color.white.opacity(0.1))
-                            DetailRow(label: "Account", value: transaction.accountName)
+                            DetailRowTransactions(label: "Account", value: transaction.accountName)
                             Divider().background(Color.white.opacity(0.1))
-                            DetailRow(label: "Original Description", value: transaction.originalDescription)
+                            DetailRowTransactions(label: "Original Description", value: transaction.originalDescription)
 
                             if transaction.isSubscription, let frequency = transaction.subscriptionFrequency {
                                 Divider().background(Color.white.opacity(0.1))
-                                DetailRow(label: "Subscription", value: frequency.rawValue, color: .indigo)
+                                DetailRowTransactions(label: "Subscription", value: frequency.rawValue, color: .indigo)
                             }
 
                             if !transaction.tags.isEmpty {
@@ -2183,7 +2183,7 @@ private struct TransactionDetailSheet: View {
     }
 }
 
-private struct DetailRow: View {
+private struct DetailRowTransactions: View {
     let label: String
     let value: String
     var color: Color = .white

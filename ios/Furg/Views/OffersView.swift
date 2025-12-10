@@ -549,15 +549,15 @@ private struct OfferDetailSheet: View {
 
                         // Details
                         VStack(alignment: .leading, spacing: 12) {
-                            DetailRow(label: "Category", value: offer.category.rawValue)
-                            DetailRow(label: "Expires", value: offer.expiresAt.formatted(.dateTime.month().day().year()))
+                            DetailRowOffers(label: "Category", value: offer.category.rawValue)
+                            DetailRowOffers(label: "Expires", value: offer.expiresAt.formatted(.dateTime.month().day().year()))
 
                             if let distance = offer.distance {
-                                DetailRow(label: "Distance", value: "\(String(format: "%.1f", distance)) miles away")
+                                DetailRowOffers(label: "Distance", value: "\(String(format: "%.1f", distance)) miles away")
                             }
 
                             if offer.isOnline {
-                                DetailRow(label: "Type", value: "Online Only")
+                                DetailRowOffers(label: "Type", value: "Online Only")
                             }
                         }
                         .padding(16)
@@ -642,7 +642,7 @@ private struct OfferDetailSheet: View {
     }
 }
 
-private struct DetailRow: View {
+private struct DetailRowOffers: View {
     let label: String
     let value: String
 

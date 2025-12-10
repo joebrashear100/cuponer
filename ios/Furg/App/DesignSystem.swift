@@ -1048,12 +1048,15 @@ struct QuickDebtPaymentSheet: View {
     @State private var selectedDebtIndex = 0
     @State private var paymentAmount = ""
     @State private var paymentMethod = "Balance Transfer"
+    @State private var isSubmitting = false
+    @State private var showSuccessMessage = false
 
+    // Temporary sample debts - will be wired to DebtPayoffManager in Phase 3.2
     let sampleDebts = [
-        ("Credit Card - Chase", "$4,250", "High Interest"),
-        ("Student Loan - Federal", "$18,500", "Low Interest"),
-        ("Auto Loan - Honda", "$12,000", "Medium Interest"),
-        ("Personal Loan - SoFi", "$3,750", "Variable"),
+        (id: UUID(), name: "Credit Card - Chase", balance: 4250.0, rate: 0.18),
+        (id: UUID(), name: "Student Loan - Federal", balance: 18500.0, rate: 0.05),
+        (id: UUID(), name: "Auto Loan - Honda", balance: 12000.0, rate: 0.06),
+        (id: UUID(), name: "Personal Loan - SoFi", balance: 3750.0, rate: 0.08),
     ]
 
     var body: some View {
@@ -1096,11 +1099,12 @@ struct QuickDebtPaymentSheet: View {
 
                             VStack(spacing: 8) {
                                 ForEach(0..<sampleDebts.count, id: \.self) { index in
+                                    let debt = sampleDebts[index]
                                     DebtSelectionRow(
                                         isSelected: selectedDebtIndex == index,
-                                        debtName: sampleDebts[index].0,
-                                        debtBalance: sampleDebts[index].1,
-                                        interestType: sampleDebts[index].2
+                                        debtName: debt.name,
+                                        debtBalance: String(format: "$%.0f", debt.balance),
+                                        interestType: String(format: "%.1f%%", debt.rate * 100)
                                     ) {
                                         selectedDebtIndex = index
                                     }
@@ -1182,7 +1186,7 @@ struct QuickDebtPaymentSheet: View {
                                     Text("Debt:")
                                         .foregroundColor(.white.opacity(0.6))
                                     Spacer()
-                                    Text(sampleDebts[selectedDebtIndex].0)
+                                    Text(sampleDebts[selectedDebtIndex].name)
                                         .foregroundColor(.white)
                                         .font(.system(size: 13, weight: .medium))
                                 }
@@ -1217,14 +1221,18 @@ struct QuickDebtPaymentSheet: View {
                         // Submit Button
                         VStack(spacing: 12) {
                             Button {
-                                // TODO: Submit payment via DebtPayoffManager
-                                dismiss()
+                                isSubmitting = true
+                                // TODO: Wire to DebtPayoffManager.recordPayment in Phase 3.2
+                                showSuccessMessage = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                    dismiss()
+                                }
                             } label: {
                                 HStack {
-                                    Image(systemName: "checkmark.circle.fill")
+                                    Image(systemName: showSuccessMessage ? "checkmark.circle.fill" : "checkmark.circle.fill")
                                         .font(.system(size: 16, weight: .semibold))
 
-                                    Text("Record Payment")
+                                    Text(showSuccessMessage ? "Payment Recorded!" : "Record Payment")
                                         .font(.system(size: 16, weight: .semibold))
 
                                     Spacer()
@@ -1234,7 +1242,7 @@ struct QuickDebtPaymentSheet: View {
                                 .padding(.vertical, 16)
                                 .background(
                                     LinearGradient(
-                                        colors: [.furgMint, Color(red: 0.3, green: 0.85, blue: 0.6)],
+                                        colors: showSuccessMessage ? [Color.furgMint.opacity(0.6), Color.furgMint.opacity(0.4)] : [.furgMint, Color(red: 0.3, green: 0.85, blue: 0.6)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -1242,8 +1250,8 @@ struct QuickDebtPaymentSheet: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .shadow(color: Color.furgMint.opacity(0.3), radius: 8, y: 4)
                             }
-                            .disabled(paymentAmount.isEmpty || Double(paymentAmount) ?? 0 <= 0)
-                            .opacity(paymentAmount.isEmpty || Double(paymentAmount) ?? 0 <= 0 ? 0.5 : 1)
+                            .disabled(paymentAmount.isEmpty || Double(paymentAmount) ?? 0 <= 0 || isSubmitting)
+                            .opacity((paymentAmount.isEmpty || Double(paymentAmount) ?? 0 <= 0 || isSubmitting) ? 0.5 : 1)
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)

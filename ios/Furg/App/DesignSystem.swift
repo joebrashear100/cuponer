@@ -853,13 +853,28 @@ struct HomeHubView: View {
     @ObservedObject var navigationState: NavigationState
     @ObservedObject var financeManager: FinanceManager
 
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Good morning"
+        case 12..<17: return "Good afternoon"
+        case 17..<21: return "Good evening"
+        default: return "Good night"
+        }
+    }
+
+    private var formattedBalance: String {
+        let balance = financeManager.balance?.totalBalance ?? 4250.00
+        return String(format: "$%.2f", balance)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Greeting and balance summary
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Afternoon")
+                        Text(greeting)
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.6))
 
@@ -875,7 +890,7 @@ struct HomeHubView: View {
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.5))
 
-                        Text("$4,250")
+                        Text(formattedBalance)
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(.furgMint)
                     }
@@ -883,18 +898,22 @@ struct HomeHubView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
 
-                // Navigation cards grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16)
-                ], spacing: 16) {
-                    ForEach(NavigationState.AppView.allCases.filter { $0 != .hub }) { view in
-                        HubNavigationCard(
-                            view: view,
-                            action: { navigationState.navigateTo(view) }
-                        )
+                // Navigation cards grid (2x2 + 1 centered)
+                VStack {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 16),
+                        GridItem(.flexible(), spacing: 16)
+                    ], spacing: 16) {
+                        ForEach(NavigationState.AppView.allCases.filter { $0 != .hub }) { view in
+                            HubNavigationCard(
+                                view: view,
+                                action: { navigationState.navigateTo(view) }
+                            )
+                        }
                     }
+                    .frame(maxWidth: 400) // Center the grid on larger screens
                 }
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 100) // Space for FAB
             }

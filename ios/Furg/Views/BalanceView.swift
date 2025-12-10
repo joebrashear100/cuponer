@@ -13,6 +13,13 @@ struct BalanceView: View {
     @State private var animate = false
     @State private var selectedTimeRange: TimeRange = .month
 
+    // Premium tool sheet states
+    @State private var showDebtPayoff = false
+    @State private var showCardRecommendations = false
+    @State private var showInvestmentPortfolio = false
+    @State private var showMerchantIntelligence = false
+    @State private var showLifeIntegration = false
+
     enum TimeRange: String, CaseIterable {
         case week = "Week"
         case month = "Month"
@@ -60,6 +67,84 @@ struct BalanceView: View {
             animate = true
             Task {
                 await financeManager.refreshAll()
+            }
+        }
+        // Note: Premium tool views need to be added to Xcode project
+        // Files exist at: DebtPayoffView.swift, CardRecommendationsView.swift,
+        // InvestmentPortfolioView.swift, MerchantIntelligenceView.swift, LifeIntegrationView.swift
+        .sheet(isPresented: $showDebtPayoff) {
+            ZStack {
+                Color.furgCharcoal.ignoresSafeArea()
+                VStack {
+                    Text("Debt Payoff Tool")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Text("View file exists - needs to be added to Xcode project")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Button("Close") { showDebtPayoff = false }
+                        .padding(.top, 20)
+                }
+            }
+        }
+        .sheet(isPresented: $showCardRecommendations) {
+            ZStack {
+                Color.furgCharcoal.ignoresSafeArea()
+                VStack {
+                    Text("Card Optimizer")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Text("View file exists - needs to be added to Xcode project")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Button("Close") { showCardRecommendations = false }
+                        .padding(.top, 20)
+                }
+            }
+        }
+        .sheet(isPresented: $showInvestmentPortfolio) {
+            ZStack {
+                Color.furgCharcoal.ignoresSafeArea()
+                VStack {
+                    Text("Investment Portfolio")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Text("View file exists - needs to be added to Xcode project")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Button("Close") { showInvestmentPortfolio = false }
+                        .padding(.top, 20)
+                }
+            }
+        }
+        .sheet(isPresented: $showMerchantIntelligence) {
+            ZStack {
+                Color.furgCharcoal.ignoresSafeArea()
+                VStack {
+                    Text("Merchant Intelligence")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Text("View file exists - needs to be added to Xcode project")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Button("Close") { showMerchantIntelligence = false }
+                        .padding(.top, 20)
+                }
+            }
+        }
+        .sheet(isPresented: $showLifeIntegration) {
+            ZStack {
+                Color.furgCharcoal.ignoresSafeArea()
+                VStack {
+                    Text("Life Integration")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Text("View file exists - needs to be added to Xcode project")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
+                    Button("Close") { showLifeIntegration = false }
+                        .padding(.top, 20)
+                }
             }
         }
     }
@@ -304,7 +389,7 @@ struct BalanceView: View {
                         title: "Debt Payoff",
                         metric: "$38,500",
                         color: Color(red: 0.95, green: 0.4, blue: 0.4)
-                    ) { }
+                    ) { showDebtPayoff = true }
 
                     // Card Optimizer
                     ToolQuickAccessCard(
@@ -312,7 +397,7 @@ struct BalanceView: View {
                         title: "Card Match",
                         metric: "95% match",
                         color: Color(red: 0.6, green: 0.4, blue: 0.9)
-                    ) { }
+                    ) { showCardRecommendations = true }
 
                     // Investments
                     ToolQuickAccessCard(
@@ -320,7 +405,7 @@ struct BalanceView: View {
                         title: "Portfolio",
                         metric: "+$2,450",
                         color: Color(red: 0.7, green: 0.4, blue: 0.9)
-                    ) { }
+                    ) { showInvestmentPortfolio = true }
 
                     // Merchant Intel
                     ToolQuickAccessCard(
@@ -328,7 +413,7 @@ struct BalanceView: View {
                         title: "Deals",
                         metric: "5 active",
                         color: Color(red: 0.4, green: 0.8, blue: 0.9)
-                    ) { }
+                    ) { showMerchantIntelligence = true }
 
                     // Life Integration
                     ToolQuickAccessCard(
@@ -336,7 +421,7 @@ struct BalanceView: View {
                         title: "Life",
                         metric: "Risk: 45",
                         color: Color(red: 0.9, green: 0.4, blue: 0.7)
-                    ) { }
+                    ) { showLifeIntegration = true }
                 }
                 .padding(.horizontal, 20)
             }

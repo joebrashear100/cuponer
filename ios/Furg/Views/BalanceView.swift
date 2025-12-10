@@ -41,147 +41,14 @@ struct BalanceView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
-                    // Minimal header
-                    HStack {
-                        Text(greeting)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white.opacity(0.5))
-                        Spacer()
-                        Button {
-                            Task { await financeManager.refreshAll() }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.7))
-                        }
-                    }
-                    .padding(.top, 60)
-                    .padding(.horizontal, 20)
-
-                    // Hero Balance - Big, bold, clear
-                    VStack(spacing: 8) {
-                        Text("Total Balance")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white.opacity(0.5))
-
-                        if let balance = financeManager.balance {
-                            Text(formatCurrency(balance.totalBalance))
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-                                .minimumScaleFactor(0.8)
-
-                            // Change indicator - GREEN up (demo data)
-                            let monthChange = 450.0
-                            HStack(spacing: 6) {
-                                Image(systemName: monthChange >= 0 ? "arrow.up" : "arrow.down")
-                                    .font(.system(size: 14, weight: .bold))
-                                Text("$\(Int(abs(monthChange))) this month")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .foregroundColor(monthChange >= 0 ? .chartIncome : .chartSpending)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background((monthChange >= 0 ? Color.chartIncome : Color.chartSpending).opacity(0.15))
-                            .clipShape(Capsule())
-                        } else {
-                            Text("$0")
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
-                                .foregroundColor(.white.opacity(0.3))
-                        }
-                    }
-                    .padding(.vertical, 20)
-                    .opacity(animate ? 1 : 0)
-                    .offset(y: animate ? 0 : -10)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animate)
-
-                    // Balance trend chart - SIMPLE & BEAUTIFUL
-                    if let balance = financeManager.balance {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Balance Trend")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.white)
-
-                            // Time range picker
-                            HStack(spacing: 12) {
-                                ForEach(TimeRange.allCases, id: \.self) { range in
-                                    Button {
-                                        withAnimation(.spring(response: 0.3)) {
-                                            selectedTimeRange = range
-                                        }
-                                    } label: {
-                                        Text(range.rawValue)
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(selectedTimeRange == range ? .white : .white.opacity(0.4))
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .background(
-                                                selectedTimeRange == range
-                                                ? Color.white.opacity(0.15)
-                                                : Color.clear
-                                            )
-                                            .clipShape(Capsule())
-                                    }
-                                }
-                                Spacer()
-                            }
-
-                            // Beautiful line chart
-                            BalanceTrendChart(data: generateBalanceData(), selectedRange: selectedTimeRange)
-                                .frame(height: 200)
-                        }
-                        .padding(20)
-                        .background(Color.white.opacity(0.03))
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                        .padding(.horizontal, 20)
-                        .opacity(animate ? 1 : 0)
-                        .offset(y: animate ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animate)
-                    }
-
-                    // Cash flow summary - CLEAN INDICATORS
-                    HStack(spacing: 16) {
-                        // Income - GREEN
-                        CashFlowIndicator(
-                            title: "Income",
-                            amount: 4200,
-                            isPositive: true,
-                            icon: "arrow.down"
-                        )
-
-                        // Spending - RED
-                        CashFlowIndicator(
-                            title: "Spending",
-                            amount: 3150,
-                            isPositive: false,
-                            icon: "arrow.up"
-                        )
-                    }
-                    .padding(.horizontal, 20)
-                    .opacity(animate ? 1 : 0)
-                    .offset(y: animate ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animate)
-
-                    // Accounts - MINIMAL CARDS
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Accounts")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-
-                        VStack(spacing: 8) {
-                            BalanceAccountRow(name: "Chase Checking", balance: 2450, change: 120)
-                            BalanceAccountRow(name: "Discover Savings", balance: 8900, change: 250)
-                            BalanceAccountRow(name: "Amex Credit", balance: -1200, change: -80)
-                        }
-                    }
-                    .opacity(animate ? 1 : 0)
-                    .offset(y: animate ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animate)
-
+                    headerSection
+                    heroBalanceSection
+                    balanceTrendSection
+                    cashFlowSection
+                    metricsSection
+                    categoriesSection
+                    accountsSection
+                    quickActionsSection
                     Spacer(minLength: 100)
                 }
             }
@@ -192,6 +59,246 @@ struct BalanceView: View {
                 await financeManager.refreshAll()
             }
         }
+    }
+
+    // MARK: - View Sections
+    private var headerSection: some View {
+        HStack {
+            Text(greeting)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.white.opacity(0.5))
+            Spacer()
+            Button {
+                Task { await financeManager.refreshAll() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+        }
+        .padding(.top, 60)
+        .padding(.horizontal, 20)
+    }
+
+    private var heroBalanceSection: some View {
+        VStack(spacing: 8) {
+            Text("Total Balance")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.white.opacity(0.5))
+
+            if let balance = financeManager.balance {
+                Text(formatCurrency(balance.totalBalance))
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.8)
+
+                let monthChange = 450.0
+                HStack(spacing: 6) {
+                    Image(systemName: monthChange >= 0 ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("$\(Int(abs(monthChange))) this month")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(monthChange >= 0 ? .chartIncome : .chartSpending)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background((monthChange >= 0 ? Color.chartIncome : Color.chartSpending).opacity(0.15))
+                .clipShape(Capsule())
+            } else {
+                Text("$0")
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.3))
+            }
+        }
+        .padding(.vertical, 20)
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : -10)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animate)
+    }
+
+    private var balanceTrendSection: some View {
+        Group {
+            if let balance = financeManager.balance {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Balance Trend")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    HStack(spacing: 12) {
+                        ForEach(TimeRange.allCases, id: \.self) { range in
+                            Button {
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedTimeRange = range
+                                }
+                            } label: {
+                                Text(range.rawValue)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(selectedTimeRange == range ? .white : .white.opacity(0.4))
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        selectedTimeRange == range
+                                        ? Color.white.opacity(0.15)
+                                        : Color.clear
+                                    )
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        Spacer()
+                    }
+
+                    BalanceTrendChart(data: generateBalanceData(), selectedRange: selectedTimeRange)
+                        .frame(height: 200)
+                }
+                .padding(20)
+                .background(Color.white.opacity(0.03))
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .padding(.horizontal, 20)
+                .opacity(animate ? 1 : 0)
+                .offset(y: animate ? 0 : 20)
+                .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animate)
+            }
+        }
+    }
+
+    private var cashFlowSection: some View {
+        HStack(spacing: 16) {
+            CashFlowIndicator(
+                title: "Income",
+                amount: 4200,
+                isPositive: true,
+                icon: "arrow.down"
+            )
+            CashFlowIndicator(
+                title: "Spending",
+                amount: 3150,
+                isPositive: false,
+                icon: "arrow.up"
+            )
+        }
+        .padding(.horizontal, 20)
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: animate)
+    }
+
+    private var metricsSection: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                DashboardMetricCard(
+                    title: "Savings Rate",
+                    value: "24%",
+                    subtitle: "This month",
+                    icon: "arrow.up.right.circle.fill",
+                    color: .chartIncome
+                )
+                DashboardMetricCard(
+                    title: "Avg Daily",
+                    value: "$105",
+                    subtitle: "Spending",
+                    icon: "chart.bar.fill",
+                    color: .chartSpending
+                )
+            }
+            HStack(spacing: 12) {
+                DashboardMetricCard(
+                    title: "Net Worth",
+                    value: "+$4,250",
+                    subtitle: "This month",
+                    icon: "chart.line.uptrend.xyaxis",
+                    color: Color(red: 0.45, green: 0.85, blue: 0.65)
+                )
+                DashboardMetricCard(
+                    title: "Forecast",
+                    value: "$3,240",
+                    subtitle: "Month end",
+                    icon: "calendar.badge.clock",
+                    color: Color(red: 0.35, green: 0.75, blue: 0.95)
+                )
+            }
+        }
+        .padding(.horizontal, 20)
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.35), value: animate)
+    }
+
+    private var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Spending by Category")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                Spacer()
+                Text("This Month")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            .padding(.horizontal, 20)
+
+            VStack(spacing: 10) {
+                DashboardCategoryRow(name: "Groceries", amount: 523, percentage: 17, color: Color(red: 0.4, green: 0.8, blue: 0.4))
+                DashboardCategoryRow(name: "Dining", amount: 387, percentage: 13, color: Color(red: 0.8, green: 0.6, blue: 0.2))
+                DashboardCategoryRow(name: "Transport", amount: 245, percentage: 8, color: Color(red: 0.8, green: 0.4, blue: 0.4))
+                DashboardCategoryRow(name: "Entertainment", amount: 156, percentage: 5, color: Color(red: 0.6, green: 0.4, blue: 0.8))
+                DashboardCategoryRow(name: "Other", amount: 839, percentage: 28, color: Color(red: 0.5, green: 0.5, blue: 0.5))
+            }
+            .padding(.horizontal, 20)
+        }
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: animate)
+    }
+
+    private var accountsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Accounts")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+
+            VStack(spacing: 8) {
+                BalanceAccountRow(name: "Chase Checking", balance: 2450, change: 120)
+                BalanceAccountRow(name: "Discover Savings", balance: 8900, change: 250)
+                BalanceAccountRow(name: "Amex Credit", balance: -1200, change: -80)
+            }
+        }
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.45), value: animate)
+    }
+
+    private var quickActionsSection: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                QuickActionButton(
+                    icon: "arrow.left.arrow.right",
+                    label: "Transfer",
+                    color: Color(red: 0.35, green: 0.75, blue: 0.95),
+                    action: {}
+                )
+                QuickActionButton(
+                    icon: "creditcard.fill",
+                    label: "Pay Bill",
+                    color: Color(red: 0.75, green: 0.55, blue: 0.95),
+                    action: {}
+                )
+                QuickActionButton(
+                    icon: "arrow.down.doc.fill",
+                    label: "Request",
+                    color: Color(red: 0.95, green: 0.65, blue: 0.35),
+                    action: {}
+                )
+            }
+        }
+        .padding(.horizontal, 20)
+        .opacity(animate ? 1 : 0)
+        .offset(y: animate ? 0 : 20)
+        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.5), value: animate)
     }
 
     private func formatCurrency(_ value: Double) -> String {
@@ -310,6 +417,99 @@ struct CashFlowIndicator: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Dashboard Metric Card (specific to dashboard view)
+private struct DashboardMetricCard: View {
+    let title: String
+    let value: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(color)
+
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+
+                Text(value)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(color.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Dashboard Category Row (specific to dashboard view)
+private struct DashboardCategoryRow: View {
+    let name: String
+    let amount: Double
+    let percentage: Int
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 8, height: 8)
+
+                    Text(name)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("$\(Int(amount))")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    Text("\(percentage)%")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+            }
+
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.1))
+
+                    Capsule()
+                        .fill(color)
+                        .frame(width: geometry.size.width * CGFloat(percentage) / 100)
+                }
+            }
+            .frame(height: 4)
+        }
+        .padding(.horizontal, 20)
     }
 }
 

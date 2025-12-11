@@ -30,6 +30,7 @@ final class AppContainer: ObservableObject {
     lazy var roundUpManager = RoundUpManager()
     lazy var forecastingManager = ForecastingManager()
     lazy var spendingLimitsManager = SpendingLimitsManager()
+    lazy var rufusManager = RufusManager()
 
     // Singleton managers
     let healthKitManager = HealthKitManager.shared
@@ -87,6 +88,7 @@ struct FurgApp: App {
             .environmentObject(container.roundUpManager)
             .environmentObject(container.forecastingManager)
             .environmentObject(container.spendingLimitsManager)
+            .environmentObject(container.rufusManager)
             // Singleton managers
             .environmentObject(container.healthKitManager)
             .environmentObject(container.notificationManager)

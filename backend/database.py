@@ -1192,6 +1192,231 @@ class Database:
             return int(result.split()[-1]) if result else 0
 
 
+    # ==================== RUFUS OPERATIONS ====================
+
+    async def create_rufus_tracked_product(self, user_id: str, product: Dict[str, Any]) -> str:
+        """Create a tracked product for Rufus price alerts"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO rufus_tracked_products (
+                    user_id, asin, title, current_price, target_price,
+                    image_url, url, category
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ON CONFLICT (user_id, asin) DO UPDATE
+                SET target_price = EXCLUDED.target_price,
+                    current_price = EXCLUDED.current_price,
+                    updated_at = NOW()
+                RETURNING id
+                """,
+                user_id,
+                product["asin"],
+                product["title"],
+                product["current_price"],
+                product["target_price"],
+                product.get("image_url"),
+                product.get("url"),
+                product.get("category")
+            )
+            return str(result["id"])
+
+    async def get_rufus_tracked_products(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all tracked products for a user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM rufus_tracked_products
+                WHERE user_id = $1 AND is_active = TRUE
+                ORDER BY created_at DESC
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def get_rufus_tracked_product(self, user_id: str, asin: str) -> Optional[Dict[str, Any]]:
+        """Get a specific tracked product"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT * FROM rufus_tracked_products
+                WHERE user_id = $1 AND asin = $2 AND is_active = TRUE
+                """,
+                user_id,
+                asin
+            )
+            return dict(row) if row else None
+
+    async def update_rufus_tracked_price(
+        self,
+        tracking_id: str,
+        new_price: float,
+        price_dropped: bool = False
+    ) -> bool:
+        """Update the current price for a tracked product"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE rufus_tracked_products
+                SET current_price = $1,
+                    last_checked_price = current_price,
+                    last_checked_at = NOW(),
+                    price_drop_detected = $2,
+                    updated_at = NOW()
+                WHERE id = $3
+                """,
+                new_price,
+                price_dropped,
+                tracking_id
+            )
+            return result != "UPDATE 0"
+
+    async def delete_rufus_tracked_product(self, user_id: str, asin: str) -> bool:
+        """Stop tracking a product"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE rufus_tracked_products
+                SET is_active = FALSE
+                WHERE user_id = $1 AND asin = $2
+                """,
+                user_id,
+                asin
+            )
+            return result != "UPDATE 0"
+
+    async def save_rufus_price_history(
+        self,
+        asin: str,
+        price: float,
+        original_price: Optional[float] = None,
+        deal_badge: Optional[str] = None
+    ):
+        """Save a price point to history"""
+        async with self.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO rufus_price_history (asin, price, original_price, deal_badge)
+                VALUES ($1, $2, $3, $4)
+                """,
+                asin,
+                price,
+                original_price,
+                deal_badge
+            )
+
+    async def get_rufus_price_history(
+        self,
+        asin: str,
+        days: int = 30
+    ) -> List[Dict[str, Any]]:
+        """Get price history for a product"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT price, original_price, deal_badge, recorded_at
+                FROM rufus_price_history
+                WHERE asin = $1 AND recorded_at >= NOW() - INTERVAL '%s days'
+                ORDER BY recorded_at DESC
+                """,
+                asin,
+                days
+            )
+            return [dict(row) for row in rows]
+
+    async def save_rufus_deal(self, user_id: str, deal: Dict[str, Any]) -> str:
+        """Save a deal for later"""
+        async with self.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO rufus_saved_deals (
+                    user_id, asin, title, price, original_price,
+                    savings_percent, image_url, url, deal_type, expires_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ON CONFLICT (user_id, asin) DO UPDATE
+                SET price = EXCLUDED.price,
+                    savings_percent = EXCLUDED.savings_percent,
+                    updated_at = NOW()
+                RETURNING id
+                """,
+                user_id,
+                deal["asin"],
+                deal["title"],
+                deal["price"],
+                deal.get("original_price"),
+                deal.get("savings_percent"),
+                deal.get("image_url"),
+                deal.get("url"),
+                deal.get("deal_type", "saved"),
+                deal.get("expires_at")
+            )
+            return str(result["id"])
+
+    async def get_rufus_saved_deals(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get saved deals for a user"""
+        async with self.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM rufus_saved_deals
+                WHERE user_id = $1 AND is_active = TRUE
+                ORDER BY created_at DESC
+                """,
+                user_id
+            )
+            return [dict(row) for row in rows]
+
+    async def delete_rufus_saved_deal(self, user_id: str, asin: str) -> bool:
+        """Remove a saved deal"""
+        async with self.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE rufus_saved_deals
+                SET is_active = FALSE
+                WHERE user_id = $1 AND asin = $2
+                """,
+                user_id,
+                asin
+            )
+            return result != "UPDATE 0"
+
+    async def get_rufus_stats(self, user_id: str) -> Dict[str, Any]:
+        """Get Rufus usage statistics for a user"""
+        async with self.acquire() as conn:
+            # Get tracking stats
+            tracking_stats = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) as total_tracked,
+                    COUNT(*) FILTER (WHERE price_drop_detected = TRUE) as price_drops_found,
+                    COALESCE(SUM(current_price - target_price) FILTER (WHERE current_price <= target_price), 0) as potential_savings
+                FROM rufus_tracked_products
+                WHERE user_id = $1 AND is_active = TRUE
+                """,
+                user_id
+            )
+
+            # Get saved deals stats
+            deals_stats = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) as saved_deals,
+                    COALESCE(SUM(original_price - price) FILTER (WHERE original_price IS NOT NULL), 0) as total_savings_available
+                FROM rufus_saved_deals
+                WHERE user_id = $1 AND is_active = TRUE
+                """,
+                user_id
+            )
+
+            return {
+                "products_tracked": tracking_stats["total_tracked"] if tracking_stats else 0,
+                "price_drops_found": tracking_stats["price_drops_found"] if tracking_stats else 0,
+                "potential_savings": float(tracking_stats["potential_savings"]) if tracking_stats else 0,
+                "saved_deals": deals_stats["saved_deals"] if deals_stats else 0,
+                "total_savings_available": float(deals_stats["total_savings_available"]) if deals_stats else 0
+            }
+
+
 # Global database instance
 db = Database()
 

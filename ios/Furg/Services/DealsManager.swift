@@ -1,53 +1,53 @@
 //
-//  RufusManager.swift
+//  DealsManager.swift
 //  Furg
 //
-//  Rufus - Amazon Shopping AI Integration Manager
+//  Deals - Amazon Shopping AI Integration Manager
 //  Price tracking, deal discovery, and smart shopping powered by Amazon
 //
 
 import Foundation
 import os.log
 
-private let rufusLogger = Logger(subsystem: "com.furg.app", category: "Rufus")
+private let dealsLogger = Logger(subsystem: "com.furg.app", category: "Deals")
 
 @MainActor
-class RufusManager: ObservableObject {
+class DealsManager: ObservableObject {
     // MARK: - Published Properties
 
     @Published var isLoading = false
     @Published var errorMessage: String?
 
     // Home data
-    @Published var stats: RufusStats?
-    @Published var priceDrops: [RufusPriceDrop] = []
-    @Published var suggestedDeals: [RufusDeal] = []
-    @Published var greeting: String = "Hey! Rufus here."
+    @Published var stats: DealsStats?
+    @Published var priceDrops: [DealsPriceDrop] = []
+    @Published var suggestedDeals: [DealsDeal] = []
+    @Published var greeting: String = "Hey! Deals here."
     @Published var tip: String = ""
 
     // Search
-    @Published var searchResults: [RufusProduct] = []
+    @Published var searchResults: [DealsProduct] = []
     @Published var searchQuery: String = ""
 
     // Deals
-    @Published var currentDeals: [RufusDeal] = []
-    @Published var dealsByType: [String: [RufusDeal]] = [:]
+    @Published var currentDeals: [DealsDeal] = []
+    @Published var dealsByType: [String: [DealsDeal]] = [:]
 
     // Tracked products
-    @Published var trackedProducts: [RufusTrackedProduct] = []
+    @Published var trackedProducts: [DealsTrackedProduct] = []
     @Published var totalPotentialSavings: Double = 0
 
     // Saved deals
-    @Published var savedDeals: [RufusSavedDeal] = []
+    @Published var savedDeals: [DealsSavedDeal] = []
     @Published var totalSavingsAvailable: Double = 0
 
     // Product detail
-    @Published var selectedProduct: RufusProduct?
-    @Published var selectedProductPrediction: RufusPricePrediction?
-    @Published var selectedProductHistory: [RufusPricePoint] = []
+    @Published var selectedProduct: DealsProduct?
+    @Published var selectedProductPrediction: DealsPricePrediction?
+    @Published var selectedProductHistory: [DealsPricePoint] = []
 
     // Wishlist matches
-    @Published var wishlistMatches: [String: [RufusDeal]] = [:]
+    @Published var wishlistMatches: [String: [DealsDeal]] = [:]
 
     // MARK: - Private Properties
 
@@ -66,7 +66,7 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response: RufusHomeResponse = try await apiClient.get("/rufus")
+            let response: DealsHomeResponse = try await apiClient.get("/deals")
 
             stats = response.stats
             priceDrops = response.priceDrops
@@ -74,10 +74,10 @@ class RufusManager: ObservableObject {
             greeting = response.greeting
             tip = response.tip
 
-            rufusLogger.info("Rufus home loaded: \(response.stats.productsTracked) tracked, \(response.suggestedDeals.count) deals")
+            dealsLogger.info("Deals home loaded: \(response.stats.productsTracked) tracked, \(response.suggestedDeals.count) deals")
         } catch {
-            errorMessage = "Failed to load Rufus: \(error.localizedDescription)"
-            rufusLogger.error("Failed to load Rufus home: \(error.localizedDescription)")
+            errorMessage = "Failed to load Deals: \(error.localizedDescription)"
+            dealsLogger.error("Failed to load Deals home: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -87,12 +87,12 @@ class RufusManager: ObservableObject {
 
     func search(
         keywords: String,
-        category: RufusCategory? = nil,
+        category: DealsCategory? = nil,
         minPrice: Double? = nil,
         maxPrice: Double? = nil,
         minRating: Double? = nil,
         primeOnly: Bool = false,
-        sortBy: RufusSortOption = .relevance
+        sortBy: DealsSortOption = .relevance
     ) async {
         guard !keywords.isEmpty else {
             searchResults = []
@@ -104,7 +104,7 @@ class RufusManager: ObservableObject {
         searchQuery = keywords
 
         do {
-            let request = RufusSearchRequest(
+            let request = DealsSearchRequest(
                 keywords: keywords,
                 category: category == .all ? nil : category?.rawValue,
                 minPrice: minPrice,
@@ -114,15 +114,15 @@ class RufusManager: ObservableObject {
                 sortBy: sortBy.rawValue
             )
 
-            let response: RufusSearchResponse = try await apiClient.post("/rufus/search", body: request)
+            let response: DealsSearchResponse = try await apiClient.post("/deals/search", body: request)
 
             searchResults = response.products
-            tip = response.rufusTip
+            tip = response.dealsTip
 
-            rufusLogger.info("Rufus search '\(keywords)': \(response.resultsCount) results")
+            dealsLogger.info("Deals search '\(keywords)': \(response.resultsCount) results")
         } catch {
             errorMessage = "Search failed: \(error.localizedDescription)"
-            rufusLogger.error("Rufus search failed: \(error.localizedDescription)")
+            dealsLogger.error("Deals search failed: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -135,12 +135,12 @@ class RufusManager: ObservableObject {
 
     // MARK: - Deals
 
-    func loadDeals(categories: [RufusCategory]? = nil, maxPrice: Double? = nil) async {
+    func loadDeals(categories: [DealsCategory]? = nil, maxPrice: Double? = nil) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            var endpoint = "/rufus/deals"
+            var endpoint = "/deals/deals"
             var queryParams: [String] = []
 
             if let cats = categories, !cats.isEmpty {
@@ -156,15 +156,15 @@ class RufusManager: ObservableObject {
                 endpoint += "?" + queryParams.joined(separator: "&")
             }
 
-            let response: RufusDealsResponse = try await apiClient.get(endpoint)
+            let response: DealsDealsResponse = try await apiClient.get(endpoint)
 
             currentDeals = response.deals
             dealsByType = response.byType
 
-            rufusLogger.info("Rufus deals loaded: \(response.totalDeals) deals")
+            dealsLogger.info("Deals deals loaded: \(response.totalDeals) deals")
         } catch {
             errorMessage = "Failed to load deals: \(error.localizedDescription)"
-            rufusLogger.error("Failed to load Rufus deals: \(error.localizedDescription)")
+            dealsLogger.error("Failed to load Deals deals: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -177,36 +177,36 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response: RufusProductDetailResponse = try await apiClient.get("/rufus/product/\(asin)")
+            let response: DealsProductDetailResponse = try await apiClient.get("/deals/product/\(asin)")
 
             selectedProduct = response.product
             selectedProductPrediction = response.pricePrediction
             selectedProductHistory = response.priceHistory
-            tip = response.rufusVerdict
+            tip = response.dealsVerdict
 
-            rufusLogger.info("Rufus product loaded: \(asin)")
+            dealsLogger.info("Deals product loaded: \(asin)")
         } catch {
             errorMessage = "Failed to load product: \(error.localizedDescription)"
-            rufusLogger.error("Failed to load Rufus product: \(error.localizedDescription)")
+            dealsLogger.error("Failed to load Deals product: \(error.localizedDescription)")
         }
 
         isLoading = false
     }
 
-    func findAlternatives(asin: String, maxPrice: Double? = nil) async -> [RufusProduct] {
+    func findAlternatives(asin: String, maxPrice: Double? = nil) async -> [DealsProduct] {
         do {
-            var endpoint = "/rufus/alternatives/\(asin)"
+            var endpoint = "/deals/alternatives/\(asin)"
             if let price = maxPrice {
                 endpoint += "?max_price=\(price)"
             }
 
-            let response: RufusAlternativesResponse = try await apiClient.get(endpoint)
-            tip = response.rufusSays
+            let response: DealsAlternativesResponse = try await apiClient.get(endpoint)
+            tip = response.dealsSays
 
-            rufusLogger.info("Rufus alternatives found: \(response.alternativesCount)")
+            dealsLogger.info("Deals alternatives found: \(response.alternativesCount)")
             return response.alternatives
         } catch {
-            rufusLogger.error("Failed to find alternatives: \(error.localizedDescription)")
+            dealsLogger.error("Failed to find alternatives: \(error.localizedDescription)")
             return []
         }
     }
@@ -218,19 +218,19 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let request = RufusTrackRequest(asin: asin, targetPrice: targetPrice)
-            let response: RufusTrackResponse = try await apiClient.post("/rufus/track", body: request)
+            let request = DealsTrackRequest(asin: asin, targetPrice: targetPrice)
+            let response: DealsTrackResponse = try await apiClient.post("/deals/track", body: request)
 
-            tip = response.rufusSays
+            tip = response.dealsSays
 
             // Refresh tracked products
             await loadTrackedProducts()
 
-            rufusLogger.info("Rufus tracking started: \(asin)")
+            dealsLogger.info("Deals tracking started: \(asin)")
             return response.success
         } catch {
             errorMessage = "Failed to track product: \(error.localizedDescription)"
-            rufusLogger.error("Failed to track product: \(error.localizedDescription)")
+            dealsLogger.error("Failed to track product: \(error.localizedDescription)")
             isLoading = false
             return false
         }
@@ -241,15 +241,15 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response: RufusTrackedResponse = try await apiClient.get("/rufus/tracked")
+            let response: DealsTrackedResponse = try await apiClient.get("/deals/tracked")
 
             trackedProducts = response.products
             totalPotentialSavings = response.totalPotentialSavings
 
-            rufusLogger.info("Rufus tracked loaded: \(response.trackedCount) products")
+            dealsLogger.info("Deals tracked loaded: \(response.trackedCount) products")
         } catch {
             errorMessage = "Failed to load tracked products: \(error.localizedDescription)"
-            rufusLogger.error("Failed to load tracked products: \(error.localizedDescription)")
+            dealsLogger.error("Failed to load tracked products: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -257,24 +257,24 @@ class RufusManager: ObservableObject {
 
     func untrackProduct(asin: String) async -> Bool {
         do {
-            let _: [String: String] = try await apiClient.get("/rufus/tracked/\(asin)")
+            let _: [String: String] = try await apiClient.get("/deals/tracked/\(asin)")
 
             // Remove from local list
             trackedProducts.removeAll { $0.asin == asin }
 
-            rufusLogger.info("Rufus untracked: \(asin)")
+            dealsLogger.info("Deals untracked: \(asin)")
             return true
         } catch {
-            rufusLogger.error("Failed to untrack product: \(error.localizedDescription)")
+            dealsLogger.error("Failed to untrack product: \(error.localizedDescription)")
             return false
         }
     }
 
     // MARK: - Saved Deals
 
-    func saveDeal(_ product: RufusProduct, dealType: RufusDeal.DealType = .saved) async -> Bool {
+    func saveDeal(_ product: DealsProduct, dealType: DealsDeal.DealType = .saved) async -> Bool {
         do {
-            let request = RufusSaveDealRequest(
+            let request = DealsSaveDealRequest(
                 asin: product.asin,
                 title: product.title,
                 price: product.price,
@@ -285,15 +285,15 @@ class RufusManager: ObservableObject {
                 dealType: dealType.rawValue
             )
 
-            let _: [String: Any] = try await apiClient.post("/rufus/deals/save", body: request)
+            let _: [String: Any] = try await apiClient.post("/deals/deals/save", body: request)
 
             // Refresh saved deals
             await loadSavedDeals()
 
-            rufusLogger.info("Rufus deal saved: \(product.asin)")
+            dealsLogger.info("Deals deal saved: \(product.asin)")
             return true
         } catch {
-            rufusLogger.error("Failed to save deal: \(error.localizedDescription)")
+            dealsLogger.error("Failed to save deal: \(error.localizedDescription)")
             return false
         }
     }
@@ -303,15 +303,15 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response: RufusSavedDealsResponse = try await apiClient.get("/rufus/deals/saved")
+            let response: DealsSavedDealsResponse = try await apiClient.get("/deals/deals/saved")
 
             savedDeals = response.deals
             totalSavingsAvailable = response.totalSavingsAvailable
 
-            rufusLogger.info("Rufus saved deals loaded: \(response.savedCount)")
+            dealsLogger.info("Deals saved deals loaded: \(response.savedCount)")
         } catch {
             errorMessage = "Failed to load saved deals: \(error.localizedDescription)"
-            rufusLogger.error("Failed to load saved deals: \(error.localizedDescription)")
+            dealsLogger.error("Failed to load saved deals: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -319,15 +319,15 @@ class RufusManager: ObservableObject {
 
     func removeSavedDeal(asin: String) async -> Bool {
         do {
-            let _: [String: String] = try await apiClient.get("/rufus/deals/saved/\(asin)")
+            let _: [String: String] = try await apiClient.get("/deals/deals/saved/\(asin)")
 
             // Remove from local list
             savedDeals.removeAll { $0.asin == asin }
 
-            rufusLogger.info("Rufus deal removed: \(asin)")
+            dealsLogger.info("Deals deal removed: \(asin)")
             return true
         } catch {
-            rufusLogger.error("Failed to remove saved deal: \(error.localizedDescription)")
+            dealsLogger.error("Failed to remove saved deal: \(error.localizedDescription)")
             return false
         }
     }
@@ -339,15 +339,15 @@ class RufusManager: ObservableObject {
         errorMessage = nil
 
         do {
-            let response: RufusWishlistMatchResponse = try await apiClient.post("/rufus/wishlist-deals", body: EmptyRequest())
+            let response: DealsWishlistMatchResponse = try await apiClient.post("/deals/wishlist-deals", body: EmptyRequest())
 
             wishlistMatches = response.matches
-            tip = response.rufusSays
+            tip = response.dealsSays
 
-            rufusLogger.info("Rufus wishlist matches: \(response.matchesCount)")
+            dealsLogger.info("Deals wishlist matches: \(response.matchesCount)")
         } catch {
             errorMessage = "Failed to find wishlist deals: \(error.localizedDescription)"
-            rufusLogger.error("Failed to find wishlist deals: \(error.localizedDescription)")
+            dealsLogger.error("Failed to find wishlist deals: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -355,36 +355,36 @@ class RufusManager: ObservableObject {
 
     // MARK: - Chat Integration
 
-    func chatSearch(message: String) async -> RufusChatResponse? {
+    func chatSearch(message: String) async -> DealsChatResponse? {
         do {
-            var urlComponents = URLComponents(string: "\(Config.baseURL)/api/v1/rufus/chat")!
+            var urlComponents = URLComponents(string: "\(Config.baseURL)/api/v1/deals/chat")!
             urlComponents.queryItems = [URLQueryItem(name: "message", value: message)]
 
-            let response: RufusChatResponse = try await apiClient.post("/rufus/chat?message=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? message)", body: EmptyRequest())
+            let response: DealsChatResponse = try await apiClient.post("/deals/chat?message=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? message)", body: EmptyRequest())
 
-            rufusLogger.info("Rufus chat search: \(message)")
+            dealsLogger.info("Deals chat search: \(message)")
             return response
         } catch {
-            rufusLogger.error("Rufus chat search failed: \(error.localizedDescription)")
+            dealsLogger.error("Deals chat search failed: \(error.localizedDescription)")
             return nil
         }
     }
 
     // MARK: - Price Prediction
 
-    func getPricePrediction(asin: String) async -> RufusPricePrediction? {
+    func getPricePrediction(asin: String) async -> DealsPricePrediction? {
         do {
-            let response: [String: Any] = try await apiClient.get("/rufus/price-prediction/\(asin)")
+            let response: [String: Any] = try await apiClient.get("/deals/price-prediction/\(asin)")
 
             if let prediction = response["prediction"] as? [String: Any] {
                 return try JSONDecoder().decode(
-                    RufusPricePrediction.self,
+                    DealsPricePrediction.self,
                     from: JSONSerialization.data(withJSONObject: prediction)
                 )
             }
             return nil
         } catch {
-            rufusLogger.error("Failed to get price prediction: \(error.localizedDescription)")
+            dealsLogger.error("Failed to get price prediction: \(error.localizedDescription)")
             return nil
         }
     }
@@ -393,13 +393,13 @@ class RufusManager: ObservableObject {
 
     func loadStats() async {
         do {
-            let response: RufusStatsResponse = try await apiClient.get("/rufus/stats")
+            let response: DealsStatsResponse = try await apiClient.get("/deals/stats")
             stats = response.stats
-            tip = response.rufusMessage
+            tip = response.dealsMessage
 
-            rufusLogger.info("Rufus stats loaded")
+            dealsLogger.info("Deals stats loaded")
         } catch {
-            rufusLogger.error("Failed to load stats: \(error.localizedDescription)")
+            dealsLogger.error("Failed to load stats: \(error.localizedDescription)")
         }
     }
 
@@ -421,7 +421,7 @@ class RufusManager: ObservableObject {
         !savedDeals.isEmpty
     }
 
-    var trackedWithDrops: [RufusTrackedProduct] {
+    var trackedWithDrops: [DealsTrackedProduct] {
         trackedProducts.filter { $0.priceDropped }
     }
 
@@ -431,10 +431,10 @@ class RufusManager: ObservableObject {
         errorMessage = nil
     }
 
-    func openProductOnAmazon(_ product: RufusProduct) {
+    func openProductOnAmazon(_ product: DealsProduct) {
         guard let url = URL(string: product.url) else { return }
         // In a real app, this would open Safari
-        rufusLogger.info("Opening Amazon URL: \(product.url)")
+        dealsLogger.info("Opening Amazon URL: \(product.url)")
     }
 }
 

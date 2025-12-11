@@ -1,5 +1,5 @@
 """
-Rufus Service - Amazon Shopping AI Integration
+Deals Service - Amazon Shopping AI Integration
 Powered by Amazon Product Advertising API 5.0
 
 Helps users save money through:
@@ -66,8 +66,8 @@ class AmazonProduct:
 
 
 @dataclass
-class RufusDeal:
-    """A deal found by Rufus"""
+class DealsDeal:
+    """A deal found by Deals"""
     product: AmazonProduct
     deal_type: str  # "lightning", "daily", "prime", "coupon", "price_drop"
     expires_at: Optional[datetime]
@@ -86,9 +86,9 @@ class RufusDeal:
         }
 
 
-class RufusService:
+class DealsService:
     """
-    Rufus - Your AI Shopping Sidekick
+    Deals - Your AI Shopping Sidekick
 
     Integrates with Amazon Product Advertising API to help users
     find deals, track prices, and save money on purchases.
@@ -232,7 +232,7 @@ class RufusService:
         # In production, make actual API call
         # For now, return mock data for development
         if not AMAZON_ACCESS_KEY or not AMAZON_SECRET_KEY:
-            return await RufusService._get_mock_products(keywords, max_price)
+            return await DealsService._get_mock_products(keywords, max_price)
 
         # Make API request
         now = datetime.utcnow()
@@ -240,7 +240,7 @@ class RufusService:
         date = now.strftime("%Y%m%d")
 
         payload_str = json.dumps(payload)
-        headers = RufusService._generate_signature(
+        headers = DealsService._generate_signature(
             "POST", AMAZON_HOST, "/paapi5/searchitems",
             payload_str, timestamp, date
         )
@@ -258,7 +258,7 @@ class RufusService:
                 return []
 
             data = response.json()
-            return RufusService._parse_search_results(data)
+            return DealsService._parse_search_results(data)
 
     @staticmethod
     async def get_product_by_asin(asin: str) -> Optional[AmazonProduct]:
@@ -306,7 +306,7 @@ class RufusService:
         date = now.strftime("%Y%m%d")
 
         payload_str = json.dumps(payload)
-        headers = RufusService._generate_signature(
+        headers = DealsService._generate_signature(
             "POST", AMAZON_HOST, "/paapi5/getitems",
             payload_str, timestamp, date
         )
@@ -324,7 +324,7 @@ class RufusService:
                 return None
 
             data = response.json()
-            products = RufusService._parse_search_results(data)
+            products = DealsService._parse_search_results(data)
             return products[0] if products else None
 
     @staticmethod
@@ -332,7 +332,7 @@ class RufusService:
         categories: Optional[List[str]] = None,
         max_price: Optional[float] = None,
         keywords: Optional[List[str]] = None
-    ) -> List[RufusDeal]:
+    ) -> List[DealsDeal]:
         """
         Find current deals on Amazon
 
@@ -342,7 +342,7 @@ class RufusService:
             keywords: Keywords to match deals against
 
         Returns:
-            List of RufusDeal objects sorted by relevance
+            List of DealsDeal objects sorted by relevance
         """
         deals = []
 
@@ -351,7 +351,7 @@ class RufusService:
 
         for category in search_categories:
             # Search with deal-focused keywords
-            products = await RufusService.search_products(
+            products = await DealsService.search_products(
                 keywords=f"deal {category}" if not keywords else " ".join(keywords),
                 category=category,
                 max_price=max_price,
@@ -361,9 +361,9 @@ class RufusService:
             for product in products:
                 # Check if this is actually a deal
                 if product.savings_percent and product.savings_percent >= 10:
-                    deal = RufusDeal(
+                    deal = DealsDeal(
                         product=product,
-                        deal_type=RufusService._determine_deal_type(product),
+                        deal_type=DealsService._determine_deal_type(product),
                         expires_at=None,  # Would come from API in production
                         match_reason=f"Great deal in {category}",
                         savings_amount=round((product.original_price or product.price) - product.price, 2),
@@ -391,14 +391,14 @@ class RufusService:
             List of alternative products sorted by price
         """
         # Get original product
-        original = await RufusService.get_product_by_asin(asin)
+        original = await DealsService.get_product_by_asin(asin)
         if not original:
             return []
 
         # Search for similar products at lower price
         search_terms = original.title.split()[:3]  # Use first 3 words
 
-        alternatives = await RufusService.search_products(
+        alternatives = await DealsService.search_products(
             keywords=" ".join(search_terms),
             max_price=max_price or original.price * 0.8,  # 20% cheaper by default
             sort_by="Price:LowToHigh"
@@ -411,7 +411,7 @@ class RufusService:
     async def match_wishlist_deals(
         wishlist_items: List[Dict[str, Any]],
         max_results_per_item: int = 3
-    ) -> Dict[str, List[RufusDeal]]:
+    ) -> Dict[str, List[DealsDeal]]:
         """
         Find Amazon deals matching wishlist items
 
@@ -429,7 +429,7 @@ class RufusService:
             target_price = item.get("price", 0)
 
             # Search for this item
-            products = await RufusService.search_products(
+            products = await DealsService.search_products(
                 keywords=name,
                 max_price=target_price * 1.1,  # Allow 10% over budget
                 sort_by="Price:LowToHigh"
@@ -440,7 +440,7 @@ class RufusService:
                 # Calculate match score
                 price_match = 1 - (abs(product.price - target_price) / target_price)
 
-                deal = RufusDeal(
+                deal = DealsDeal(
                     product=product,
                     deal_type="wishlist_match",
                     expires_at=None,
@@ -468,7 +468,7 @@ class RufusService:
         """
         # In production, this would analyze historical price data
         # For now, provide a simulated prediction
-        product = await RufusService.get_product_by_asin(asin)
+        product = await DealsService.get_product_by_asin(asin)
         if not product:
             return {"error": "Product not found"}
 
@@ -520,7 +520,7 @@ class RufusService:
         search_terms = " ".join(keywords)
 
         if is_deal_search:
-            products = await RufusService.search_products(
+            products = await DealsService.search_products(
                 keywords=search_terms,
                 max_price=budget,
                 sort_by="Price:LowToHigh"
@@ -533,10 +533,10 @@ class RufusService:
                     "message": f"Found a great deal! {best.title[:50]}... is ${best.price:.2f}" +
                               (f" (was ${best.original_price:.2f} - {best.savings_percent:.0f}% off!)" if best.savings_percent else ""),
                     "products": [p.to_dict() for p in products[:3]],
-                    "rufus_tip": "I can track this price for you and alert you if it drops even more!"
+                    "deals_tip": "I can track this price for you and alert you if it drops even more!"
                 }
         else:
-            products = await RufusService.search_products(
+            products = await DealsService.search_products(
                 keywords=search_terms,
                 max_price=budget,
                 sort_by="Relevance"
@@ -547,14 +547,14 @@ class RufusService:
                     "type": "search_results",
                     "message": f"Found {len(products)} options for '{search_terms}'",
                     "products": [p.to_dict() for p in products[:5]],
-                    "rufus_tip": "Want me to find cheaper alternatives or track prices on any of these?"
+                    "deals_tip": "Want me to find cheaper alternatives or track prices on any of these?"
                 }
 
         return {
             "type": "no_results",
             "message": f"Couldn't find anything for '{search_terms}'. Try different keywords?",
             "products": [],
-            "rufus_tip": "Tip: Be specific! Instead of 'headphones', try 'wireless bluetooth headphones'"
+            "deals_tip": "Tip: Be specific! Instead of 'headphones', try 'wireless bluetooth headphones'"
         }
 
     @staticmethod
@@ -785,7 +785,7 @@ class RufusService:
 
 
 # Price tracking service
-class RufusPriceTracker:
+class DealsPriceTracker:
     """
     Tracks prices for products and alerts users on drops
     """
@@ -810,7 +810,7 @@ class RufusPriceTracker:
             Tracking confirmation
         """
         # Get current product info
-        product = await RufusService.get_product_by_asin(asin)
+        product = await DealsService.get_product_by_asin(asin)
         if not product:
             return {"error": "Product not found"}
 
@@ -829,7 +829,7 @@ class RufusPriceTracker:
 
         # Save to database if provided
         if db:
-            await db.create_rufus_tracked_product(user_id, tracking_data)
+            await db.create_deals_tracked_product(user_id, tracking_data)
 
         return {
             "success": True,
@@ -850,11 +850,11 @@ class RufusPriceTracker:
         if not db:
             return []
 
-        tracked = await db.get_rufus_tracked_products(user_id)
+        tracked = await db.get_deals_tracked_products(user_id)
         drops = []
 
         for item in tracked:
-            current = await RufusService.get_product_by_asin(item["asin"])
+            current = await DealsService.get_product_by_asin(item["asin"])
             if current and current.price < item.get("last_checked_price", item["current_price"]):
                 drops.append({
                     "asin": item["asin"],
@@ -866,6 +866,6 @@ class RufusPriceTracker:
                 })
 
                 # Update last checked price
-                await db.update_rufus_tracked_price(item["id"], current.price)
+                await db.update_deals_tracked_price(item["id"], current.price)
 
         return drops

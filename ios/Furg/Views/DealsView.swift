@@ -1,15 +1,15 @@
 //
-//  RufusView.swift
+//  DealsView.swift
 //  Furg
 //
-//  Rufus - Your Amazon Shopping AI Sidekick
+//  Deals - Your Amazon Shopping AI Sidekick
 //  Find deals, track prices, save money
 //
 
 import SwiftUI
 
-struct RufusView: View {
-    @StateObject private var rufusManager = RufusManager()
+struct DealsView: View {
+    @StateObject private var dealsManager = DealsManager()
     @State private var selectedTab = 0
     @State private var showSearch = false
     @State private var searchText = ""
@@ -18,11 +18,11 @@ struct RufusView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Rufus Header
-                    rufusHeader
+                    // Deals Header
+                    dealsHeader
 
                     // Quick Stats
-                    if let stats = rufusManager.stats {
+                    if let stats = dealsManager.stats {
                         statsCards(stats)
                     }
 
@@ -43,7 +43,7 @@ struct RufusView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Rufus")
+            .navigationTitle("Deals")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -54,46 +54,46 @@ struct RufusView: View {
                 }
             }
             .sheet(isPresented: $showSearch) {
-                RufusSearchView(rufusManager: rufusManager)
+                DealsSearchView(dealsManager: dealsManager)
             }
             .refreshable {
-                await rufusManager.loadHome()
+                await dealsManager.loadHome()
             }
             .task {
-                await rufusManager.loadHome()
-                await rufusManager.loadTrackedProducts()
-                await rufusManager.loadDeals()
+                await dealsManager.loadHome()
+                await dealsManager.loadTrackedProducts()
+                await dealsManager.loadDeals()
             }
         }
     }
 
     // MARK: - Header
 
-    private var rufusHeader: some View {
+    private var dealsHeader: some View {
         VStack(spacing: 12) {
-            // Rufus mascot/icon
+            // Deals icon
             ZStack {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.orange, Color.orange.opacity(0.7)],
+                            colors: [Color.furgMint, Color.furgMint.opacity(0.7)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 80, height: 80)
 
-                Image(systemName: "dog.fill")
+                Image(systemName: "tag.fill")
                     .font(.system(size: 40))
                     .foregroundStyle(.white)
             }
 
-            Text(rufusManager.greeting)
+            Text(dealsManager.greeting)
                 .font(.headline)
                 .multilineTextAlignment(.center)
 
-            if !rufusManager.tip.isEmpty {
-                Text(rufusManager.tip)
+            if !dealsManager.tip.isEmpty {
+                Text(dealsManager.tip)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -105,7 +105,7 @@ struct RufusView: View {
 
     // MARK: - Stats Cards
 
-    private func statsCards(_ stats: RufusStats) -> some View {
+    private func statsCards(_ stats: DealsStats) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 StatCard(
@@ -155,24 +155,24 @@ struct RufusView: View {
     private var dealsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Price drops alert
-            if rufusManager.hasPriceDrops {
+            if dealsManager.hasPriceDrops {
                 priceDropsAlert
             }
 
             // Suggested deals
-            if !rufusManager.suggestedDeals.isEmpty {
+            if !dealsManager.suggestedDeals.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Hot Deals")
                         .font(.headline)
 
-                    ForEach(rufusManager.suggestedDeals) { deal in
-                        RufusDealCard(deal: deal, onTrack: {
+                    ForEach(dealsManager.suggestedDeals) { deal in
+                        DealsDealCard(deal: deal, onTrack: {
                             Task {
-                                await rufusManager.trackProduct(asin: deal.product.asin)
+                                await dealsManager.trackProduct(asin: deal.product.asin)
                             }
                         }, onSave: {
                             Task {
-                                await rufusManager.saveDeal(deal.product, dealType: deal.dealType)
+                                await dealsManager.saveDeal(deal.product, dealType: deal.dealType)
                             }
                         })
                     }
@@ -185,10 +185,10 @@ struct RufusView: View {
                     .font(.headline)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                    ForEach(RufusCategory.allCases.filter { $0 != .all }, id: \.self) { category in
+                    ForEach(DealsCategory.allCases.filter { $0 != .all }, id: \.self) { category in
                         CategoryButton(category: category) {
                             Task {
-                                await rufusManager.loadDeals(categories: [category])
+                                await dealsManager.loadDeals(categories: [category])
                             }
                         }
                     }
@@ -196,19 +196,19 @@ struct RufusView: View {
             }
 
             // Current deals
-            if rufusManager.hasDeals {
+            if dealsManager.hasDeals {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Current Deals (\(rufusManager.currentDeals.count))")
+                    Text("Current Deals (\(dealsManager.currentDeals.count))")
                         .font(.headline)
 
-                    ForEach(rufusManager.currentDeals) { deal in
-                        RufusDealCard(deal: deal, onTrack: {
+                    ForEach(dealsManager.currentDeals) { deal in
+                        DealsDealCard(deal: deal, onTrack: {
                             Task {
-                                await rufusManager.trackProduct(asin: deal.product.asin)
+                                await dealsManager.trackProduct(asin: deal.product.asin)
                             }
                         }, onSave: {
                             Task {
-                                await rufusManager.saveDeal(deal.product, dealType: deal.dealType)
+                                await dealsManager.saveDeal(deal.product, dealType: deal.dealType)
                             }
                         })
                     }
@@ -216,7 +216,7 @@ struct RufusView: View {
             }
 
             // Empty state
-            if rufusManager.suggestedDeals.isEmpty && rufusManager.currentDeals.isEmpty && !rufusManager.isLoading {
+            if dealsManager.suggestedDeals.isEmpty && dealsManager.currentDeals.isEmpty && !dealsManager.isLoading {
                 emptyDealsState
             }
         }
@@ -234,7 +234,7 @@ struct RufusView: View {
                 Spacer()
             }
 
-            ForEach(rufusManager.priceDrops) { drop in
+            ForEach(dealsManager.priceDrops) { drop in
                 HStack {
                     AsyncImage(url: URL(string: drop.imageUrl ?? "")) { image in
                         image.resizable().aspectRatio(contentMode: .fit)
@@ -274,12 +274,12 @@ struct RufusView: View {
 
     private var trackedSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if rufusManager.totalPotentialSavings > 0 {
+            if dealsManager.totalPotentialSavings > 0 {
                 HStack {
                     Image(systemName: "chart.line.downtrend.xyaxis")
                         .foregroundStyle(.green)
                     Text("Potential Savings: ")
-                    Text(String(format: "$%.2f", rufusManager.totalPotentialSavings))
+                    Text(String(format: "$%.2f", dealsManager.totalPotentialSavings))
                         .fontWeight(.bold)
                         .foregroundStyle(.green)
                 }
@@ -289,13 +289,13 @@ struct RufusView: View {
                 .cornerRadius(12)
             }
 
-            if rufusManager.trackedProducts.isEmpty {
+            if dealsManager.trackedProducts.isEmpty {
                 emptyTrackingState
             } else {
-                ForEach(rufusManager.trackedProducts) { product in
+                ForEach(dealsManager.trackedProducts) { product in
                     TrackedProductCard(product: product) {
                         Task {
-                            await rufusManager.untrackProduct(asin: product.asin)
+                            await dealsManager.untrackProduct(asin: product.asin)
                         }
                     }
                 }
@@ -307,12 +307,12 @@ struct RufusView: View {
 
     private var savedSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if rufusManager.totalSavingsAvailable > 0 {
+            if dealsManager.totalSavingsAvailable > 0 {
                 HStack {
                     Image(systemName: "bookmark.fill")
                         .foregroundStyle(.purple)
                     Text("Total Savings Available: ")
-                    Text(String(format: "$%.2f", rufusManager.totalSavingsAvailable))
+                    Text(String(format: "$%.2f", dealsManager.totalSavingsAvailable))
                         .fontWeight(.bold)
                         .foregroundStyle(.purple)
                 }
@@ -322,13 +322,13 @@ struct RufusView: View {
                 .cornerRadius(12)
             }
 
-            if rufusManager.savedDeals.isEmpty {
+            if dealsManager.savedDeals.isEmpty {
                 emptySavedState
             } else {
-                ForEach(rufusManager.savedDeals) { deal in
+                ForEach(dealsManager.savedDeals) { deal in
                     SavedDealCard(deal: deal) {
                         Task {
-                            await rufusManager.removeSavedDeal(asin: deal.asin)
+                            await dealsManager.removeSavedDeal(asin: deal.asin)
                         }
                     }
                 }
@@ -424,7 +424,7 @@ struct StatCard: View {
 }
 
 struct CategoryButton: View {
-    let category: RufusCategory
+    let category: DealsCategory
     let action: () -> Void
 
     var body: some View {
@@ -445,8 +445,8 @@ struct CategoryButton: View {
     }
 }
 
-struct RufusDealCard: View {
-    let deal: RufusDeal
+struct DealsDealCard: View {
+    let deal: DealsDeal
     let onTrack: () -> Void
     let onSave: () -> Void
 
@@ -550,7 +550,7 @@ struct RufusDealCard: View {
 }
 
 struct TrackedProductCard: View {
-    let product: RufusTrackedProduct
+    let product: DealsTrackedProduct
     let onUntrack: () -> Void
 
     var body: some View {
@@ -613,7 +613,7 @@ struct TrackedProductCard: View {
 }
 
 struct SavedDealCard: View {
-    let deal: RufusSavedDeal
+    let deal: DealsSavedDeal
     let onRemove: () -> Void
 
     var body: some View {
@@ -694,5 +694,5 @@ extension Color {
 }
 
 #Preview {
-    RufusView()
+    DealsView()
 }

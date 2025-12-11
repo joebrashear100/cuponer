@@ -406,11 +406,11 @@ BEFORE UPDATE ON user_profiles
 FOR EACH ROW
 EXECUTE FUNCTION update_profile_timestamp();
 
--- ==================== RUFUS TABLES ====================
+-- ==================== DEALS TABLES ====================
 -- Amazon Shopping AI Integration - Price Tracking & Deals
 
--- Rufus: Tracked products for price alerts
-CREATE TABLE rufus_tracked_products (
+-- Deals: Tracked products for price alerts
+CREATE TABLE deals_tracked_products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     asin VARCHAR(20) NOT NULL, -- Amazon Standard Identification Number
@@ -431,12 +431,12 @@ CREATE TABLE rufus_tracked_products (
     UNIQUE(user_id, asin)
 );
 
-CREATE INDEX idx_rufus_tracked_user ON rufus_tracked_products(user_id, is_active);
-CREATE INDEX idx_rufus_tracked_asin ON rufus_tracked_products(asin);
-CREATE INDEX idx_rufus_price_drops ON rufus_tracked_products(user_id, price_drop_detected) WHERE price_drop_detected = TRUE;
+CREATE INDEX idx_deals_tracked_user ON deals_tracked_products(user_id, is_active);
+CREATE INDEX idx_deals_tracked_asin ON deals_tracked_products(asin);
+CREATE INDEX idx_deals_price_drops ON deals_tracked_products(user_id, price_drop_detected) WHERE price_drop_detected = TRUE;
 
--- Rufus: Price history for products (TimescaleDB hypertable)
-CREATE TABLE rufus_price_history (
+-- Deals: Price history for products (TimescaleDB hypertable)
+CREATE TABLE deals_price_history (
     id UUID DEFAULT gen_random_uuid(),
     asin VARCHAR(20) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
@@ -447,12 +447,12 @@ CREATE TABLE rufus_price_history (
 );
 
 -- Convert to hypertable for efficient time-series queries
-SELECT create_hypertable('rufus_price_history', 'recorded_at', if_not_exists => TRUE);
+SELECT create_hypertable('deals_price_history', 'recorded_at', if_not_exists => TRUE);
 
-CREATE INDEX idx_rufus_price_history_asin ON rufus_price_history(asin, recorded_at DESC);
+CREATE INDEX idx_deals_price_history_asin ON deals_price_history(asin, recorded_at DESC);
 
--- Rufus: Saved deals
-CREATE TABLE rufus_saved_deals (
+-- Deals: Saved deals
+CREATE TABLE deals_saved_deals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     asin VARCHAR(20) NOT NULL,
@@ -470,11 +470,11 @@ CREATE TABLE rufus_saved_deals (
     UNIQUE(user_id, asin)
 );
 
-CREATE INDEX idx_rufus_saved_deals_user ON rufus_saved_deals(user_id, is_active);
-CREATE INDEX idx_rufus_saved_deals_type ON rufus_saved_deals(deal_type, is_active);
+CREATE INDEX idx_deals_saved_deals_user ON deals_saved_deals(user_id, is_active);
+CREATE INDEX idx_deals_saved_deals_type ON deals_saved_deals(deal_type, is_active);
 
--- Rufus: Search history for personalization
-CREATE TABLE rufus_search_history (
+-- Deals: Search history for personalization
+CREATE TABLE deals_search_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     query VARCHAR(500) NOT NULL,
@@ -485,10 +485,10 @@ CREATE TABLE rufus_search_history (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_rufus_search_history_user ON rufus_search_history(user_id, created_at DESC);
+CREATE INDEX idx_deals_search_history_user ON deals_search_history(user_id, created_at DESC);
 
--- Rufus: Deal notifications
-CREATE TABLE rufus_notifications (
+-- Deals: Deal notifications
+CREATE TABLE deals_notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     asin VARCHAR(20) NOT NULL,
@@ -504,22 +504,22 @@ CREATE TABLE rufus_notifications (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_rufus_notifications_user ON rufus_notifications(user_id, is_read, created_at DESC);
-CREATE INDEX idx_rufus_notifications_unsent ON rufus_notifications(is_sent) WHERE is_sent = FALSE;
+CREATE INDEX idx_deals_notifications_user ON deals_notifications(user_id, is_read, created_at DESC);
+CREATE INDEX idx_deals_notifications_unsent ON deals_notifications(is_sent) WHERE is_sent = FALSE;
 
--- View: Rufus user statistics
-CREATE VIEW rufus_user_stats AS
+-- View: Deals user statistics
+CREATE VIEW deals_user_stats AS
 SELECT
     u.id AS user_id,
-    (SELECT COUNT(*) FROM rufus_tracked_products WHERE user_id = u.id AND is_active = TRUE) AS products_tracked,
-    (SELECT COUNT(*) FROM rufus_tracked_products WHERE user_id = u.id AND price_drop_detected = TRUE AND is_active = TRUE) AS active_price_drops,
-    (SELECT COUNT(*) FROM rufus_saved_deals WHERE user_id = u.id AND is_active = TRUE) AS saved_deals,
-    (SELECT COALESCE(SUM(original_price - price), 0) FROM rufus_saved_deals WHERE user_id = u.id AND is_active = TRUE AND original_price IS NOT NULL) AS potential_savings,
-    (SELECT COUNT(*) FROM rufus_notifications WHERE user_id = u.id AND is_read = FALSE) AS unread_notifications
+    (SELECT COUNT(*) FROM deals_tracked_products WHERE user_id = u.id AND is_active = TRUE) AS products_tracked,
+    (SELECT COUNT(*) FROM deals_tracked_products WHERE user_id = u.id AND price_drop_detected = TRUE AND is_active = TRUE) AS active_price_drops,
+    (SELECT COUNT(*) FROM deals_saved_deals WHERE user_id = u.id AND is_active = TRUE) AS saved_deals,
+    (SELECT COALESCE(SUM(original_price - price), 0) FROM deals_saved_deals WHERE user_id = u.id AND is_active = TRUE AND original_price IS NOT NULL) AS potential_savings,
+    (SELECT COUNT(*) FROM deals_notifications WHERE user_id = u.id AND is_read = FALSE) AS unread_notifications
 FROM users u;
 
 -- Function: Check for price drops across all tracked products
-CREATE OR REPLACE FUNCTION rufus_check_price_drops(p_user_id UUID)
+CREATE OR REPLACE FUNCTION deals_check_price_drops(p_user_id UUID)
 RETURNS TABLE (
     asin VARCHAR(20),
     title VARCHAR(500),
@@ -539,7 +539,7 @@ BEGIN
         rtp.target_price,
         (rtp.last_checked_price - rtp.current_price) AS savings,
         (rtp.current_price <= rtp.target_price) AS hit_target
-    FROM rufus_tracked_products rtp
+    FROM deals_tracked_products rtp
     WHERE rtp.user_id = p_user_id
     AND rtp.is_active = TRUE
     AND rtp.last_checked_price IS NOT NULL
@@ -548,7 +548,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function: Get price statistics for a product
-CREATE OR REPLACE FUNCTION rufus_get_price_stats(p_asin VARCHAR(20), p_days INTEGER DEFAULT 30)
+CREATE OR REPLACE FUNCTION deals_get_price_stats(p_asin VARCHAR(20), p_days INTEGER DEFAULT 30)
 RETURNS TABLE (
     avg_price DECIMAL(10,2),
     min_price DECIMAL(10,2),
@@ -566,7 +566,7 @@ BEGIN
         ROUND(STDDEV(rph.price)::numeric, 2) AS price_volatility,
         EXTRACT(DAY FROM (MAX(rph.recorded_at) - MIN(rph.recorded_at)))::INTEGER AS days_tracked,
         COUNT(*)::INTEGER AS data_points
-    FROM rufus_price_history rph
+    FROM deals_price_history rph
     WHERE rph.asin = p_asin
     AND rph.recorded_at >= NOW() - (p_days || ' days')::INTERVAL;
 END;

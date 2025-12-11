@@ -1,8 +1,8 @@
 //
-//  RufusModels.swift
+//  DealsModels.swift
 //  Furg
 //
-//  Models for Rufus - Amazon Shopping AI Integration
+//  Models for Deals - Amazon Shopping AI Integration
 //  Price tracking, deal discovery, and smart shopping assistance
 //
 
@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: - Amazon Product
 
-struct RufusProduct: Identifiable, Codable, Equatable {
+struct DealsProduct: Identifiable, Codable, Equatable {
     let asin: String
     let title: String
     let price: Double
@@ -58,10 +58,10 @@ struct RufusProduct: Identifiable, Codable, Equatable {
     }
 }
 
-// MARK: - Rufus Deal
+// MARK: - Deals Deal
 
-struct RufusDeal: Identifiable, Codable {
-    let product: RufusProduct
+struct DealsDeal: Identifiable, Codable {
+    let product: DealsProduct
     let dealType: DealType
     let expiresAt: Date?
     let matchReason: String
@@ -128,7 +128,7 @@ struct RufusDeal: Identifiable, Codable {
 
 // MARK: - Tracked Product
 
-struct RufusTrackedProduct: Identifiable, Codable {
+struct DealsTrackedProduct: Identifiable, Codable {
     let id: String
     let asin: String
     let title: String
@@ -172,7 +172,7 @@ struct RufusTrackedProduct: Identifiable, Codable {
 
 // MARK: - Saved Deal
 
-struct RufusSavedDeal: Identifiable, Codable {
+struct DealsSavedDeal: Identifiable, Codable {
     let asin: String
     let title: String
     let price: Double
@@ -206,7 +206,7 @@ struct RufusSavedDeal: Identifiable, Codable {
 
 // MARK: - Price Prediction
 
-struct RufusPricePrediction: Codable {
+struct DealsPricePrediction: Codable {
     let currentPrice: Double
     let averagePrice: Double
     let lowestPrice30d: Double
@@ -254,16 +254,16 @@ struct RufusPricePrediction: Codable {
 
 // MARK: - Price History Point
 
-struct RufusPricePoint: Identifiable, Codable {
+struct DealsPricePoint: Identifiable, Codable {
     let price: Double
     let date: Date
 
     var id: Date { date }
 }
 
-// MARK: - Rufus Stats
+// MARK: - Deals Stats
 
-struct RufusStats: Codable {
+struct DealsStats: Codable {
     let productsTracked: Int
     let priceDropsFound: Int
     let potentialSavings: Double
@@ -289,12 +289,12 @@ struct RufusStats: Codable {
 
 // MARK: - API Response Models
 
-struct RufusHomeResponse: Codable {
+struct DealsHomeResponse: Codable {
     let greeting: String
-    let stats: RufusStats
-    let priceDrops: [RufusPriceDrop]
+    let stats: DealsStats
+    let priceDrops: [DealsPriceDrop]
     let savedDealsCount: Int
-    let suggestedDeals: [RufusDeal]
+    let suggestedDeals: [DealsDeal]
     let tip: String
 
     enum CodingKeys: String, CodingKey {
@@ -305,7 +305,7 @@ struct RufusHomeResponse: Codable {
     }
 }
 
-struct RufusPriceDrop: Identifiable, Codable {
+struct DealsPriceDrop: Identifiable, Codable {
     let asin: String
     let title: String
     let currentPrice: Double
@@ -323,23 +323,23 @@ struct RufusPriceDrop: Identifiable, Codable {
     }
 }
 
-struct RufusSearchResponse: Codable {
+struct DealsSearchResponse: Codable {
     let query: String
     let resultsCount: Int
-    let products: [RufusProduct]
-    let rufusTip: String
+    let products: [DealsProduct]
+    let dealsTip: String
 
     enum CodingKeys: String, CodingKey {
         case query, products
         case resultsCount = "results_count"
-        case rufusTip = "rufus_tip"
+        case dealsTip = "deals_tip"
     }
 }
 
-struct RufusDealsResponse: Codable {
+struct DealsDealsResponse: Codable {
     let totalDeals: Int
-    let byType: [String: [RufusDeal]]
-    let deals: [RufusDeal]
+    let byType: [String: [DealsDeal]]
+    let deals: [DealsDeal]
     let lastUpdated: String
 
     enum CodingKeys: String, CodingKey {
@@ -350,13 +350,13 @@ struct RufusDealsResponse: Codable {
     }
 }
 
-struct RufusProductDetailResponse: Codable {
-    let product: RufusProduct
+struct DealsProductDetailResponse: Codable {
+    let product: DealsProduct
     let isTracked: Bool
     let trackingTarget: Double?
-    let pricePrediction: RufusPricePrediction
-    let priceHistory: [RufusPricePoint]
-    let rufusVerdict: String
+    let pricePrediction: DealsPricePrediction
+    let priceHistory: [DealsPricePoint]
+    let dealsVerdict: String
 
     enum CodingKeys: String, CodingKey {
         case product
@@ -364,23 +364,23 @@ struct RufusProductDetailResponse: Codable {
         case trackingTarget = "tracking_target"
         case pricePrediction = "price_prediction"
         case priceHistory = "price_history"
-        case rufusVerdict = "rufus_verdict"
+        case dealsVerdict = "deals_verdict"
     }
 }
 
-struct RufusTrackResponse: Codable {
+struct DealsTrackResponse: Codable {
     let success: Bool
     let message: String
-    let tracking: RufusTrackingInfo
-    let rufusSays: String
+    let tracking: DealsTrackingInfo
+    let dealsSays: String
 
     enum CodingKeys: String, CodingKey {
         case success, message, tracking
-        case rufusSays = "rufus_says"
+        case dealsSays = "deals_says"
     }
 }
 
-struct RufusTrackingInfo: Codable {
+struct DealsTrackingInfo: Codable {
     let asin: String
     let currentPrice: Double
     let targetPrice: Double
@@ -394,10 +394,10 @@ struct RufusTrackingInfo: Codable {
     }
 }
 
-struct RufusTrackedResponse: Codable {
+struct DealsTrackedResponse: Codable {
     let trackedCount: Int
     let totalPotentialSavings: Double
-    let products: [RufusTrackedProduct]
+    let products: [DealsTrackedProduct]
 
     enum CodingKeys: String, CodingKey {
         case products
@@ -406,10 +406,10 @@ struct RufusTrackedResponse: Codable {
     }
 }
 
-struct RufusSavedDealsResponse: Codable {
+struct DealsSavedDealsResponse: Codable {
     let savedCount: Int
     let totalSavingsAvailable: Double
-    let deals: [RufusSavedDeal]
+    let deals: [DealsSavedDeal]
 
     enum CodingKeys: String, CodingKey {
         case deals
@@ -418,63 +418,63 @@ struct RufusSavedDealsResponse: Codable {
     }
 }
 
-struct RufusAlternativesResponse: Codable {
+struct DealsAlternativesResponse: Codable {
     let originalAsin: String
     let alternativesCount: Int
-    let alternatives: [RufusProduct]
-    let rufusSays: String
+    let alternatives: [DealsProduct]
+    let dealsSays: String
 
     enum CodingKeys: String, CodingKey {
         case alternatives
         case originalAsin = "original_asin"
         case alternativesCount = "alternatives_count"
-        case rufusSays = "rufus_says"
+        case dealsSays = "deals_says"
     }
 }
 
-struct RufusWishlistMatchResponse: Codable {
+struct DealsWishlistMatchResponse: Codable {
     let matchesCount: Int
     let wishlistItemsChecked: Int
-    let matches: [String: [RufusDeal]]
-    let rufusSays: String
+    let matches: [String: [DealsDeal]]
+    let dealsSays: String
 
     enum CodingKeys: String, CodingKey {
         case matches
         case matchesCount = "matches_count"
         case wishlistItemsChecked = "wishlist_items_checked"
-        case rufusSays = "rufus_says"
+        case dealsSays = "deals_says"
     }
 }
 
-struct RufusChatResponse: Codable {
+struct DealsChatResponse: Codable {
     let query: String
     let responseType: String
     let message: String
-    let products: [RufusProduct]
-    let rufusTip: String
+    let products: [DealsProduct]
+    let dealsTip: String
     let budgetAware: String
 
     enum CodingKeys: String, CodingKey {
         case query, message, products
         case responseType = "response_type"
-        case rufusTip = "rufus_tip"
+        case dealsTip = "deals_tip"
         case budgetAware = "budget_aware"
     }
 }
 
-struct RufusStatsResponse: Codable {
-    let stats: RufusStats
-    let rufusMessage: String
+struct DealsStatsResponse: Codable {
+    let stats: DealsStats
+    let dealsMessage: String
 
     enum CodingKeys: String, CodingKey {
         case stats
-        case rufusMessage = "rufus_message"
+        case dealsMessage = "deals_message"
     }
 }
 
 // MARK: - Request Models
 
-struct RufusSearchRequest: Encodable {
+struct DealsSearchRequest: Encodable {
     let keywords: String
     let category: String?
     let minPrice: Double?
@@ -493,7 +493,7 @@ struct RufusSearchRequest: Encodable {
     }
 }
 
-struct RufusTrackRequest: Encodable {
+struct DealsTrackRequest: Encodable {
     let asin: String
     let targetPrice: Double?
 
@@ -503,7 +503,7 @@ struct RufusTrackRequest: Encodable {
     }
 }
 
-struct RufusSaveDealRequest: Encodable {
+struct DealsSaveDealRequest: Encodable {
     let asin: String
     let title: String
     let price: Double
@@ -524,7 +524,7 @@ struct RufusSaveDealRequest: Encodable {
 
 // MARK: - Search Sort Options
 
-enum RufusSortOption: String, CaseIterable {
+enum DealsSortOption: String, CaseIterable {
     case relevance = "Relevance"
     case priceLowToHigh = "Price:LowToHigh"
     case priceHighToLow = "Price:HighToLow"
@@ -542,7 +542,7 @@ enum RufusSortOption: String, CaseIterable {
 
 // MARK: - Amazon Categories
 
-enum RufusCategory: String, CaseIterable {
+enum DealsCategory: String, CaseIterable {
     case all = "All"
     case electronics = "Electronics"
     case home = "HomeAndGarden"

@@ -1,19 +1,19 @@
 //
-//  RufusSearchView.swift
+//  DealsSearchView.swift
 //  Furg
 //
-//  Rufus Search - Find products and deals on Amazon
+//  Deals Search - Find products and deals on Amazon
 //
 
 import SwiftUI
 
-struct RufusSearchView: View {
-    @ObservedObject var rufusManager: RufusManager
+struct DealsSearchView: View {
+    @ObservedObject var dealsManager: DealsManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var searchText = ""
-    @State private var selectedCategory: RufusCategory = .all
-    @State private var selectedSort: RufusSortOption = .relevance
+    @State private var selectedCategory: DealsCategory = .all
+    @State private var selectedSort: DealsSortOption = .relevance
     @State private var primeOnly = false
     @State private var maxPrice: Double?
     @State private var showFilters = false
@@ -28,17 +28,17 @@ struct RufusSearchView: View {
                 filterPills
 
                 // Results
-                if rufusManager.isLoading {
+                if dealsManager.isLoading {
                     loadingView
-                } else if rufusManager.searchResults.isEmpty && !searchText.isEmpty {
+                } else if dealsManager.searchResults.isEmpty && !searchText.isEmpty {
                     emptyResultsView
-                } else if rufusManager.searchResults.isEmpty {
+                } else if dealsManager.searchResults.isEmpty {
                     searchPromptView
                 } else {
                     resultsList
                 }
             }
-            .navigationTitle("Search with Rufus")
+            .navigationTitle("Search with Deals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -78,7 +78,7 @@ struct RufusSearchView: View {
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
-                    rufusManager.clearSearch()
+                    dealsManager.clearSearch()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
@@ -98,7 +98,7 @@ struct RufusSearchView: View {
             HStack(spacing: 8) {
                 // Category pill
                 Menu {
-                    ForEach(RufusCategory.allCases, id: \.self) { category in
+                    ForEach(DealsCategory.allCases, id: \.self) { category in
                         Button {
                             selectedCategory = category
                         } label: {
@@ -119,7 +119,7 @@ struct RufusSearchView: View {
 
                 // Sort pill
                 Menu {
-                    ForEach(RufusSortOption.allCases, id: \.self) { option in
+                    ForEach(DealsSortOption.allCases, id: \.self) { option in
                         Button {
                             selectedSort = option
                         } label: {
@@ -174,30 +174,30 @@ struct RufusSearchView: View {
             LazyVStack(spacing: 12) {
                 // Results count
                 HStack {
-                    Text("\(rufusManager.searchResults.count) results")
+                    Text("\(dealsManager.searchResults.count) results")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
                     Spacer()
 
-                    if !rufusManager.tip.isEmpty {
-                        Text(rufusManager.tip)
+                    if !dealsManager.tip.isEmpty {
+                        Text(dealsManager.tip)
                             .font(.caption2)
                             .foregroundStyle(.orange)
                     }
                 }
                 .padding(.horizontal)
 
-                ForEach(rufusManager.searchResults) { product in
+                ForEach(dealsManager.searchResults) { product in
                     ProductSearchCard(product: product) {
                         // Track action
                         Task {
-                            await rufusManager.trackProduct(asin: product.asin)
+                            await dealsManager.trackProduct(asin: product.asin)
                         }
                     } onSave: {
                         // Save action
                         Task {
-                            await rufusManager.saveDeal(product)
+                            await dealsManager.saveDeal(product)
                         }
                     }
                 }
@@ -213,7 +213,7 @@ struct RufusSearchView: View {
             ProgressView()
                 .scaleEffect(1.5)
 
-            Text("Rufus is searching...")
+            Text("Deals is searching...")
                 .font(.headline)
 
             Text("Finding the best deals for you")
@@ -295,7 +295,7 @@ struct RufusSearchView: View {
         NavigationStack {
             List {
                 Section("Category") {
-                    ForEach(RufusCategory.allCases, id: \.self) { category in
+                    ForEach(DealsCategory.allCases, id: \.self) { category in
                         Button {
                             selectedCategory = category
                         } label: {
@@ -314,7 +314,7 @@ struct RufusSearchView: View {
                 }
 
                 Section("Sort By") {
-                    ForEach(RufusSortOption.allCases, id: \.self) { option in
+                    ForEach(DealsSortOption.allCases, id: \.self) { option in
                         Button {
                             selectedSort = option
                         } label: {
@@ -376,7 +376,7 @@ struct RufusSearchView: View {
 
     private func performSearch() {
         Task {
-            await rufusManager.search(
+            await dealsManager.search(
                 keywords: searchText,
                 category: selectedCategory == .all ? nil : selectedCategory,
                 maxPrice: maxPrice,
@@ -432,7 +432,7 @@ struct QuickSearchPill: View {
 }
 
 struct ProductSearchCard: View {
-    let product: RufusProduct
+    let product: DealsProduct
     let onTrack: () -> Void
     let onSave: () -> Void
 
@@ -599,5 +599,5 @@ struct FlowLayout: Layout {
 }
 
 #Preview {
-    RufusSearchView(rufusManager: RufusManager())
+    DealsSearchView(dealsManager: DealsManager())
 }

@@ -25,7 +25,7 @@ from services.chat import ChatService
 from services.plaid_service import PlaidService
 from services.bill_detection import BillDetector
 from services.shadow_banking import ShadowBankingService
-from services.rufus_service import RufusService, RufusPriceTracker
+from services.deals_service import DealsService, PriceTracker
 from ml.categorizer import get_categorizer
 
 
@@ -1481,10 +1481,10 @@ async def get_achievements(user_id: str = Depends(get_current_user)):
     }
 
 
-# ==================== RUFUS ENDPOINTS ====================
+# ==================== DEALS ENDPOINTS ====================
 # Amazon Shopping AI - Price Tracking, Deals & Smart Shopping
 
-class RufusSearchRequest(BaseModel):
+class DealsSearchRequest(BaseModel):
     keywords: str
     category: Optional[str] = None
     min_price: Optional[float] = None
@@ -1494,12 +1494,12 @@ class RufusSearchRequest(BaseModel):
     sort_by: str = "Relevance"
 
 
-class RufusTrackRequest(BaseModel):
+class DealsTrackRequest(BaseModel):
     asin: str
     target_price: Optional[float] = None
 
 
-class RufusSaveDealRequest(BaseModel):
+class DealsSaveDealRequest(BaseModel):
     asin: str
     title: str
     price: float
@@ -1510,32 +1510,32 @@ class RufusSaveDealRequest(BaseModel):
     deal_type: str = "saved"
 
 
-@app.get("/api/v1/rufus")
-async def rufus_home(user_id: str = Depends(get_current_user)):
+@app.get("/api/v1/deals")
+async def deals_home(user_id: str = Depends(get_current_user)):
     """
-    Rufus home - Get overview and personalized recommendations
+    Deals home - Get overview and personalized recommendations
 
     Returns stats, tracked products with price drops, and deal suggestions
     """
     # Get user stats
-    stats = await db.get_rufus_stats(user_id)
+    stats = await db.get_deals_stats(user_id)
 
     # Get tracked products with price drops
-    tracked = await db.get_rufus_tracked_products(user_id)
+    tracked = await db.get_deals_tracked_products(user_id)
     price_drops = [t for t in tracked if t.get("price_drop_detected")]
 
     # Get saved deals
-    saved_deals = await db.get_rufus_saved_deals(user_id)
+    saved_deals = await db.get_deals_saved_deals(user_id)
 
     # Find deals matching user's budget (from financial data)
     balance = await ShadowBankingService.get_balance_summary(user_id)
     disposable = balance.get("visible_balance", 100)
 
     # Get personalized deal suggestions
-    deals = await RufusService.find_deals(max_price=disposable * 0.5)  # Max 50% of balance
+    deals = await DealsService.find_deals(max_price=disposable * 0.5)  # Max 50% of balance
 
     return {
-        "greeting": "Hey! Rufus here. Let me help you save some money!",
+        "greeting": "Hey! Ready to help you. Let me help you save some money!",
         "stats": stats,
         "price_drops": [
             {
@@ -1554,17 +1554,17 @@ async def rufus_home(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.post("/api/v1/rufus/search")
-async def rufus_search(
-    request: RufusSearchRequest,
+@app.post("/api/v1/deals/search")
+async def deals_search(
+    request: DealsSearchRequest,
     user_id: str = Depends(get_current_user)
 ):
     """
-    Search Amazon products through Rufus
+    Search Amazon products for deals
 
     Searches Amazon's catalog with optional filters
     """
-    products = await RufusService.search_products(
+    products = await DealsService.search_products(
         keywords=request.keywords,
         category=request.category,
         min_price=request.min_price,
@@ -1575,13 +1575,13 @@ async def rufus_search(
     )
 
     # Log search for personalization
-    # await db.save_rufus_search(user_id, request.keywords, len(products))
+    # await db.save_deals_search(user_id, request.keywords, len(products))
 
     return {
         "query": request.keywords,
         "results_count": len(products),
         "products": [p.to_dict() for p in products],
-        "rufus_tip": (
+        "deals_tip": (
             "Want to track any of these? I'll alert you when the price drops!"
             if products else
             "No products found. Try different keywords!"
@@ -1589,8 +1589,8 @@ async def rufus_search(
     }
 
 
-@app.get("/api/v1/rufus/deals")
-async def rufus_get_deals(
+@app.get("/api/v1/deals/deals")
+async def deals_get_deals(
     categories: Optional[str] = None,  # Comma-separated
     max_price: Optional[float] = None,
     user_id: str = Depends(get_current_user)
@@ -1602,7 +1602,7 @@ async def rufus_get_deals(
     """
     category_list = categories.split(",") if categories else None
 
-    deals = await RufusService.find_deals(
+    deals = await DealsService.find_deals(
         categories=category_list,
         max_price=max_price
     )
@@ -1623,8 +1623,8 @@ async def rufus_get_deals(
     }
 
 
-@app.get("/api/v1/rufus/product/{asin}")
-async def rufus_get_product(
+@app.get("/api/v1/deals/product/{asin}")
+async def deals_get_product(
     asin: str,
     user_id: str = Depends(get_current_user)
 ):
@@ -1633,18 +1633,18 @@ async def rufus_get_product(
 
     Returns current price, deal status, and price prediction
     """
-    product = await RufusService.get_product_by_asin(asin)
+    product = await DealsService.get_product_by_asin(asin)
     if not product:
         raise HTTPException(404, "Product not found")
 
     # Check if user is tracking this product
-    tracked = await db.get_rufus_tracked_product(user_id, asin)
+    tracked = await db.get_deals_tracked_product(user_id, asin)
 
     # Get price prediction
-    prediction = await RufusService.get_price_prediction(asin)
+    prediction = await DealsService.get_price_prediction(asin)
 
     # Get price history
-    history = await db.get_rufus_price_history(asin, days=30)
+    history = await db.get_deals_price_history(asin, days=30)
 
     return {
         "product": product.to_dict(),
@@ -1658,21 +1658,21 @@ async def rufus_get_product(
             }
             for h in history[:30]
         ],
-        "rufus_verdict": prediction.get("reason", "Check back for price analysis!")
+        "deals_verdict": prediction.get("reason", "Check back for price analysis!")
     }
 
 
-@app.post("/api/v1/rufus/track")
-async def rufus_track_product(
-    request: RufusTrackRequest,
+@app.post("/api/v1/deals/track")
+async def deals_track_product(
+    request: DealsTrackRequest,
     user_id: str = Depends(get_current_user)
 ):
     """
     Start tracking a product for price drops
 
-    Rufus will monitor the price and alert when it drops
+    We will monitor the price and alert when it drops
     """
-    result = await RufusPriceTracker.track_product(
+    result = await PriceTracker.track_product(
         user_id=user_id,
         asin=request.asin,
         target_price=request.target_price,
@@ -1691,18 +1691,18 @@ async def rufus_track_product(
             "target_price": result["target_price"],
             "potential_savings": result["savings_if_hit"]
         },
-        "rufus_says": f"I'm on it! I'll let you know when this drops below ${result['target_price']:.2f}"
+        "deals_says": f"I'm on it! I'll let you know when this drops below ${result['target_price']:.2f}"
     }
 
 
-@app.get("/api/v1/rufus/tracked")
-async def rufus_get_tracked(user_id: str = Depends(get_current_user)):
+@app.get("/api/v1/deals/tracked")
+async def deals_get_tracked(user_id: str = Depends(get_current_user)):
     """
     Get all tracked products
 
     Returns list of products being monitored for price drops
     """
-    tracked = await db.get_rufus_tracked_products(user_id)
+    tracked = await db.get_deals_tracked_products(user_id)
 
     total_potential_savings = 0
     for t in tracked:
@@ -1727,13 +1727,13 @@ async def rufus_get_tracked(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.delete("/api/v1/rufus/tracked/{asin}")
-async def rufus_untrack_product(
+@app.delete("/api/v1/deals/tracked/{asin}")
+async def deals_untrack_product(
     asin: str,
     user_id: str = Depends(get_current_user)
 ):
     """Stop tracking a product"""
-    success = await db.delete_rufus_tracked_product(user_id, asin)
+    success = await db.delete_deals_tracked_product(user_id, asin)
 
     if not success:
         raise HTTPException(404, "Product not being tracked")
@@ -1741,13 +1741,13 @@ async def rufus_untrack_product(
     return {"message": "Stopped tracking product", "asin": asin}
 
 
-@app.post("/api/v1/rufus/deals/save")
-async def rufus_save_deal(
-    request: RufusSaveDealRequest,
+@app.post("/api/v1/deals/deals/save")
+async def deals_save_deal(
+    request: DealsSaveDealRequest,
     user_id: str = Depends(get_current_user)
 ):
     """Save a deal for later"""
-    deal_id = await db.save_rufus_deal(user_id, {
+    deal_id = await db.save_deals_deal(user_id, {
         "asin": request.asin,
         "title": request.title,
         "price": request.price,
@@ -1762,14 +1762,14 @@ async def rufus_save_deal(
         "success": True,
         "message": "Deal saved!",
         "deal_id": deal_id,
-        "rufus_tip": "Don't wait too long - deals can expire!"
+        "deals_tip": "Don't wait too long - deals can expire!"
     }
 
 
-@app.get("/api/v1/rufus/deals/saved")
-async def rufus_get_saved_deals(user_id: str = Depends(get_current_user)):
+@app.get("/api/v1/deals/deals/saved")
+async def deals_get_saved_deals(user_id: str = Depends(get_current_user)):
     """Get all saved deals"""
-    deals = await db.get_rufus_saved_deals(user_id)
+    deals = await db.get_deals_saved_deals(user_id)
 
     total_savings = sum(
         float(d.get("original_price", d["price"]) - d["price"])
@@ -1797,13 +1797,13 @@ async def rufus_get_saved_deals(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.delete("/api/v1/rufus/deals/saved/{asin}")
-async def rufus_remove_saved_deal(
+@app.delete("/api/v1/deals/deals/saved/{asin}")
+async def deals_remove_saved_deal(
     asin: str,
     user_id: str = Depends(get_current_user)
 ):
     """Remove a saved deal"""
-    success = await db.delete_rufus_saved_deal(user_id, asin)
+    success = await db.delete_deals_saved_deal(user_id, asin)
 
     if not success:
         raise HTTPException(404, "Deal not found")
@@ -1811,8 +1811,8 @@ async def rufus_remove_saved_deal(
     return {"message": "Deal removed", "asin": asin}
 
 
-@app.get("/api/v1/rufus/alternatives/{asin}")
-async def rufus_find_alternatives(
+@app.get("/api/v1/deals/alternatives/{asin}")
+async def deals_find_alternatives(
     asin: str,
     max_price: Optional[float] = None,
     user_id: str = Depends(get_current_user)
@@ -1820,28 +1820,28 @@ async def rufus_find_alternatives(
     """
     Find cheaper alternatives to a product
 
-    Rufus searches for similar products at lower prices
+    Searching for similar products at lower prices
     """
-    alternatives = await RufusService.find_alternatives(asin, max_price)
+    alternatives = await DealsService.find_alternatives(asin, max_price)
 
     if not alternatives:
         return {
             "original_asin": asin,
             "alternatives_count": 0,
             "alternatives": [],
-            "rufus_says": "This already looks like a great deal! Couldn't find cheaper alternatives."
+            "deals_says": "This already looks like a great deal! Couldn't find cheaper alternatives."
         }
 
     return {
         "original_asin": asin,
         "alternatives_count": len(alternatives),
         "alternatives": [p.to_dict() for p in alternatives],
-        "rufus_says": f"Found {len(alternatives)} cheaper options! Check them out."
+        "deals_says": f"Found {len(alternatives)} cheaper options! Check them out."
     }
 
 
-@app.post("/api/v1/rufus/wishlist-deals")
-async def rufus_match_wishlist(user_id: str = Depends(get_current_user)):
+@app.post("/api/v1/deals/wishlist-deals")
+async def deals_match_wishlist(user_id: str = Depends(get_current_user)):
     """
     Find Amazon deals matching wishlist items
 
@@ -1854,10 +1854,10 @@ async def rufus_match_wishlist(user_id: str = Depends(get_current_user)):
         return {
             "matches_count": 0,
             "matches": {},
-            "rufus_says": "Add some items to your wishlist and I'll find deals for you!"
+            "deals_says": "Add some items to your wishlist and I'll find deals for you!"
         }
 
-    # Convert to format expected by RufusService
+    # Convert to format expected by DealsService
     wishlist_items = [
         {"name": item["name"], "price": float(item["price"])}
         for item in wishlist
@@ -1865,7 +1865,7 @@ async def rufus_match_wishlist(user_id: str = Depends(get_current_user)):
     ]
 
     # Find matches
-    matches = await RufusService.match_wishlist_deals(wishlist_items)
+    matches = await DealsService.match_wishlist_deals(wishlist_items)
 
     total_matches = sum(len(deals) for deals in matches.values())
 
@@ -1876,7 +1876,7 @@ async def rufus_match_wishlist(user_id: str = Depends(get_current_user)):
             name: [d.to_dict() for d in deals]
             for name, deals in matches.items()
         },
-        "rufus_says": (
+        "deals_says": (
             f"Found {total_matches} deals matching your wishlist!"
             if total_matches > 0 else
             "No deals found right now, but I'll keep looking!"
@@ -1884,17 +1884,17 @@ async def rufus_match_wishlist(user_id: str = Depends(get_current_user)):
     }
 
 
-@app.get("/api/v1/rufus/price-prediction/{asin}")
-async def rufus_price_prediction(
+@app.get("/api/v1/deals/price-prediction/{asin}")
+async def deals_price_prediction(
     asin: str,
     user_id: str = Depends(get_current_user)
 ):
     """
     Get price prediction for a product
 
-    Rufus analyzes price history and predicts if now is a good time to buy
+    Analyzing price history and predicts if now is a good time to buy
     """
-    prediction = await RufusService.get_price_prediction(asin)
+    prediction = await DealsService.get_price_prediction(asin)
 
     if "error" in prediction:
         raise HTTPException(404, prediction["error"])
@@ -1902,7 +1902,7 @@ async def rufus_price_prediction(
     return {
         "asin": asin,
         "prediction": prediction,
-        "rufus_verdict": (
+        "deals_verdict": (
             "Buy now! This is a great price."
             if prediction.get("recommendation") == "buy" else
             f"Consider waiting. {prediction.get('reason', 'Price may drop.')}"
@@ -1910,41 +1910,41 @@ async def rufus_price_prediction(
     }
 
 
-@app.post("/api/v1/rufus/chat")
-async def rufus_chat_search(
+@app.post("/api/v1/deals/chat")
+async def deals_chat_search(
     message: str,
     user_id: str = Depends(get_current_user)
 ):
     """
     Natural language shopping search
 
-    Ask Rufus to find deals in plain English
+    Search to find deals in plain English
     Example: "find me a good deal on wireless headphones under $100"
     """
     # Get user's budget context
     balance = await ShadowBankingService.get_balance_summary(user_id)
     budget = balance.get("visible_balance", 500) * 0.3  # Max 30% of balance by default
 
-    result = await RufusService.smart_search_for_chat(message, budget)
+    result = await DealsService.smart_search_for_chat(message, budget)
 
     return {
         "query": message,
         "response_type": result["type"],
         "message": result["message"],
         "products": result.get("products", []),
-        "rufus_tip": result.get("rufus_tip", ""),
+        "deals_tip": result.get("deals_tip", ""),
         "budget_aware": f"Based on your balance, keeping suggestions under ${budget:.2f}"
     }
 
 
-@app.get("/api/v1/rufus/stats")
-async def rufus_get_stats(user_id: str = Depends(get_current_user)):
-    """Get Rufus usage statistics"""
-    stats = await db.get_rufus_stats(user_id)
+@app.get("/api/v1/deals/stats")
+async def deals_get_stats(user_id: str = Depends(get_current_user)):
+    """Get Deals usage statistics"""
+    stats = await db.get_deals_stats(user_id)
 
     return {
         "stats": stats,
-        "rufus_message": (
+        "deals_message": (
             f"You're tracking {stats['products_tracked']} products. "
             f"I've found ${stats['potential_savings']:.2f} in potential savings!"
             if stats['products_tracked'] > 0 else

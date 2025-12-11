@@ -24,7 +24,7 @@ struct MainTabView: View {
                 case 1:
                     ChatView()
                 case 2:
-                    RufusView()
+                    DealsView()
                 case 3:
                     TransactionsListView()
                 case 4:
@@ -48,7 +48,7 @@ struct CustomTabBar: View {
     let tabs: [(icon: String, label: String)] = [
         ("house.fill", "Home"),
         ("message.fill", "Chat"),
-        ("dog.fill", "Rufus"),
+        ("tag.fill", "Deals"),
         ("list.bullet.rectangle", "Activity"),
         ("gearshape.fill", "Settings")
     ]
@@ -171,5 +171,5 @@ private struct AccessibleTabButtonStyle: ButtonStyle {
         .environmentObject(WishlistManager())
         .environmentObject(GoalsManager())
         .environmentObject(SubscriptionManager())
-        .environmentObject(RufusManager())
+        .environmentObject(DealsManager())
 }

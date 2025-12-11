@@ -327,7 +327,7 @@ struct PrimaryGoalCard: View {
 
 // MARK: - Goal Card
 
-struct GoalCard: View {
+struct GoalCardView: View {
     let goal: FurgSavingsGoal
     let progress: GoalProgress?
     let onTap: () -> Void

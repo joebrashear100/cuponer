@@ -28,15 +28,19 @@ struct FurgApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if authManager.isAuthenticated {
-                    if authManager.hasCompletedOnboarding {
-                        MainTabView()
-                    } else {
-                        OnboardingView()
-                    }
-                } else {
-                    WelcomeView()
-                }
+                // V2 Design Preview - Remove this to go back to normal auth flow
+                FurgAppV2()
+
+                // Original auth flow (uncomment to restore):
+                // if authManager.isAuthenticated {
+                //     if authManager.hasCompletedOnboarding {
+                //         MainTabView()
+                //     } else {
+                //         OnboardingView()
+                //     }
+                // } else {
+                //     WelcomeView()
+                // }
             }
             .environmentObject(authManager)
             .environmentObject(apiClient)

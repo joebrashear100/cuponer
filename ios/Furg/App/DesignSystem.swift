@@ -303,7 +303,7 @@ struct AccentBadge: View {
     }
 }
 
-struct StatCard: View {
+struct FurgStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -343,7 +343,7 @@ struct StatCard: View {
     }
 }
 
-struct PillTabBar: View {
+struct FurgPillTabBar: View {
     @Binding var selectedIndex: Int
     let tabs: [String]
 

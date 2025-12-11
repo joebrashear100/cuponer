@@ -606,7 +606,7 @@ struct TransactionsListView: View {
 
 // MARK: - Insight Card
 
-private struct InsightCard: View {
+private struct TransactionInsightCard: View {
     let insight: TransactionAIInsight
     let onAction: (TransactionAIInsight.ActionType) -> Void
 
@@ -1979,7 +1979,7 @@ private struct TransactionDetailSheet: View {
     }
 }
 
-private struct DetailRow: View {
+private struct TransactionDetailRow: View {
     let label: String
     let value: String
     var color: Color = .white

@@ -251,7 +251,7 @@ struct CheckGoalProgressIntent: AppIntent {
     }
 }
 
-struct GoalProgress: Identifiable {
+struct ShortcutGoalProgress: Identifiable {
     let id = UUID()
     let name: String
     let current: Double
@@ -263,7 +263,7 @@ struct GoalProgress: Identifiable {
 }
 
 struct GoalProgressSnippetView: View {
-    let goals: [GoalProgress]
+    let goals: [ShortcutGoalProgress]
 
     var body: some View {
         VStack(spacing: 12) {

@@ -161,7 +161,7 @@ struct WelcomeView: View {
     }
 }
 
-struct FeatureRow: View {
+struct WelcomeFeatureRow: View {
     let icon: String
     let title: String
     let subtitle: String

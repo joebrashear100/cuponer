@@ -715,9 +715,9 @@ struct ShoppingTabView: View {
         VStack(spacing: 16) {
             // Shopping Stats
             HStack(spacing: 16) {
-                StatCard(value: "\(shoppingIntelligence.listItemCount)", label: "List Items", color: .blue)
-                StatCard(value: "\(shoppingIntelligence.activeDealsCount)", label: "Active Deals", color: .green)
-                StatCard(value: "$\(Int(loyaltyPrograms.totalPointsValue))", label: "Points Value", color: .orange)
+                LifeStatCard(value: "\(shoppingIntelligence.listItemCount)", label: "List Items", color: .blue)
+                LifeStatCard(value: "\(shoppingIntelligence.activeDealsCount)", label: "Active Deals", color: .green)
+                LifeStatCard(value: "$\(Int(loyaltyPrograms.totalPointsValue))", label: "Points Value", color: .orange)
             }
 
             // Shopping List Preview
@@ -965,7 +965,7 @@ struct SimulateTabView: View {
     }
 }
 
-struct StatCard: View {
+struct LifeStatCard: View {
     let value: String
     let label: String
     let color: Color

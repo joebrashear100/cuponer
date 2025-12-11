@@ -13,7 +13,7 @@ import Combine
 struct BrokerageAccount: Identifiable, Codable {
     let id: String
     let brokerage: BrokerageType
-    let accountType: AccountType
+    let accountType: InvestmentAccountType
     let accountName: String
     let accountNumber: String // Last 4 digits
     var holdings: [Holding]
@@ -65,7 +65,7 @@ enum BrokerageType: String, Codable, CaseIterable {
     }
 }
 
-enum AccountType: String, Codable, CaseIterable {
+enum InvestmentAccountType: String, Codable, CaseIterable {
     case individual = "Individual Brokerage"
     case joint = "Joint Brokerage"
     case traditionalIRA = "Traditional IRA"
@@ -136,20 +136,20 @@ enum DividendFrequency: String, Codable {
     case irregular = "Irregular"
 }
 
-struct Transaction: Identifiable, Codable {
+struct InvestmentTransaction: Identifiable, Codable {
     let id: String
     let accountId: String
     let date: Date
-    let type: TransactionType
+    let type: InvestmentTransactionType
     let symbol: String?
     let shares: Double?
     let price: Double?
     let amount: Double
     let description: String
-    let status: TransactionStatus
+    let status: InvestmentTransactionStatus
 }
 
-enum TransactionType: String, Codable {
+enum InvestmentTransactionType: String, Codable {
     case buy = "Buy"
     case sell = "Sell"
     case dividend = "Dividend"
@@ -164,7 +164,7 @@ enum TransactionType: String, Codable {
     case reinvestment = "Dividend Reinvestment"
 }
 
-enum TransactionStatus: String, Codable {
+enum InvestmentTransactionStatus: String, Codable {
     case pending = "Pending"
     case completed = "Completed"
     case cancelled = "Cancelled"

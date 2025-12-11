@@ -490,7 +490,7 @@ private struct CategorySpendRow: View {
     }
 }
 
-private struct InsightRow: View {
+private struct SpendingInsightRow: View {
     let icon: String
     let color: Color
     let text: String

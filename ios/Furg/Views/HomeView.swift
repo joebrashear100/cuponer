@@ -311,7 +311,7 @@ struct QuickActionsRow: View {
     }
 }
 
-struct QuickActionButton: View {
+struct HomeQuickActionButton: View {
     let icon: String
     let label: String
     let color: Color

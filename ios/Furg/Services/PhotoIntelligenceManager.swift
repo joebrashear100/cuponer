@@ -88,7 +88,7 @@ struct ProductAlternative: Identifiable, Codable {
     let reviewCount: Int?
 }
 
-struct WishlistItem: Identifiable, Codable {
+struct PhotoWishlistItem: Identifiable, Codable {
     let id: String
     var name: String
     var brand: String?
@@ -97,20 +97,20 @@ struct WishlistItem: Identifiable, Codable {
     var imageData: Data?
     var category: String
     var addedDate: Date
-    var priceHistory: [PriceHistoryEntry]
+    var priceHistory: [PhotoPriceHistoryEntry]
     var priceAlertEnabled: Bool
     var priceAlertThreshold: Double?
-    var retailers: [RetailerListing]
+    var retailers: [PhotoRetailerListing]
     var notes: String?
-    var priority: Priority
+    var priority: PhotoItemPriority
 
-    struct PriceHistoryEntry: Codable {
+    struct PhotoPriceHistoryEntry: Codable {
         let date: Date
         let price: Double
         let retailer: String
     }
 
-    struct RetailerListing: Codable {
+    struct PhotoRetailerListing: Codable {
         let retailer: String
         let price: Double
         let url: String?
@@ -118,7 +118,7 @@ struct WishlistItem: Identifiable, Codable {
         let lastChecked: Date
     }
 
-    enum Priority: String, Codable, CaseIterable {
+    enum PhotoItemPriority: String, Codable, CaseIterable {
         case low, medium, high, urgent
 
         var sortOrder: Int {
@@ -164,7 +164,7 @@ class PhotoIntelligenceManager: ObservableObject {
 
     // MARK: - Published Properties
     @Published var recentAnalyses: [ProductAnalysis] = []
-    @Published var wishlist: [WishlistItem] = []
+    @Published var wishlist: [PhotoWishlistItem] = []
     @Published var productScans: [ProductScan] = []
 
     @Published var isAnalyzing = false
@@ -173,7 +173,7 @@ class PhotoIntelligenceManager: ObservableObject {
 
     // Price alerts
     @Published var activePriceAlerts: Int = 0
-    @Published var recentPriceDrops: [WishlistItem] = []
+    @Published var recentPriceDrops: [PhotoWishlistItem] = []
 
     // MARK: - Private Properties
     private let userDefaults = UserDefaults.standard
@@ -604,7 +604,7 @@ class PhotoIntelligenceManager: ObservableObject {
     func addToWishlist(from analysis: ProductAnalysis) {
         guard let product = analysis.detectedProducts.first else { return }
 
-        let item = WishlistItem(
+        let item = PhotoWishlistItem(
             id: UUID().uuidString,
             name: product.name,
             brand: product.brand,
@@ -614,7 +614,7 @@ class PhotoIntelligenceManager: ObservableObject {
             category: product.category,
             addedDate: Date(),
             priceHistory: analysis.priceInfo?.detectedPrice.map {
-                [WishlistItem.PriceHistoryEntry(
+                [PhotoWishlistItem.PhotoPriceHistoryEntry(
                     date: Date(),
                     price: $0,
                     retailer: analysis.priceInfo?.retailer ?? "Unknown"
@@ -623,7 +623,7 @@ class PhotoIntelligenceManager: ObservableObject {
             priceAlertEnabled: true,
             priceAlertThreshold: analysis.priceInfo?.detectedPrice.map { $0 * 0.85 },
             retailers: analysis.alternatives.map {
-                WishlistItem.RetailerListing(
+                PhotoWishlistItem.PhotoRetailerListing(
                     retailer: $0.retailer,
                     price: $0.price,
                     url: $0.url,
@@ -641,7 +641,7 @@ class PhotoIntelligenceManager: ObservableObject {
     }
 
     func addToWishlist(name: String, targetPrice: Double?, category: String, imageData: Data?) {
-        let item = WishlistItem(
+        let item = PhotoWishlistItem(
             id: UUID().uuidString,
             name: name,
             brand: nil,
@@ -663,7 +663,7 @@ class PhotoIntelligenceManager: ObservableObject {
         updatePriceAlertStats()
     }
 
-    func updateWishlistItem(_ item: WishlistItem) {
+    func updateWishlistItem(_ item: PhotoWishlistItem) {
         if let index = wishlist.firstIndex(where: { $0.id == item.id }) {
             wishlist[index] = item
             saveWishlist()
@@ -688,7 +688,7 @@ class PhotoIntelligenceManager: ObservableObject {
                 let priceChange = Double.random(in: -0.1...0.05)
                 let newPrice = currentPrice * (1 + priceChange)
 
-                item.priceHistory.append(WishlistItem.PriceHistoryEntry(
+                item.priceHistory.append(PhotoWishlistItem.PhotoPriceHistoryEntry(
                     date: Date(),
                     price: newPrice,
                     retailer: item.retailers.first?.retailer ?? "Unknown"
@@ -698,7 +698,7 @@ class PhotoIntelligenceManager: ObservableObject {
                 // Update retailers
                 for j in 0..<item.retailers.count {
                     var retailer = item.retailers[j]
-                    retailer = WishlistItem.RetailerListing(
+                    retailer = PhotoWishlistItem.PhotoRetailerListing(
                         retailer: retailer.retailer,
                         price: retailer.price * (1 + Double.random(in: -0.1...0.05)),
                         url: retailer.url,
@@ -747,7 +747,7 @@ class PhotoIntelligenceManager: ObservableObject {
         }
 
         if let data = userDefaults.data(forKey: wishlistKey),
-           let items = try? JSONDecoder().decode([WishlistItem].self, from: data) {
+           let items = try? JSONDecoder().decode([PhotoWishlistItem].self, from: data) {
             wishlist = items
         }
 

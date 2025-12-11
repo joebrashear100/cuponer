@@ -16,7 +16,7 @@ class FinancialHealthManager: ObservableObject {
     @Published var healthGrade: HealthGrade = .c
     @Published var scoreBreakdown: [ScoreComponent] = []
     @Published var recommendations: [HealthRecommendation] = []
-    @Published var scoreHistory: [ScoreHistoryPoint] = []
+    @Published var scoreHistory: [HealthScoreHistoryPoint] = []
 
     private init() {
         calculateHealthScore()
@@ -396,7 +396,7 @@ enum RecommendationPriority: Int {
     }
 }
 
-struct ScoreHistoryPoint: Identifiable {
+struct HealthScoreHistoryPoint: Identifiable {
     let id = UUID()
     let date: Date
     let score: Int

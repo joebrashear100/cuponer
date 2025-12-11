@@ -132,7 +132,7 @@ struct ProjectionComparison: Codable {
     }
 }
 
-struct UserFinancialProfile: Codable {
+struct SimulatorUserProfile: Codable {
     var monthlyIncome: Double
     var monthlyExpenses: Double
     var currentSavings: Double
@@ -146,7 +146,7 @@ struct UserFinancialProfile: Codable {
     var savingsRate: Double
     var investmentReturnRate: Double
 
-    static var `default`: UserFinancialProfile {
+    static var `default`: SimulatorUserProfile {
         UserFinancialProfile(
             monthlyIncome: 6000,
             monthlyExpenses: 4000,
@@ -180,7 +180,7 @@ class LifeSimulator: ObservableObject {
     static let shared = LifeSimulator()
 
     // MARK: - Published Properties
-    @Published var userProfile: UserFinancialProfile
+    @Published var userProfile: SimulatorUserProfile
     @Published var savedScenarios: [LifeScenario] = []
     @Published var currentScenario: LifeScenario?
 
@@ -224,7 +224,7 @@ class LifeSimulator: ObservableObject {
 
     // MARK: - Profile Management
 
-    func updateProfile(_ profile: UserFinancialProfile) {
+    func updateProfile(_ profile: SimulatorUserProfile) {
         userProfile = profile
         saveProfile()
     }

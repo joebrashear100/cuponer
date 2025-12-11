@@ -11,7 +11,7 @@ import Combine
 
 // MARK: - Merchant Models
 
-struct MerchantProfile: Identifiable, Codable {
+struct IntelMerchantProfile: Identifiable, Codable {
     let id: String
     let name: String
     let category: MerchantCategory
@@ -101,7 +101,7 @@ struct ExchangePolicy: Codable {
 struct PriceIntelligence: Codable {
     let priceHistory: [PriceHistoryPoint]
     let bestTimeToBuy: BestTimeToBuy
-    let seasonalPatterns: [SeasonalPattern]
+    let seasonalPatterns: [IntelSeasonalPattern]
     let saleFrequency: SaleFrequency
     let couponAvailability: CouponAvailability
     let priceMatchSavings: Double? // Historical savings from price matching
@@ -137,7 +137,7 @@ struct MonthlyTrend: Codable {
     let majorSales: [String]
 }
 
-struct SeasonalPattern: Codable {
+struct IntelSeasonalPattern: Codable {
     let season: String
     let categories: [String]
     let averageDiscount: Double
@@ -187,7 +187,7 @@ struct LoyaltyTier: Codable {
 struct PaymentOption: Codable {
     let type: PaymentType
     let bonusRewards: Double? // Extra percentage
-    let financing: FinancingOption?
+    let financing: MerchantFinancingOption?
 }
 
 enum PaymentType: String, Codable {
@@ -205,7 +205,7 @@ enum PaymentType: String, Codable {
     case giftCard = "Gift Card"
 }
 
-struct FinancingOption: Codable {
+struct MerchantFinancingOption: Codable {
     let provider: String
     let minPurchase: Double
     let interestFree: Bool
@@ -319,9 +319,9 @@ class MerchantIntelligenceManager: ObservableObject {
     @Published var merchantProfiles: [String: MerchantProfile] = [:]
     @Published var merchantRelationships: [String: MerchantRelationship] = [:]
     @Published var activeInsights: [MerchantInsight] = []
-    @Published var recentMerchants: [MerchantProfile] = []
-    @Published var favoriteMerchants: [MerchantProfile] = []
-    @Published var nearbyMerchants: [MerchantProfile] = []
+    @Published var recentMerchants: [IntelMerchantProfile] = []
+    @Published var favoriteMerchants: [IntelMerchantProfile] = []
+    @Published var nearbyMerchants: [IntelMerchantProfile] = []
 
     private var cancellables = Set<AnyCancellable>()
     private let locationManager = CLLocationManager()
@@ -343,7 +343,7 @@ class MerchantIntelligenceManager: ObservableObject {
 
     private func loadUserPreferences() {
         if let data = UserDefaults.standard.data(forKey: "favoriteMerchants"),
-           let favorites = try? JSONDecoder().decode([MerchantProfile].self, from: data) {
+           let favorites = try? JSONDecoder().decode([IntelMerchantProfile].self, from: data) {
             favoriteMerchants = favorites
         }
     }
@@ -369,7 +369,7 @@ class MerchantIntelligenceManager: ObservableObject {
         generateMerchantRelationships()
     }
 
-    private func generateMerchantDatabase() -> [MerchantProfile] {
+    private func generateMerchantDatabase() -> [IntelMerchantProfile] {
         return [
             // WALMART
             MerchantProfile(
@@ -455,7 +455,7 @@ class MerchantIntelligenceManager: ObservableObject {
                     PaymentOption(type: .credit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .debit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil),
-                    PaymentOption(type: .affirm, bonusRewards: nil, financing: FinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
+                    PaymentOption(type: .affirm, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
                 ],
                 operatingHours: OperatingHours(
                     regular: [
@@ -749,8 +749,8 @@ class MerchantIntelligenceManager: ObservableObject {
                     gasDiscount: nil
                 ),
                 paymentOptions: [
-                    PaymentOption(type: .credit, bonusRewards: nil, financing: FinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 12)),
-                    PaymentOption(type: .storeCard, bonusRewards: 5, financing: FinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 18)),
+                    PaymentOption(type: .credit, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 12)),
+                    PaymentOption(type: .storeCard, bonusRewards: 5, financing: MerchantFinancingOption(provider: "Best Buy Card", minPurchase: 299, interestFree: true, months: 18)),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil)
                 ],
                 operatingHours: OperatingHours(
@@ -832,7 +832,7 @@ class MerchantIntelligenceManager: ObservableObject {
                 paymentOptions: [
                     PaymentOption(type: .credit, bonusRewards: nil, financing: nil),
                     PaymentOption(type: .storeCard, bonusRewards: 5, financing: nil),
-                    PaymentOption(type: .affirm, bonusRewards: nil, financing: FinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
+                    PaymentOption(type: .affirm, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Affirm", minPurchase: 50, interestFree: false, months: 12))
                 ],
                 operatingHours: nil,
                 crowdData: nil,
@@ -1009,8 +1009,8 @@ class MerchantIntelligenceManager: ObservableObject {
                     gasDiscount: nil
                 ),
                 paymentOptions: [
-                    PaymentOption(type: .credit, bonusRewards: nil, financing: FinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 6)),
-                    PaymentOption(type: .storeCard, bonusRewards: 0, financing: FinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 24)),
+                    PaymentOption(type: .credit, bonusRewards: nil, financing: MerchantFinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 6)),
+                    PaymentOption(type: .storeCard, bonusRewards: 0, financing: MerchantFinancingOption(provider: "Home Depot Card", minPurchase: 299, interestFree: true, months: 24)),
                     PaymentOption(type: .applePay, bonusRewards: nil, financing: nil)
                 ],
                 operatingHours: OperatingHours(
@@ -1146,7 +1146,7 @@ class MerchantIntelligenceManager: ObservableObject {
         return merchantProfiles.values.first { $0.name.lowercased() == name.lowercased() }
     }
 
-    func searchMerchants(query: String) -> [MerchantProfile] {
+    func searchMerchants(query: String) -> [IntelMerchantProfile] {
         let lowercased = query.lowercased()
         return merchantProfiles.values.filter {
             $0.name.lowercased().contains(lowercased) ||
@@ -1154,7 +1154,7 @@ class MerchantIntelligenceManager: ObservableObject {
         }
     }
 
-    func getMerchants(category: MerchantCategory) -> [MerchantProfile] {
+    func getMerchants(category: MerchantCategory) -> [IntelMerchantProfile] {
         return merchantProfiles.values.filter { $0.category == category }
     }
 
@@ -1397,7 +1397,7 @@ class MerchantIntelligenceManager: ObservableObject {
         return nil
     }
 
-    func getFinancingOptions(merchantId: String, purchaseAmount: Double) -> [FinancingOption] {
+    func getFinancingOptions(merchantId: String, purchaseAmount: Double) -> [MerchantFinancingOption] {
         guard let merchant = merchantProfiles[merchantId] else { return [] }
 
         return merchant.paymentOptions.compactMap { option in

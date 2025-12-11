@@ -642,7 +642,7 @@ private struct OfferDetailSheet: View {
     }
 }
 
-private struct DetailRow: View {
+private struct OfferDetailRow: View {
     let label: String
     let value: String
 

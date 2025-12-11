@@ -56,7 +56,7 @@ struct CardReward: Codable {
     }
 }
 
-struct CardRecommendation: Identifiable {
+struct OptimizerCardRecommendation: Identifiable {
     let id = UUID()
     let card: UserCard
     let category: String

@@ -727,7 +727,7 @@ struct PriorityChip: View {
 
 // MARK: - Category Chip
 
-struct CategoryChip: View {
+struct WishlistCategoryChip: View {
     let category: ItemCategory
     let isSelected: Bool
     let action: () -> Void

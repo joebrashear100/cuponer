@@ -207,7 +207,7 @@ struct ChatView: View {
 
 // MARK: - Empty State View
 
-private struct EmptyStateView: View {
+private struct ChatEmptyStateView: View {
     var onSuggestionTap: (String) -> Void
 
     let suggestions = [

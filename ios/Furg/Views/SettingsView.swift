@@ -607,134 +607,24 @@ struct SettingsView: View {
             .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showDebtPayoff) {
-            NavigationStack {
-                ZStack {
-                    Color.furgCharcoal.ignoresSafeArea()
-                    VStack {
-                        HStack {
-                            Text("Debt Payoff")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                            Spacer()
-                            Button("Done") {
-                                showDebtPayoff = false
-                            }
-                            .foregroundColor(.furgMint)
-                        }
-                        .padding()
-
-                        Spacer()
-                        Text("Debt Payoff View - Coming Soon")
-                            .foregroundColor(.white.opacity(0.6))
-                        Spacer()
-                    }
-                }
-            }
-            .presentationBackground(Color.furgCharcoal)
+            DebtPayoffView()
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showCardRecommendations) {
-            NavigationStack {
-                ZStack {
-                    Color.furgCharcoal.ignoresSafeArea()
-                    VStack {
-                        HStack {
-                            Text("Card Recommendations")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                            Spacer()
-                            Button("Done") {
-                                showCardRecommendations = false
-                            }
-                            .foregroundColor(.furgMint)
-                        }
-                        .padding()
-
-                        Spacer()
-                        Text("Card Recommendations View - Coming Soon")
-                            .foregroundColor(.white.opacity(0.6))
-                        Spacer()
-                    }
-                }
-            }
-            .presentationBackground(Color.furgCharcoal)
+            CardRecommendationsView()
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showInvestmentPortfolio) {
-            NavigationStack {
-                ZStack {
-                    Color.furgCharcoal.ignoresSafeArea()
-                    VStack {
-                        HStack {
-                            Text("Investment Portfolio")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                            Spacer()
-                            Button("Done") {
-                                showInvestmentPortfolio = false
-                            }
-                            .foregroundColor(.furgMint)
-                        }
-                        .padding()
-
-                        Spacer()
-                        Text("Investment Portfolio View - Coming Soon")
-                            .foregroundColor(.white.opacity(0.6))
-                        Spacer()
-                    }
-                }
-            }
-            .presentationBackground(Color.furgCharcoal)
+            InvestmentPortfolioView()
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showMerchantIntelligence) {
-            NavigationStack {
-                ZStack {
-                    Color.furgCharcoal.ignoresSafeArea()
-                    VStack {
-                        HStack {
-                            Text("Merchant Intelligence")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                            Spacer()
-                            Button("Done") {
-                                showMerchantIntelligence = false
-                            }
-                            .foregroundColor(.furgMint)
-                        }
-                        .padding()
-
-                        Spacer()
-                        Text("Merchant Intelligence View - Coming Soon")
-                            .foregroundColor(.white.opacity(0.6))
-                        Spacer()
-                    }
-                }
-            }
-            .presentationBackground(Color.furgCharcoal)
+            MerchantIntelligenceView()
+                .presentationBackground(Color.furgCharcoal)
         }
         .sheet(isPresented: $showLifeIntegration) {
-            NavigationStack {
-                ZStack {
-                    Color.furgCharcoal.ignoresSafeArea()
-                    VStack {
-                        HStack {
-                            Text("Life Integration")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                            Spacer()
-                            Button("Done") {
-                                showLifeIntegration = false
-                            }
-                            .foregroundColor(.furgMint)
-                        }
-                        .padding()
-
-                        Spacer()
-                        Text("Life Integration View - Coming Soon")
-                            .foregroundColor(.white.opacity(0.6))
-                        Spacer()
-                    }
-                }
-            }
-            .presentationBackground(Color.furgCharcoal)
+            LifeIntegrationView()
+                .presentationBackground(Color.furgCharcoal)
         }
     }
 

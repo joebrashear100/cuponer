@@ -21,11 +21,17 @@ from auth import (
 )
 from database import db
 from rate_limiter import rate_limit, get_remaining_budget
-from services.chat import ChatService
+from services.chat import ChatService  # Legacy single-model service
+from services.chat_v2 import ChatServiceV2  # Multi-model service
 from services.plaid_service import PlaidService
 from services.bill_detection import BillDetector
 from services.shadow_banking import ShadowBankingService
+from services.gemini_service import gemini_service
+from services.grok_service import grok_service
 from ml.categorizer import get_categorizer
+
+# Feature flag for multi-model chat
+USE_MULTI_MODEL_CHAT = os.getenv("USE_MULTI_MODEL_CHAT", "true").lower() == "true"
 
 
 # Lifespan context manager for startup/shutdown
@@ -35,9 +41,24 @@ async def lifespan(app: FastAPI):
     print("🚀 Starting FURG backend...")
     await db.connect()
     print("✅ Database connected")
+
+    # Initialize multi-model chat if enabled
+    if USE_MULTI_MODEL_CHAT:
+        print("🤖 Initializing multi-model chat (Grok + Claude + Gemini)...")
+        await ChatServiceV2.initialize()
+        print("✅ Multi-model router ready")
+        print("   - Grok 4 Fast: Roasting & casual chat")
+        print("   - Claude Sonnet: Financial advice")
+        print("   - Gemini Flash: Routing & categorization")
+    else:
+        print("📝 Using single-model chat (Claude only)")
+
     yield
+
     # Shutdown
     print("👋 Shutting down FURG backend...")
+    await gemini_service.close()
+    await grok_service.close()
     await db.disconnect()
 
 
@@ -80,6 +101,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     tokens_used: Optional[Dict[str, int]] = None
+    model: Optional[str] = None  # Which model handled the request
+    intent: Optional[str] = None  # Classified intent (roast, advice, etc.)
+    cost: Optional[float] = None  # Cost in dollars
+    latency_ms: Optional[int] = None  # Response latency
 
 
 class PlaidLinkTokenResponse(BaseModel):
@@ -221,15 +246,11 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
     """
     Send a message to FURG and get a response
 
-    Handles conversation with full context
+    Multi-model routing:
+    - Roasting/casual -> Grok 4 Fast (cheap, fast)
+    - Financial advice -> Claude Sonnet (nuanced)
+    - Categorization -> Gemini Flash (fast)
     """
-    # Check for special commands first
-    command_response = await ChatService.handle_command(user_id, request.message)
-    if command_response:
-        await db.save_message(user_id, "user", request.message)
-        await db.save_message(user_id, "assistant", command_response)
-        return ChatResponse(message=command_response)
-
     # Get user profile
     profile = await db.get_user_profile(user_id)
 
@@ -238,13 +259,40 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
     if request.include_context:
         context = await _build_chat_context(user_id)
 
-    # Get response from ChatService
-    response = await ChatService.chat(user_id, request.message, profile, context)
+    # Use multi-model or legacy single-model chat
+    if USE_MULTI_MODEL_CHAT:
+        # Multi-model chat with intelligent routing
+        response = await ChatServiceV2.chat(
+            user_id=user_id,
+            message=request.message,
+            profile=profile,
+            context=context,
+            life_context=None  # TODO: Wire up iOS life context
+        )
 
-    return ChatResponse(
-        message=response["message"],
-        tokens_used=response.get("tokens_used")
-    )
+        return ChatResponse(
+            message=response["message"],
+            tokens_used=response.get("tokens_used"),
+            model=response.get("model"),
+            intent=response.get("intent"),
+            cost=response.get("cost"),
+            latency_ms=response.get("latency_ms")
+        )
+    else:
+        # Legacy single-model chat (Claude only)
+        command_response = await ChatService.handle_command(user_id, request.message)
+        if command_response:
+            await db.save_message(user_id, "user", request.message)
+            await db.save_message(user_id, "assistant", command_response)
+            return ChatResponse(message=command_response)
+
+        response = await ChatService.chat(user_id, request.message, profile, context)
+
+        return ChatResponse(
+            message=response["message"],
+            tokens_used=response.get("tokens_used"),
+            model="claude-sonnet-4-20250514"
+        )
 
 
 @app.get("/api/v1/chat/history")
@@ -272,6 +320,44 @@ async def clear_chat_history(user_id: str = Depends(get_current_user)):
     """Clear conversation history"""
     await db.clear_conversation_history(user_id)
     return {"message": "Conversation history cleared"}
+
+
+@app.get("/api/v1/chat/routing-stats")
+async def get_routing_stats(user_id: str = Depends(get_current_user)):
+    """
+    Get model routing statistics
+
+    Shows which models are handling requests and associated costs
+    """
+    if not USE_MULTI_MODEL_CHAT:
+        return {
+            "enabled": False,
+            "message": "Multi-model routing is disabled"
+        }
+
+    stats = await ChatServiceV2.get_routing_stats(user_id)
+
+    return {
+        "enabled": True,
+        "user_stats": stats,
+        "models": {
+            "grok-4-fast": {
+                "purpose": "Roasting & casual chat",
+                "cost_per_1m_input": 0.20,
+                "cost_per_1m_output": 0.50
+            },
+            "claude-sonnet-4-20250514": {
+                "purpose": "Financial advice & complex questions",
+                "cost_per_1m_input": 3.00,
+                "cost_per_1m_output": 15.00
+            },
+            "gemini-2.0-flash": {
+                "purpose": "Routing & categorization",
+                "cost_per_1m_input": 0.075,
+                "cost_per_1m_output": 0.30
+            }
+        }
+    }
 
 
 # ==================== PLAID ENDPOINTS ====================

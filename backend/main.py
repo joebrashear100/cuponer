@@ -28,6 +28,7 @@ from services.bill_detection import BillDetector
 from services.shadow_banking import ShadowBankingService
 from services.gemini_service import gemini_service
 from services.grok_service import grok_service
+from services.openai_shopping import ShoppingAssistant, quick_shop
 from ml.categorizer import get_categorizer
 
 # Feature flag for multi-model chat
@@ -1473,6 +1474,315 @@ async def mark_wishlist_purchased(
         raise HTTPException(400, "Failed to update item")
 
     return {"message": "Item marked as purchased"}
+
+
+# ==================== SHOPPING ASSISTANT ENDPOINTS ====================
+# ChatGPT-style shopping mode with AI-powered product search, deals, and recommendations
+
+class ShoppingChatRequest(BaseModel):
+    message: str
+    include_context: bool = True
+
+
+class ShoppingChatResponse(BaseModel):
+    message: str
+    actions: list = []
+    function_results: list = []
+    tokens_used: Optional[Dict[str, int]] = None
+
+
+class ProductSearchRequest(BaseModel):
+    query: str
+    category: Optional[str] = None
+    max_price: Optional[float] = None
+    min_price: Optional[float] = None
+    sort_by: str = "relevance"
+    limit: int = 10
+
+
+class DealSearchRequest(BaseModel):
+    query: str
+    retailer: Optional[str] = None
+    discount_type: Optional[str] = None
+    min_discount: Optional[float] = None
+
+
+class PriceCompareRequest(BaseModel):
+    product_name: str
+    include_used: bool = False
+
+
+class ShoppingListItemRequest(BaseModel):
+    item_name: str
+    quantity: int = 1
+    category: Optional[str] = None
+    target_price: Optional[float] = None
+    preferred_store: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PriceAlertRequest(BaseModel):
+    product_name: str
+    target_price: float
+
+
+# Store shopping assistant sessions per user
+_shopping_sessions: Dict[str, ShoppingAssistant] = {}
+
+
+def get_shopping_assistant(user_id: str) -> ShoppingAssistant:
+    """Get or create a shopping assistant for a user"""
+    if user_id not in _shopping_sessions:
+        _shopping_sessions[user_id] = ShoppingAssistant(user_id)
+    return _shopping_sessions[user_id]
+
+
+@app.post("/api/v1/shopping/chat", response_model=ShoppingChatResponse)
+@rate_limit
+async def shopping_chat(
+    request: ShoppingChatRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Chat with the AI shopping assistant (ChatGPT shopping mode).
+
+    Ask questions like:
+    - "Find me running shoes under $100"
+    - "What deals are available at Target?"
+    - "Compare prices for AirPods Pro"
+    - "Add milk to my shopping list"
+    - "What credit card should I use at Amazon?"
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    # Build context if requested
+    context = None
+    if request.include_context:
+        context = await _build_shopping_context(user_id)
+
+    # Get response from shopping assistant
+    response = await assistant.chat(request.message, context)
+
+    return ShoppingChatResponse(
+        message=response["message"],
+        actions=response.get("actions", []),
+        function_results=response.get("function_results", []),
+        tokens_used=response.get("tokens_used")
+    )
+
+
+@app.delete("/api/v1/shopping/chat/history")
+async def clear_shopping_history(user_id: str = Depends(get_current_user)):
+    """Clear shopping chat history"""
+    if user_id in _shopping_sessions:
+        _shopping_sessions[user_id].clear_history()
+    return {"message": "Shopping chat history cleared"}
+
+
+@app.post("/api/v1/shopping/search")
+async def search_products(
+    request: ProductSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Search for products directly without chat.
+    Returns product results with prices, ratings, and deals.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._search_products(
+        query=request.query,
+        category=request.category,
+        max_price=request.max_price,
+        min_price=request.min_price,
+        sort_by=request.sort_by,
+        limit=request.limit
+    )
+
+    return results
+
+
+@app.post("/api/v1/shopping/deals")
+async def find_deals(
+    request: DealSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Find deals and coupons for products or categories.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._find_deals(
+        query=request.query,
+        retailer=request.retailer,
+        discount_type=request.discount_type,
+        min_discount=request.min_discount
+    )
+
+    return results
+
+
+@app.post("/api/v1/shopping/compare")
+async def compare_prices(
+    request: PriceCompareRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Compare prices for a product across multiple retailers.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._compare_prices(
+        product_name=request.product_name,
+        include_used=request.include_used
+    )
+
+    return results
+
+
+@app.get("/api/v1/shopping/list")
+async def get_shopping_list(user_id: str = Depends(get_current_user)):
+    """Get user's shopping list"""
+    assistant = get_shopping_assistant(user_id)
+    return await assistant._get_shopping_list()
+
+
+@app.post("/api/v1/shopping/list")
+async def add_to_shopping_list(
+    request: ShoppingListItemRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Add item to shopping list"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._add_to_shopping_list(
+        item_name=request.item_name,
+        quantity=request.quantity,
+        category=request.category,
+        target_price=request.target_price,
+        preferred_store=request.preferred_store,
+        notes=request.notes
+    )
+
+    return result
+
+
+@app.post("/api/v1/shopping/price-alert")
+async def create_price_alert(
+    request: PriceAlertRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Create a price drop alert"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._create_price_alert(
+        product_name=request.product_name,
+        target_price=request.target_price
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/recommendations")
+async def get_shopping_recommendations(
+    category: Optional[str] = None,
+    budget: Optional[float] = None,
+    use_case: Optional[str] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Get personalized product recommendations"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._get_recommendations(
+        category=category,
+        budget=budget,
+        use_case=use_case
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/best-card")
+async def get_best_card(
+    merchant: str,
+    amount: Optional[float] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Find the best credit card to use for a purchase"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._find_best_card(
+        merchant=merchant,
+        amount=amount
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/loyalty-points")
+async def get_loyalty_points(
+    retailer: Optional[str] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Check loyalty points balance across programs"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._check_loyalty_points(retailer=retailer)
+
+    return result
+
+
+@app.get("/api/v1/shopping/reorder-suggestions")
+async def get_reorder_suggestions(
+    days_ahead: int = 7,
+    user_id: str = Depends(get_current_user)
+):
+    """Get suggestions for items that may need reordering"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._get_reorder_suggestions(days_ahead=days_ahead)
+
+    return result
+
+
+@app.post("/api/v1/shopping/quick")
+@rate_limit
+async def quick_shopping_query(
+    request: ShoppingChatRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Quick shopping query without maintaining conversation state.
+    Good for one-off questions.
+    """
+    context = await _build_shopping_context(user_id) if request.include_context else None
+    result = await quick_shop(user_id, request.message, context)
+
+    return ShoppingChatResponse(
+        message=result["message"],
+        actions=result.get("actions", []),
+        function_results=result.get("function_results", []),
+        tokens_used=result.get("tokens_used")
+    )
+
+
+async def _build_shopping_context(user_id: str) -> Dict[str, Any]:
+    """Build context for shopping assistant"""
+    # Get balance for budget context
+    balance_summary = await ShadowBankingService.get_balance_summary(user_id)
+
+    # Get profile for preferences
+    profile = await db.get_user_profile(user_id)
+
+    # Simplified shopping context
+    context = {
+        "budget": balance_summary.get("visible_balance", 0),
+        "shopping_list": [],  # Would fetch from shopping list table
+        "preferred_retailers": profile.get("preferred_retailers", []) if profile else [],
+        "credit_cards": profile.get("credit_cards", []) if profile else []
+    }
+
+    return context
 
 
 # ==================== ACHIEVEMENTS ENDPOINTS ====================

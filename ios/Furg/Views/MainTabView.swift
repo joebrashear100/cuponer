@@ -68,19 +68,23 @@ struct MainTabView: View {
                                 }
                             }
                     )
-
-                // Pill navigation at bottom
-                PillNavigation(navigationState: navigationState)
             }
 
-            // Floating Action Button (bottom right, above pill nav)
+            // Floating pill (bottom left) and FAB (bottom right)
             VStack {
                 Spacer()
-                HStack {
+                HStack(spacing: 0) {
+                    // Bottom left floating pill
+                    BottomPill(navigationState: navigationState)
+                        .padding(.leading, 20)
+                        .padding(.bottom, 20)
+
                     Spacer()
+
+                    // Bottom right FAB
                     FloatingActionButton()
                         .padding(.trailing, 20)
-                        .padding(.bottom, 80) // Account for pill nav
+                        .padding(.bottom, 20)
                 }
             }
         }

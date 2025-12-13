@@ -498,9 +498,6 @@ class DebtPayoffManager: ObservableObject {
             description: description
         )
         milestones.append(milestone)
-
-        // Send notification
-        NotificationManager.shared.scheduleDebtMilestoneNotification(milestone: milestone)
     }
 
     private func celebrateDebtPayoff(_ debt: Debt) {
@@ -515,8 +512,6 @@ class DebtPayoffManager: ObservableObject {
         )
         milestones.append(milestone)
         saveMilestones()
-
-        NotificationManager.shared.scheduleDebtMilestoneNotification(milestone: milestone)
     }
 
     // MARK: - Analytics

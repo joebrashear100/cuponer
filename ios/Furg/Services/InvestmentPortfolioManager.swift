@@ -701,7 +701,14 @@ class InvestmentPortfolioManager: ObservableObject {
         case .month: return (30, 0.025)
         case .threeMonth: return (90, 0.065)
         case .sixMonth: return (180, 0.085)
-        case .ytd: return (Calendar.current.component(.dayOfYear, from: Date()), 0.12)
+        case .ytd:
+            // Calculate days since start of year (compatible with all iOS versions)
+            let calendar = Calendar.current
+            guard let yearStart = calendar.date(from: calendar.dateComponents([.year], from: Date())) else {
+                return (365, 0.12)
+            }
+            let daysSinceYearStart = calendar.dateComponents([.day], from: yearStart, to: Date()).day ?? 365
+            return (max(1, daysSinceYearStart), 0.12)
         case .year: return (365, 0.14)
         case .threeYear: return (365 * 3, 0.35)
         case .fiveYear: return (365 * 5, 0.65)

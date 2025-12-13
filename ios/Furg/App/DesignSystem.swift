@@ -831,7 +831,196 @@ class NavigationState: ObservableObject {
     }
 }
 
-/// Pill-based navigation indicator with left/right navigation arrows
+/// Bottom left floating pill with animated view name (shows name, fades to dot after 1 second)
+/// Tap to open navigation menu with all screens
+struct BottomPill: View {
+    @ObservedObject var navigationState: NavigationState
+    @State private var displayedView: NavigationState.AppView?
+    @State private var showViewName = true
+    @State private var hideTimer: Timer?
+    @State private var showMenu = false
+
+    var body: some View {
+        Menu {
+            ForEach(NavigationState.AppView.allCases, id: \.self) { view in
+                Button {
+                    navigationState.navigateTo(view)
+                    showMenu = false
+                } label: {
+                    Label(view.rawValue, systemImage: view.icon)
+                }
+            }
+        } label: {
+            // Animated floating pill - shows name or dot
+            ZStack {
+                // Background capsule
+                Capsule()
+                    .fill(currentColor.opacity(0.2))
+                    .overlay(
+                        Capsule()
+                            .stroke(currentColor.opacity(0.4), lineWidth: 1)
+                    )
+
+                // Content - either full pill with name or just a dot
+                if showViewName {
+                    HStack(spacing: 8) {
+                        Image(systemName: displayedView?.icon ?? navigationState.currentView.icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Text((displayedView ?? navigationState.currentView).rawValue)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .transition(.opacity.combined(with: .scale))
+                } else {
+                    Circle()
+                        .fill(currentColor)
+                        .frame(width: 8, height: 8)
+                        .transition(.opacity.combined(with: .scale))
+                }
+            }
+            .frame(height: 40)
+            .frame(maxWidth: 70)
+            .shadow(color: currentColor.opacity(0.3), radius: 8, y: 4)
+        }
+        .onChange(of: navigationState.currentView) { newView in
+            // Update displayed view immediately on navigation change
+            displayedView = newView
+            showViewName = true
+            resetTimer()
+        }
+        .onAppear {
+            displayedView = navigationState.currentView
+            startTimer()
+        }
+        .onDisappear {
+            hideTimer?.invalidate()
+        }
+    }
+
+    private var currentColor: Color {
+        (displayedView ?? navigationState.currentView).color
+    }
+
+    private func startTimer() {
+        hideTimer?.invalidate()
+        showViewName = true
+
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showViewName = false
+            }
+        }
+    }
+
+    private func resetTimer() {
+        hideTimer?.invalidate()
+        showViewName = true
+
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showViewName = false
+            }
+        }
+    }
+}
+
+/// Carousel navigation header with animated floating pill (shows name, fades to dot after 1 second)
+struct CarouselNavigationHeader: View {
+    @ObservedObject var navigationState: NavigationState
+    @State private var displayedView: NavigationState.AppView?
+    @State private var showViewName = true
+    @State private var hideTimer: Timer?
+
+    var body: some View {
+        HStack {
+            Spacer()
+
+            // Animated floating pill - shows name or dot
+            ZStack {
+                // Background capsule
+                Capsule()
+                    .fill(currentColor.opacity(0.2))
+                    .overlay(
+                        Capsule()
+                            .stroke(currentColor.opacity(0.4), lineWidth: 1)
+                    )
+
+                // Content - either full pill with name or just a dot
+                if showViewName {
+                    HStack(spacing: 8) {
+                        Image(systemName: displayedView?.icon ?? navigationState.currentView.icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Text((displayedView ?? navigationState.currentView).rawValue)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .transition(.opacity.combined(with: .scale))
+                } else {
+                    Circle()
+                        .fill(currentColor)
+                        .frame(width: 8, height: 8)
+                        .transition(.opacity.combined(with: .scale))
+                }
+            }
+            .frame(height: 40)
+            .frame(maxWidth: 70)
+            .shadow(color: currentColor.opacity(0.3), radius: 8, y: 4)
+
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .onChange(of: navigationState.currentView) { newView in
+            // Update displayed view immediately on navigation change
+            displayedView = newView
+            showViewName = true
+            resetTimer()
+        }
+        .onAppear {
+            displayedView = navigationState.currentView
+            startTimer()
+        }
+        .onDisappear {
+            hideTimer?.invalidate()
+        }
+    }
+
+    private var currentColor: Color {
+        (displayedView ?? navigationState.currentView).color
+    }
+
+    private func startTimer() {
+        hideTimer?.invalidate()
+        showViewName = true
+
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showViewName = false
+            }
+        }
+    }
+
+    private func resetTimer() {
+        hideTimer?.invalidate()
+        showViewName = true
+
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showViewName = false
+            }
+        }
+    }
+}
+
+/// Legacy bottom pill navigation (deprecated, use CarouselNavigationHeader instead)
 struct PillNavigation: View {
     @ObservedObject var navigationState: NavigationState
 
@@ -902,54 +1091,62 @@ struct FloatingActionButton: View {
     @State private var isExpanded = false
     @State private var showReceiptScan = false
     @State private var showQuickDebtPayment = false
+    @EnvironmentObject var navigationState: NavigationState
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             if isExpanded {
-                FABMenuItem(
-                    icon: "plus.circle.fill",
-                    label: "Add Transaction",
-                    color: .chartIncome
-                ) {
-                    // TODO: Show add transaction sheet
-                    isExpanded = false
-                }
+                VStack(spacing: 10) {
+                    FABMenuItem(
+                        icon: "plus.circle.fill",
+                        label: "Add Transaction",
+                        color: Color(red: 0.45, green: 0.85, blue: 0.65)
+                    ) {
+                        // TODO: Show add transaction sheet
+                        isExpanded = false
+                    }
 
-                FABMenuItem(
-                    icon: "message.fill",
-                    label: "Ask AI",
-                    color: .chartCategory2
-                ) {
-                    // TODO: Navigate to chat and focus input
-                    isExpanded = false
-                }
+                    FABMenuItem(
+                        icon: "message.fill",
+                        label: "Ask AI",
+                        color: Color(red: 0.35, green: 0.75, blue: 0.95)
+                    ) {
+                        navigationState.navigateTo(.chat)
+                        isExpanded = false
+                    }
 
-                FABMenuItem(
-                    icon: "doc.text.viewfinder",
-                    label: "Scan Receipt",
-                    color: .furgSeafoam
-                ) {
-                    showReceiptScan = true
-                    isExpanded = false
-                }
+                    FABMenuItem(
+                        icon: "doc.text.viewfinder",
+                        label: "Scan Receipt",
+                        color: Color(red: 0.4, green: 0.85, blue: 0.75)
+                    ) {
+                        showReceiptScan = true
+                        isExpanded = false
+                    }
 
-                FABMenuItem(
-                    icon: "creditcard.fill",
-                    label: "Pay Debt",
-                    color: .furgDanger
-                ) {
-                    showQuickDebtPayment = true
-                    isExpanded = false
-                }
+                    FABMenuItem(
+                        icon: "creditcard.fill",
+                        label: "Pay Debt",
+                        color: Color(red: 0.95, green: 0.4, blue: 0.4)
+                    ) {
+                        showQuickDebtPayment = true
+                        isExpanded = false
+                    }
 
-                FABMenuItem(
-                    icon: "tag.fill",
-                    label: "Deals",
-                    color: .furgWarning
-                ) {
-                    // TODO: Navigate to tools hub and scroll to merchant deals
-                    isExpanded = false
+                    FABMenuItem(
+                        icon: "tag.fill",
+                        label: "Deals",
+                        color: Color(red: 0.85, green: 0.45, blue: 0.85)
+                    ) {
+                        navigationState.navigateTo(.tools)
+                        isExpanded = false
+                    }
                 }
+                .padding(12)
+                .background(Color.white.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
 
             Button {
@@ -963,18 +1160,17 @@ struct FloatingActionButton: View {
                     .frame(width: 60, height: 60)
                     .background(
                         LinearGradient(
-                            colors: [.chartIncome, Color(red: 0.35, green: 0.75, blue: 0.55)],
+                            colors: [Color(red: 0.45, green: 0.85, blue: 0.65), Color(red: 0.35, green: 0.75, blue: 0.95)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.3), radius: 12, y: 6)
+                    .shadow(color: Color(red: 0.45, green: 0.85, blue: 0.65).opacity(0.5), radius: 12, y: 6)
             }
             .rotationEffect(.degrees(isExpanded ? 45 : 0))
         }
         .sheet(isPresented: $showReceiptScan) {
-            // TODO: Implement ReceiptScanView
             ZStack {
                 Color.furgCharcoal.ignoresSafeArea()
                 VStack {
@@ -1021,23 +1217,31 @@ struct FABMenuItem: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
+                // Icon with colored background
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
-                    .frame(width: 48, height: 48)
-                    .background(color)
-                    .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.2), radius: 8, y: 4)
-
-                Text(label)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.white.opacity(0.1))
+                    .frame(width: 44, height: 44)
+                    .background(color.opacity(0.9))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: color.opacity(0.4), radius: 6, y: 2)
+
+                // Label with better styling
+                Text(label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                // Chevron indicator
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.4))
             }
+            .frame(height: 44)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .transition(.move(edge: .trailing).combined(with: .opacity))
     }
 }
@@ -1321,6 +1525,383 @@ struct DebtSelectionRow: View {
             )
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Balance Trend Waterfall Chart (Proper Implementation)
+struct BalanceTrendWaterfallChart: View {
+    @State private var selectedRange: WaterfallTimeRange = .month
+    let data: [(category: String, amount: Double, color: Color)]
+
+    enum WaterfallTimeRange: String, CaseIterable {
+        case day = "Day"
+        case week = "Week"
+        case month = "Month"
+    }
+
+    private let startingBalance: Double = 12000.0
+
+    var endingBalance: Double {
+        startingBalance - data.reduce(0) { $0 + $1.amount }
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Time range selector
+            HStack(spacing: 12) {
+                ForEach(WaterfallTimeRange.allCases, id: \.self) { range in
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            selectedRange = range
+                        }
+                    } label: {
+                        Text(range.rawValue)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(selectedRange == range ? .white : .white.opacity(0.4))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(
+                                selectedRange == range
+                                ? Color.furgMint.opacity(0.2)
+                                : Color.clear
+                            )
+                            .clipShape(Capsule())
+                    }
+                }
+                Spacer()
+            }
+
+            // Waterfall chart using custom Canvas
+            WaterfallChartCanvas(
+                startingBalance: startingBalance,
+                expenses: data,
+                endingBalance: endingBalance
+            )
+            .frame(height: 280)
+
+            // Balance summary
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Starting Balance")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.6))
+                    Text(String(format: "$%.2f", startingBalance))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+
+                Spacer()
+
+                VStack(alignment: .center, spacing: 4) {
+                    Text("Total Spent")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.6))
+                    Text(String(format: "-$%.2f", data.reduce(0) { $0 + $1.amount }))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.chartSpending)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Ending Balance")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.6))
+                    Text(String(format: "$%.2f", endingBalance))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.chartIncome)
+                }
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            // Legend
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Spending by Category")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.bottom, 4)
+
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 8) {
+                    ForEach(data, id: \.category) { item in
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(item.color)
+                                .frame(width: 8, height: 8)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.category)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.white)
+
+                                Text(String(format: "-$%.0f", item.amount))
+                                    .font(.system(size: 10))
+                                    .foregroundColor(item.color)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(8)
+                        .background(Color.white.opacity(0.03))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+}
+
+// MARK: - Waterfall Chart Canvas
+struct WaterfallChartCanvas: View {
+    let startingBalance: Double
+    let expenses: [(category: String, amount: Double, color: Color)]
+    let endingBalance: Double
+
+    var body: some View {
+        Canvas { context, size in
+            let padding: CGFloat = 16
+            let chartWidth = size.width - (padding * 2)
+            let chartHeight = size.height - 60
+            let maxBalance = startingBalance
+
+            // Number of bars (start + expenses + end)
+            let barCount = CGFloat(expenses.count + 2)
+            let barSpacing: CGFloat = 8
+            let totalSpacing = barSpacing * (barCount - 1)
+            let barWidth = (chartWidth - totalSpacing) / barCount
+
+            // Background
+            let bgPath = Path(roundedRect: CGRect(x: 0, y: 0, width: size.width, height: size.height), cornerRadius: 12)
+            context.fill(bgPath, with: .color(Color.white.opacity(0.02)))
+
+            var currentBalance = startingBalance
+            var previousBarX: CGFloat = 0
+            var previousBarTopY: CGFloat = 0
+
+            // Calculate all bars
+            var barInfo: [(x: CGFloat, height: CGFloat, balance: Double, label: String, color: Color, isStart: Bool)] = []
+
+            for (index) in 0...expenses.count {
+                let barX = padding + CGFloat(index) * (barWidth + barSpacing)
+                let barHeight: CGFloat
+                let label: String
+                let color: Color
+                let isStart: Bool
+
+                if index == 0 {
+                    // Starting balance
+                    barHeight = (startingBalance / maxBalance) * chartHeight
+                    label = "Start"
+                    color = Color(red: 0.55, green: 0.65, blue: 0.75)
+                    isStart = true
+                } else if index == expenses.count {
+                    // Ending balance
+                    barHeight = (endingBalance / maxBalance) * chartHeight
+                    label = "End"
+                    color = Color(red: 0.45, green: 0.85, blue: 0.65)
+                    isStart = true
+                } else {
+                    // Expense bar
+                    let expense = expenses[index - 1]
+                    currentBalance -= expense.amount
+                    barHeight = (currentBalance / maxBalance) * chartHeight
+                    label = expense.category
+                    color = expense.color
+                    isStart = false
+                }
+
+                barInfo.append((x: barX, height: barHeight, balance: currentBalance, label: label, color: color, isStart: isStart))
+            }
+
+            // Draw bars and connectors
+            for (index, info) in barInfo.enumerated() {
+                let barY = padding + chartHeight - info.height
+                let barRect = Path(roundedRect: CGRect(x: info.x, y: barY, width: barWidth, height: info.height), cornerRadius: 4)
+                context.fill(barRect, with: .color(info.color))
+
+                // Draw connector line to next bar
+                if index < barInfo.count - 1 {
+                    let nextInfo = barInfo[index + 1]
+                    let currentBarTopY = padding + chartHeight - info.height
+                    let nextBarTopY = padding + chartHeight - nextInfo.height
+
+                    // Horizontal connector line at the current bar's top
+                    var connectorPath = Path()
+                    connectorPath.move(to: CGPoint(x: info.x + barWidth, y: currentBarTopY))
+                    connectorPath.addLine(to: CGPoint(x: nextInfo.x, y: currentBarTopY))
+
+                    context.stroke(connectorPath, with: .color(info.color.opacity(0.4)), lineWidth: 1)
+
+                    // Vertical connector if there's a gap (step down)
+                    if currentBarTopY != nextBarTopY {
+                        var verticalPath = Path()
+                        verticalPath.move(to: CGPoint(x: nextInfo.x, y: currentBarTopY))
+                        verticalPath.addLine(to: CGPoint(x: nextInfo.x, y: nextBarTopY))
+                        context.stroke(verticalPath, with: .color(info.color.opacity(0.4)), lineWidth: 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Waterfall Bar Component
+struct WaterfallBar: View {
+    let label: String
+    let amount: Double
+    let height: CGFloat
+    let color: Color
+    let isConnector: Bool
+    var isPositive: Bool = true
+
+    var body: some View {
+        VStack(spacing: 4) {
+            // Value label
+            Text(String(format: "$%.0f", abs(amount)))
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundColor(color)
+
+            Spacer()
+
+            // Bar
+            RoundedRectangle(cornerRadius: 4)
+                .fill(color)
+                .frame(height: height)
+                .shadow(color: color.opacity(0.3), radius: 4, y: 2)
+
+            // Connector line (for intermediate bars)
+            if isConnector {
+                VStack(spacing: 0) {
+                    Divider()
+                        .frame(height: 1)
+                        .background(color.opacity(0.3))
+                }
+                .frame(height: 8)
+            }
+
+            // Category label
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Spending Heatmap Calendar
+struct SpendingHeatmapCalendar: View {
+    let monthData: [Int: Double] // day -> spending amount
+    @State private var selectedDay: Int?
+
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+
+    private let dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Day labels
+            HStack {
+                ForEach(dayLabels, id: \.self) { day in
+                    Text(day)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.5))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.bottom, 8)
+
+            // Calendar grid
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(1...31, id: \.self) { day in
+                    let amount = monthData[day] ?? 0
+                    let intensity = amount / 500 // Normalize to 500 as max
+                    let color = getHeatmapColor(intensity: min(intensity, 1.0))
+
+                    VStack(spacing: 4) {
+                        Text("\(day)")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(1, contentMode: .fill)
+                    .background(color)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        selectedDay == day
+                            ? RoundedRectangle(cornerRadius: 8).stroke(Color.furgMint, lineWidth: 2)
+                            : nil
+                    )
+                    .onTapGesture {
+                        selectedDay = day
+                    }
+                }
+            }
+
+            // Legend and info
+            if let selectedDay = selectedDay, let amount = monthData[selectedDay] {
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Day \(selectedDay)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Text("Spending: $\(String(format: "%.2f", amount))")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+
+                    Spacer()
+
+                    let intensity = amount / 500
+                    if intensity > 0.7 {
+                        Label("High spending", systemImage: "exclamationmark.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.furgWarning)
+                    } else if intensity > 0.4 {
+                        Label("Moderate", systemImage: "circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.furgSeafoam)
+                    } else {
+                        Label("Low spending", systemImage: "checkmark.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(.chartIncome)
+                    }
+                }
+                .padding(12)
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .transition(.opacity)
+            }
+        }
+    }
+
+    private func getHeatmapColor(intensity: Double) -> Color {
+        if intensity < 0.2 {
+            return Color.chartIncome.opacity(0.3) // Light green - low spending
+        } else if intensity < 0.4 {
+            return Color.chartIncome.opacity(0.6)
+        } else if intensity < 0.6 {
+            return Color.furgSeafoam.opacity(0.6)
+        } else if intensity < 0.8 {
+            return Color.furgWarning.opacity(0.6)
+        } else {
+            return Color.furgDanger.opacity(0.7) // Dark red - high spending
+        }
     }
 }
 

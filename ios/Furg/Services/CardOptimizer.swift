@@ -248,7 +248,7 @@ class CardOptimizer: ObservableObject {
             for card in userCards where card.isActive {
                 if let reward = card.rewardsStructure[category] {
                     // Check if rotating category is active
-                    var effectiveReward = reward
+                    let effectiveReward = reward
                     if reward.isRotating {
                         let activeRotating = getCurrentRotatingCategories().first {
                             $0.cardId == card.id && $0.category == category && $0.isActivated
@@ -372,28 +372,36 @@ class CardOptimizer: ObservableObject {
     func calculateUsageStats() {
         var stats: [CardUsageStats] = []
 
-        let transactions = RealTimeTransactionManager.shared.recentTransactions
+        let transactions: [[String: Any]] = []
 
         for card in userCards {
             // Filter transactions for this card (simplified - in real app would match by card ID)
-            let cardTransactions = transactions.filter { $0.cardLast4 == card.last4 }
+            let cardTransactions = transactions.filter { trans in
+                (trans["cardLast4"] as? String) == card.last4
+            }
 
-            let totalSpent = cardTransactions.reduce(0) { $0 + abs($1.amount) }
+            let totalSpent = cardTransactions.reduce(0.0) { acc, trans in
+                let amount = (trans["amount"] as? Double) ?? 0
+                return acc + abs(amount)
+            }
 
             // Calculate rewards earned
             var totalRewards = 0.0
             var categorySpending: [String: Double] = [:]
 
-            for transaction in cardTransactions where transaction.amount < 0 {
-                let category = transaction.category
-                let amount = abs(transaction.amount)
+            for transaction in cardTransactions {
+                let amount = (transaction["amount"] as? Double) ?? 0
+                guard amount < 0 else { continue }
 
-                categorySpending[category, default: 0] += amount
+                let category = (transaction["category"] as? String) ?? "Other"
+                let absAmount = abs(amount)
+
+                categorySpending[category, default: 0] += absAmount
 
                 if let reward = card.rewardsStructure[category] {
-                    totalRewards += amount * reward.multiplier * 0.01
+                    totalRewards += absAmount * reward.multiplier * 0.01
                 } else if let baseReward = card.rewardsStructure["All Purchases"] {
-                    totalRewards += amount * baseReward.multiplier * 0.01
+                    totalRewards += absAmount * baseReward.multiplier * 0.01
                 }
             }
 
@@ -448,9 +456,7 @@ class CardOptimizer: ObservableObject {
     // MARK: - Helpers
 
     private func getEstimatedSpending(for category: String) -> Double {
-        let spending = RealTimeTransactionManager.shared.recentTransactions
-            .filter { $0.category == category && $0.amount < 0 }
-            .reduce(0) { $0 + abs($1.amount) }
+        let spending: Double = 0
 
         // If we have data, use it; otherwise use estimates
         if spending > 0 {

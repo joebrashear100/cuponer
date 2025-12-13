@@ -31,7 +31,7 @@ final class AppContainer: ObservableObject {
     lazy var forecastingManager = ForecastingManager()
     lazy var spendingLimitsManager = SpendingLimitsManager()
     lazy var navigationState = NavigationState()
-    lazy var dealsManager = DealsManager()
+    lazy var dealsManager = DealsManager(apiClient: APIClient())
 
     // Singleton managers
     // TODO: Add HealthKitManager and NotificationManager to Xcode project

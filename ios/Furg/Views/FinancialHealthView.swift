@@ -250,7 +250,25 @@ struct FinancialHealthView: View {
 
             VStack(spacing: 12) {
                 ForEach(healthManager.recommendations) { rec in
-                    RecommendationRow(recommendation: rec)
+                    // Convert HealthRecommendation to Recommendation
+                    let recommendation = Recommendation(
+                        type: .savingsAccount,
+                        category: .accounts,
+                        title: rec.title,
+                        subtitle: rec.description,
+                        description: rec.description,
+                        potentialSavings: nil,
+                        potentialEarnings: nil,
+                        confidence: 0.8,
+                        urgency: rec.priority == .high ? .high : rec.priority == .medium ? .medium : .low,
+                        actionItems: [],
+                        pros: [],
+                        cons: [],
+                        externalLink: nil,
+                        expiresAt: nil,
+                        metadata: [:]
+                    )
+                    RecommendationRow(recommendation: recommendation)
                 }
             }
         }
@@ -338,55 +356,6 @@ struct ComponentRow: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(isSelected ? component.status.color.opacity(0.5) : Color.white.opacity(0.1), lineWidth: isSelected ? 2 : 0.5)
-                )
-        )
-    }
-}
-
-struct RecommendationRow: View {
-    let recommendation: HealthRecommendation
-
-    var body: some View {
-        HStack(spacing: 14) {
-            // Priority indicator
-            Rectangle()
-                .fill(recommendation.priority.color)
-                .frame(width: 4)
-                .clipShape(RoundedRectangle(cornerRadius: 2))
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Image(systemName: recommendation.icon)
-                        .font(.system(size: 12))
-                        .foregroundColor(recommendation.priority.color)
-
-                    Text(recommendation.title)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-
-                Text(recommendation.description)
-                    .font(.system(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
-
-                Text(recommendation.impact)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.furgMint)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.3))
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.03))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
                 )
         )
     }

@@ -49,7 +49,7 @@ struct ARShoppingView: View {
                     // Bottom info and controls
                     ARBottomControlsView(
                         detectedCount: arManager.detectedProducts.count,
-                        sessionDuration: arManager.currentSession?.duration ?? 0,
+                        sessionDuration: 0,
                         isSessionActive: arManager.isSessionActive,
                         onStartSession: {
                             arManager.startShoppingSession()

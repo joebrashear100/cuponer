@@ -481,75 +481,7 @@ struct AddIncomeSourceView: View {
         NavigationStack {
             ZStack {
                 Color.furgCharcoal.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(spacing: 20) {
-                        FurgTextField(placeholder: "Income Source Name", text: $name, icon: "textformat")
-
-                        // Type
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Income Type")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white.opacity(0.6))
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(IncomeType.allCases, id: \.self) { incomeType in
-                                        Button {
-                                            type = incomeType
-                                        } label: {
-                                            VStack(spacing: 4) {
-                                                Image(systemName: incomeType.icon)
-                                                    .font(.system(size: 16))
-                                                Text(incomeType.rawValue)
-                                                    .font(.system(size: 10))
-                                                    .lineLimit(1)
-                                            }
-                                            .foregroundColor(type == incomeType ? .furgCharcoal : .white.opacity(0.7))
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 8)
-                                            .background(type == incomeType ? Color.furgMint : Color.white.opacity(0.08))
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        HStack(spacing: 12) {
-                            FurgTextField(placeholder: "Amount", text: $amount, icon: "dollarsign")
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Frequency")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.6))
-
-                                Picker("", selection: $frequency) {
-                                    ForEach(PayFrequency.allCases, id: \.self) { freq in
-                                        Text(freq.rawValue).tag(freq)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .tint(.furgMint)
-                            }
-                        }
-
-                        FurgTextField(placeholder: "Employer (optional)", text: $employer, icon: "building.2")
-
-                        FurgTextField(placeholder: "Tax Withholding %", text: $taxWithholding, icon: "percent")
-
-                        DatePicker("Next Payday", selection: $nextPayday, displayedComponents: .date)
-                            .datePickerStyle(.compact)
-                            .foregroundColor(.white)
-                            .tint(.furgMint)
-                            .padding()
-                            .background(Color.white.opacity(0.05))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                        Spacer(minLength: 40)
-                    }
-                    .padding(20)
-                }
+                contentView
             }
             .navigationTitle("Add Income")
             .navigationBarTitleDisplayMode(.inline)
@@ -567,6 +499,82 @@ struct AddIncomeSourceView: View {
                 }
             }
         }
+    }
+
+    var contentView: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                FurgTextField("Income Source Name", text: $name, icon: "textformat")
+                incomeTypeSection
+                amountAndFrequencySection
+                FurgTextField("Employer (optional)", text: $employer, icon: "building.2")
+                FurgTextField("Tax Withholding %", text: $taxWithholding, icon: "percent")
+                paydayPicker
+                Spacer(minLength: 40)
+            }
+            .padding(20)
+        }
+    }
+
+    var incomeTypeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Income Type")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(IncomeType.allCases, id: \.self) { incomeType in
+                        Button {
+                            type = incomeType
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: incomeType.icon)
+                                    .font(.system(size: 16))
+                                Text(incomeType.rawValue)
+                                    .font(.system(size: 10))
+                                    .lineLimit(1)
+                            }
+                            .foregroundColor(type == incomeType ? .furgCharcoal : .white.opacity(0.7))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(type == incomeType ? Color.furgMint : Color.white.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    var amountAndFrequencySection: some View {
+        HStack(spacing: 12) {
+            FurgTextField("Amount", text: $amount, icon: "dollarsign")
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Frequency")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+
+                Picker("", selection: $frequency) {
+                    ForEach(PayFrequency.allCases, id: \.self) { freq in
+                        Text(freq.rawValue).tag(freq)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(.furgMint)
+            }
+        }
+    }
+
+    var paydayPicker: some View {
+        DatePicker("Next Payday", selection: $nextPayday, displayedComponents: .date)
+            .datePickerStyle(.compact)
+            .foregroundColor(.white)
+            .tint(.furgMint)
+            .padding()
+            .background(Color.white.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func saveIncome() {

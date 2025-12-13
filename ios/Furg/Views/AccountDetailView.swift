@@ -413,26 +413,6 @@ struct BalancePoint: Identifiable {
 
 // MARK: - Supporting Views
 
-private struct DetailRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(.white.opacity(0.5))
-
-            Spacer()
-
-            Text(value)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-        }
-        .padding(.vertical, 8)
-    }
-}
-
 private struct TransactionRow: View {
     let transaction: AccountTransaction
 

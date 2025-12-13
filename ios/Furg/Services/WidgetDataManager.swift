@@ -93,6 +93,8 @@ class WidgetDataManager {
 
 // MARK: - FinanceManager Extension
 
+// TODO: Implement widget sync when FinanceManager properties are available
+/*
 extension FinanceManager {
     func syncToWidgets() {
         let widgetManager = WidgetDataManager.shared
@@ -116,6 +118,7 @@ extension FinanceManager {
         )
     }
 }
+*/
 
 // MARK: - GoalsManager Extension
 

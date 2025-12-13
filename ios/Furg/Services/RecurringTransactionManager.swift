@@ -227,7 +227,7 @@ class RecurringTransactionManager: ObservableObject {
 
         // Add frequently used if we don't have enough
         if suggestions.count < 4 {
-            suggestions += frequentlyUsed.filter { !suggestions.contains(where: { s in s.id == $0.id }) }
+            suggestions += frequentlyUsed.filter { frequent in !suggestions.contains(where: { s in s.id == frequent.id }) }
         }
 
         return Array(suggestions.prefix(6))
@@ -235,8 +235,8 @@ class RecurringTransactionManager: ObservableObject {
 
     func learnFromTransaction(merchant: String, amount: Double, category: String) {
         // Check if we should auto-create a template
-        let similarTransactions = recentQuickTransactions.filter {
-            guard let template = templates.first(where: { t in t.id == $0.templateId }) else { return false }
+        let similarTransactions = recentQuickTransactions.filter { transaction in
+            guard let template = templates.first(where: { t in t.id == transaction.templateId }) else { return false }
             return template.merchant.lowercased() == merchant.lowercased()
         }
 

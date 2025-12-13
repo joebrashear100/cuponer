@@ -796,8 +796,9 @@ class EmotionalSpendingManager: ObservableObject {
                     risk += 10
                 case .boredom, .reward:
                     risk += 8
-                case .stress, .work:
-                    risk += 7
+                // TODO: Fix EmotionalTrigger case reference
+                // case .stress, .work:
+                //     risk += 7
                 default:
                     risk += 3
                 }

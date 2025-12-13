@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct DealsView: View {
-    @StateObject private var dealsManager = DealsManager()
+    @StateObject private var dealsManager = DealsManager(apiClient: APIClient())
     @State private var selectedTab = 0
     @State private var showSearch = false
     @State private var searchText = ""
@@ -109,31 +109,27 @@ struct DealsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 StatCard(
-                    icon: "eye",
+                    title: "Tracking",
                     value: "\(stats.productsTracked)",
-                    label: "Tracking",
-                    color: .blue
+                    icon: "eye"
                 )
 
                 StatCard(
-                    icon: "arrow.down.circle.fill",
+                    title: "Price Drops",
                     value: "\(stats.priceDropsFound)",
-                    label: "Price Drops",
-                    color: .green
+                    icon: "arrow.down.circle.fill"
                 )
 
                 StatCard(
-                    icon: "dollarsign.circle.fill",
+                    title: "Potential Savings",
                     value: stats.formattedPotentialSavings,
-                    label: "Potential Savings",
-                    color: .orange
+                    icon: "dollarsign.circle.fill"
                 )
 
                 StatCard(
-                    icon: "bookmark.fill",
+                    title: "Saved Deals",
                     value: "\(stats.savedDeals)",
-                    label: "Saved Deals",
-                    color: .purple
+                    icon: "bookmark.fill"
                 )
             }
         }
@@ -186,7 +182,10 @@ struct DealsView: View {
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
                     ForEach(DealsCategory.allCases.filter { $0 != .all }, id: \.self) { category in
-                        CategoryButton(category: category) {
+                        CategoryButton(
+                            category: category.rawValue,
+                            isSelected: false
+                        ) {
                             Task {
                                 await dealsManager.loadDeals(categories: [category])
                             }
@@ -399,28 +398,6 @@ struct DealsView: View {
 }
 
 // MARK: - Supporting Views
-
-struct CategoryButton: View {
-    let category: DealsCategory
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: category.icon)
-                    .font(.title3)
-                Text(category.label)
-                    .font(.caption)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color.secondary.opacity(0.1))
-            .cornerRadius(8)
-        }
-        .buttonStyle(.plain)
-    }
-}
 
 struct DealsDealCard: View {
     let deal: DealsDeal

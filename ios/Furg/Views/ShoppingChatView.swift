@@ -556,7 +556,7 @@ struct InputBar: View {
                 }) {
                     Image(systemName: showingQuickActions ? "xmark.circle.fill" : "bolt.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(showingQuickActions ? .secondary : .blue)
+                        .foregroundColor(showingQuickActions ? Color.gray : Color.blue)
                 }
 
                 // Text input
@@ -572,7 +572,7 @@ struct InputBar: View {
                 Button(action: onSend) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title)
-                        .foregroundStyle(text.isEmpty || isLoading ? .secondary : .blue)
+                        .foregroundColor(text.isEmpty || isLoading ? Color.gray : Color.blue)
                 }
                 .disabled(text.isEmpty || isLoading)
             }

@@ -63,14 +63,6 @@ struct PredictionFactor: Identifiable {
     let description: String
 }
 
-struct SeasonalPattern: Codable {
-    let month: Int
-    let dayOfWeek: Int?
-    let multiplier: Double
-    let category: String?
-    let description: String
-}
-
 struct UpcomingEvent: Identifiable {
     let id = UUID()
     let name: String
@@ -439,13 +431,13 @@ class SpendingPredictionManager: ObservableObject {
 
     private func isHolidayInRange(month: Int, day: Int?, range: (Date, Date)) -> Bool {
         let calendar = Calendar.current
-        let rangeMonth = calendar.component(.month, from: range.start)
-        let rangeEndMonth = calendar.component(.month, from: range.end)
+        let rangeMonth = calendar.component(.month, from: range.0)
+        let rangeEndMonth = calendar.component(.month, from: range.1)
 
         if month >= rangeMonth && month <= rangeEndMonth {
             if let specificDay = day {
-                let rangeDay = calendar.component(.day, from: range.start)
-                let rangeEndDay = calendar.component(.day, from: range.end)
+                let rangeDay = calendar.component(.day, from: range.0)
+                let rangeEndDay = calendar.component(.day, from: range.1)
                 return specificDay >= rangeDay && specificDay <= rangeEndDay
             }
             return true
@@ -455,10 +447,10 @@ class SpendingPredictionManager: ObservableObject {
 
     private func countWeekendDays(in range: (Date, Date)) -> Int {
         var count = 0
-        var current = range.start
+        var current = range.0
         let calendar = Calendar.current
 
-        while current <= range.end {
+        while current <= range.1 {
             let weekday = calendar.component(.weekday, from: current)
             if weekday == 1 || weekday == 7 {
                 count += 1

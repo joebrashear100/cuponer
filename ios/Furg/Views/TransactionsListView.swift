@@ -548,9 +548,9 @@ struct TransactionsListView: View {
 
             // Stats row
             HStack(spacing: 20) {
-                StatBadge(label: "Transactions", value: "\(filteredTransactions.count)", icon: "list.bullet")
-                StatBadge(label: "Avg. Purchase", value: "$\(Int(averageTransaction))", icon: "chart.bar.fill")
-                StatBadge(label: "Categories", value: "\(categoryBreakdown.count)", icon: "folder.fill")
+                StatBadge(icon: "list.bullet", value: "\(filteredTransactions.count)", label: "Transactions")
+                StatBadge(icon: "chart.bar.fill", value: "$\(Int(averageTransaction))", label: "Avg. Purchase")
+                StatBadge(icon: "folder.fill", value: "\(categoryBreakdown.count)", label: "Categories")
             }
         }
         .padding(16)
@@ -2200,31 +2200,6 @@ private struct DetailRowTransactions: View {
                 .multilineTextAlignment(.trailing)
         }
         .padding(16)
-    }
-}
-
-// MARK: - Stat Badge
-
-private struct StatBadge: View {
-    let label: String
-    let value: String
-    let icon: String
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundColor(.furgMint)
-
-            Text(value)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-
-            Text(label)
-                .font(.system(size: 9))
-                .foregroundColor(.white.opacity(0.5))
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 

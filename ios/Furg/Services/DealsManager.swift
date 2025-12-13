@@ -55,7 +55,7 @@ class DealsManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init(apiClient: APIClient = APIClient()) {
+    nonisolated init(apiClient: APIClient = APIClient()) {
         self.apiClient = apiClient
     }
 

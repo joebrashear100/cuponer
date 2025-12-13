@@ -401,12 +401,6 @@ struct CreditFactorsDetailView: View {
 
 // MARK: - Supporting Types
 
-struct ScoreHistoryPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let score: Int
-}
-
 enum ScoreRange: CaseIterable {
     case poor, fair, good, veryGood, excellent
 

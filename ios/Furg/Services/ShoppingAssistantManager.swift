@@ -167,24 +167,6 @@ struct LoyaltyPointsResult: Codable {
     }
 }
 
-struct ReorderSuggestion: Identifiable, Codable {
-    let id: String
-    let item: String
-    let lastPurchased: String
-    let typicalInterval: String
-    let suggestedDate: String
-    let bestPrice: BestPrice
-
-    struct BestPrice: Codable {
-        let retailer: String
-        let price: Double
-
-        var formattedPrice: String {
-            return String(format: "$%.2f", price)
-        }
-    }
-}
-
 // MARK: - API Response Models
 
 struct ShoppingChatResponse: Codable {

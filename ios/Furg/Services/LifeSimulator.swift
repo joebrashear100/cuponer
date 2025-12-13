@@ -132,37 +132,6 @@ struct ProjectionComparison: Codable {
     }
 }
 
-struct UserFinancialProfile: Codable {
-    var monthlyIncome: Double
-    var monthlyExpenses: Double
-    var currentSavings: Double
-    var currentInvestments: Double
-    var currentDebt: Double
-    var debtInterestRate: Double
-    var currentRent: Double
-    var currentCity: String
-    var age: Int
-    var targetRetirementAge: Int
-    var savingsRate: Double
-    var investmentReturnRate: Double
-
-    static var `default`: UserFinancialProfile {
-        UserFinancialProfile(
-            monthlyIncome: 6000,
-            monthlyExpenses: 4000,
-            currentSavings: 20000,
-            currentInvestments: 50000,
-            currentDebt: 10000,
-            debtInterestRate: 0.07,
-            currentRent: 1500,
-            currentCity: "Current City",
-            age: 30,
-            targetRetirementAge: 65,
-            savingsRate: 0.15,
-            investmentReturnRate: 0.07
-        )
-    }
-}
 
 // MARK: - Cost of Living Data
 

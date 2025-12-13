@@ -400,29 +400,6 @@ struct DealsView: View {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
-    let icon: String
-    let value: String
-    let label: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(color)
-            Text(value)
-                .font(.headline)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .frame(width: 90, height: 80)
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
-    }
-}
-
 struct CategoryButton: View {
     let category: DealsCategory
     let action: () -> Void

@@ -22,6 +22,7 @@ struct DashboardView: View {
     @State private var showOffers = false
     @State private var showSpendingAnalytics = false
     @State private var showFinancialHealth = false
+    @State private var showShoppingAssistant = false
 
     // Demo data
     let netWorth: Double = 298264.74
@@ -172,6 +173,9 @@ struct DashboardView: View {
                     }
             }
             .presentationBackground(Color.furgCharcoal)
+        }
+        .sheet(isPresented: $showShoppingAssistant) {
+            ShoppingChatView()
         }
     }
 
@@ -393,8 +397,8 @@ struct DashboardView: View {
                 DashboardQuickActionButton(icon: "dollarsign.circle.fill", label: "Cash Flow", color: .furgMint) {
                     showCashFlow = true
                 }
-                DashboardQuickActionButton(icon: "chart.pie.fill", label: "Categories", color: .purple) {
-                    showCategories = true
+                DashboardQuickActionButton(icon: "cart.fill", label: "Shop AI", color: .pink) {
+                    showShoppingAssistant = true
                 }
                 DashboardQuickActionButton(icon: "chart.bar.fill", label: "Analytics", color: .cyan) {
                     showSpendingAnalytics = true

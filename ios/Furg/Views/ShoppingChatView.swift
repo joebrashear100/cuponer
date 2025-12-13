@@ -11,7 +11,7 @@ import SwiftUI
 struct ShoppingChatView: View {
     @StateObject private var assistant = ShoppingAssistantManager.shared
     @State private var inputText = ""
-    @State private var showingQuickActions = false
+    @State private var showingShoppingQuickActions = false
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -42,9 +42,9 @@ struct ShoppingChatView: View {
                 }
 
                 // Quick action chips
-                if showingQuickActions {
-                    QuickActionsBar(onAction: { action in
-                        handleQuickAction(action)
+                if showingShoppingQuickActions {
+                    ShoppingQuickActionsBar(onAction: { action in
+                        handleShoppingQuickAction(action)
                     })
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -53,7 +53,7 @@ struct ShoppingChatView: View {
                 InputBar(
                     text: $inputText,
                     isLoading: assistant.isLoading,
-                    showingQuickActions: $showingQuickActions,
+                    showingShoppingQuickActions: $showingShoppingQuickActions,
                     onSend: sendMessage
                 )
                 .focused($isInputFocused)
@@ -67,8 +67,8 @@ struct ShoppingChatView: View {
                             Label("Clear Chat", systemImage: "trash")
                         }
 
-                        Button(action: { showingQuickActions.toggle() }) {
-                            Label(showingQuickActions ? "Hide Quick Actions" : "Show Quick Actions",
+                        Button(action: { showingShoppingQuickActions.toggle() }) {
+                            Label(showingShoppingQuickActions ? "Hide Quick Actions" : "Show Quick Actions",
                                   systemImage: "bolt.fill")
                         }
                     } label: {
@@ -91,7 +91,7 @@ struct ShoppingChatView: View {
         }
     }
 
-    private func handleQuickAction(_ action: QuickAction) {
+    private func handleShoppingQuickAction(_ action: ShoppingQuickAction) {
         Task {
             switch action {
             case .searchProducts:
@@ -463,7 +463,7 @@ struct LoadingBubble: View {
 
 // MARK: - Quick Actions Bar
 
-enum QuickAction: CaseIterable {
+enum ShoppingQuickAction: CaseIterable {
     case searchProducts
     case findDeals
     case comparePrices
@@ -505,13 +505,13 @@ enum QuickAction: CaseIterable {
     }
 }
 
-struct QuickActionsBar: View {
-    let onAction: (QuickAction) -> Void
+struct ShoppingQuickActionsBar: View {
+    let onAction: (ShoppingQuickAction) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(QuickAction.allCases, id: \.self) { action in
+                ForEach(ShoppingQuickAction.allCases, id: \.self) { action in
                     Button(action: { onAction(action) }) {
                         HStack(spacing: 6) {
                             Image(systemName: action.icon)
@@ -540,7 +540,7 @@ struct QuickActionsBar: View {
 struct InputBar: View {
     @Binding var text: String
     let isLoading: Bool
-    @Binding var showingQuickActions: Bool
+    @Binding var showingShoppingQuickActions: Bool
     let onSend: () -> Void
 
     var body: some View {
@@ -551,12 +551,12 @@ struct InputBar: View {
                 // Quick actions toggle
                 Button(action: {
                     withAnimation(.spring(response: 0.3)) {
-                        showingQuickActions.toggle()
+                        showingShoppingQuickActions.toggle()
                     }
                 }) {
-                    Image(systemName: showingQuickActions ? "xmark.circle.fill" : "bolt.circle.fill")
+                    Image(systemName: showingShoppingQuickActions ? "xmark.circle.fill" : "bolt.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(showingQuickActions ? .secondary : .blue)
+                        .foregroundStyle(showingShoppingQuickActions ? Color.secondary : Color.blue)
                 }
 
                 // Text input
@@ -572,7 +572,7 @@ struct InputBar: View {
                 Button(action: onSend) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title)
-                        .foregroundStyle(text.isEmpty || isLoading ? .secondary : .blue)
+                        .foregroundStyle(text.isEmpty || isLoading ? Color.secondary : Color.blue)
                 }
                 .disabled(text.isEmpty || isLoading)
             }

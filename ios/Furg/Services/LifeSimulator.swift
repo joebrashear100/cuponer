@@ -246,8 +246,8 @@ class LifeSimulator: ObservableObject {
             newCity: cityName,
             costOfLivingChange: costOfLivingChange,
             newSalary: userProfile.monthlyIncome * 12 * newCityData.averageSalaryMultiplier,
-            newRent: newCityData.averageRent,
             oneTimeCost: 5000, // Moving costs
+            newRent: newCityData.averageRent,
             timeHorizonYears: timeHorizonYears
         )
 
@@ -280,9 +280,9 @@ class LifeSimulator: ObservableObject {
 
         let parameters = ScenarioParameters(
             newSalary: newSalary,
+            incomeStartDate: Calendar.current.date(byAdding: .month, value: transitionCostMonths, to: Date()),
             additionalMonthlyExpenses: 0,
             oneTimeCost: userProfile.monthlyExpenses * Double(transitionCostMonths), // Transition period
-            incomeStartDate: Calendar.current.date(byAdding: .month, value: transitionCostMonths, to: Date()),
             timeHorizonYears: timeHorizonYears
         )
 
@@ -360,12 +360,12 @@ class LifeSimulator: ObservableObject {
         let housingDifference = totalMonthlyHousing - userProfile.currentRent
 
         let parameters = ScenarioParameters(
+            additionalMonthlyExpenses: housingDifference,
+            oneTimeCost: downPayment + (homePrice * 0.03), // Down payment + closing costs
             homePrice: homePrice,
             downPaymentPercent: downPaymentPercent,
             mortgageRate: mortgageRate,
             propertyTax: propertyTax,
-            additionalMonthlyExpenses: housingDifference,
-            oneTimeCost: downPayment + (homePrice * 0.03), // Down payment + closing costs
             timeHorizonYears: timeHorizonYears
         )
 
@@ -444,8 +444,8 @@ class LifeSimulator: ObservableObject {
         let additionalMonthlySavings = userProfile.monthlyIncome * (newSavingsRate - userProfile.savingsRate)
 
         let parameters = ScenarioParameters(
-            newSavingsRate: newSavingsRate,
             reducedMonthlyExpenses: additionalMonthlySavings,
+            newSavingsRate: newSavingsRate,
             timeHorizonYears: timeHorizonYears
         )
 

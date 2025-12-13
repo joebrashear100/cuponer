@@ -55,8 +55,8 @@ class DealsManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init(apiClient: APIClient = APIClient()) {
-        self.apiClient = apiClient
+    init(apiClient: APIClient? = nil) {
+        self.apiClient = apiClient ?? APIClient()
     }
 
     // MARK: - Home
@@ -285,7 +285,7 @@ class DealsManager: ObservableObject {
                 dealType: dealType.rawValue
             )
 
-            let _: [String: Any] = try await apiClient.post("/deals/deals/save", body: request)
+            let _: EmptyAPIResponse = try await apiClient.post("/deals/deals/save", body: request)
 
             // Refresh saved deals
             await loadSavedDeals()
@@ -374,19 +374,16 @@ class DealsManager: ObservableObject {
 
     func getPricePrediction(asin: String) async -> DealsPricePrediction? {
         do {
-            let response: [String: Any] = try await apiClient.get("/deals/price-prediction/\(asin)")
-
-            if let prediction = response["prediction"] as? [String: Any] {
-                return try JSONDecoder().decode(
-                    DealsPricePrediction.self,
-                    from: JSONSerialization.data(withJSONObject: prediction)
-                )
-            }
-            return nil
+            let response: DealsPricePredictionResponse = try await apiClient.get("/deals/price-prediction/\(asin)")
+            return response.prediction
         } catch {
             dealsLogger.error("Failed to get price prediction: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    private struct DealsPricePredictionResponse: Decodable {
+        let prediction: DealsPricePrediction?
     }
 
     // MARK: - Stats

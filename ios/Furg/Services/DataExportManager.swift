@@ -118,6 +118,7 @@ struct ExportResult {
 
 // MARK: - Data Export Manager
 
+@MainActor
 class DataExportManager: ObservableObject {
     static let shared = DataExportManager()
 

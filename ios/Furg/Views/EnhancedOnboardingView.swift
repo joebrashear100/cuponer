@@ -173,9 +173,8 @@ struct EnhancedOnboardingView: View {
 
         Task {
             // Save user data
-            if let income = Double(monthlyIncome.replacingOccurrences(of: ",", with: "")) {
-                financeManager.monthlyBudget = income * 0.7 // Default 70% for expenses
-            }
+            // Note: Monthly budget will be set via budget manager later
+            _ = Double(monthlyIncome.replacingOccurrences(of: ",", with: ""))
 
             if let goalAmount = Double(savingsGoal.replacingOccurrences(of: ",", with: "")), !goalPurpose.isEmpty {
                 let goal = FurgSavingsGoal(

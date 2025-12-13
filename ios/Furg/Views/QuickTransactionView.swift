@@ -470,7 +470,7 @@ struct QuickAddConfirmView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     // Notes (optional)
-                    FurgTextField(placeholder: "Notes (optional)", text: $notes, icon: "note.text")
+                    FurgTextField("Notes (optional)", text: $notes, icon: "note.text")
 
                     Spacer()
 
@@ -573,9 +573,9 @@ struct AddTemplateView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        FurgTextField(placeholder: "Template Name", text: $name, icon: "textformat")
-                        FurgTextField(placeholder: "Merchant Name", text: $merchant, icon: "building.2")
-                        FurgTextField(placeholder: "Default Amount (optional)", text: $defaultAmount, icon: "dollarsign")
+                        FurgTextField("Template Name", text: $name, icon: "textformat")
+                        FurgTextField("Merchant Name", text: $merchant, icon: "building.2")
+                        FurgTextField("Default Amount (optional)", text: $defaultAmount, icon: "dollarsign")
 
                         // Category
                         VStack(alignment: .leading, spacing: 8) {

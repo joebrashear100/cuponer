@@ -49,7 +49,7 @@ struct ARShoppingView: View {
                     // Bottom info and controls
                     ARBottomControlsView(
                         detectedCount: arManager.detectedProducts.count,
-                        sessionDuration: arManager.currentSession?.duration ?? 0,
+                        sessionDuration: arManager.currentSession.map { Date().timeIntervalSince($0.startTime) } ?? 0,
                         isSessionActive: arManager.isSessionActive,
                         onStartSession: {
                             arManager.startShoppingSession()
@@ -210,7 +210,7 @@ extension ARShoppingViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
             let results = await ARShoppingManager.shared.processFrame(pixelBuffer)
 
             for result in results {
-                let _ = ARShoppingManager.shared.analyzeProduct(result)
+                let _ = await ARShoppingManager.shared.analyzeProduct(result)
             }
         }
     }
@@ -261,10 +261,10 @@ struct CameraPermissionView: View {
                 .padding(.horizontal, 32)
 
             VStack(alignment: .leading, spacing: 16) {
-                FeatureRow(icon: "dollarsign.circle.fill", text: "See prices in hours of your work")
-                FeatureRow(icon: "creditcard.fill", text: "Best card recommendations")
-                FeatureRow(icon: "chart.bar.fill", text: "Price comparisons across stores")
-                FeatureRow(icon: "brain.head.profile", text: "Smart affordability insights")
+                ARFeatureRow(icon: "dollarsign.circle.fill", text: "See prices in hours of your work")
+                ARFeatureRow(icon: "creditcard.fill", text: "Best card recommendations")
+                ARFeatureRow(icon: "chart.bar.fill", text: "Price comparisons across stores")
+                ARFeatureRow(icon: "brain.head.profile", text: "Smart affordability insights")
             }
             .padding(.vertical)
 
@@ -283,7 +283,7 @@ struct CameraPermissionView: View {
     }
 }
 
-struct FeatureRow: View {
+struct ARFeatureRow: View {
     let icon: String
     let text: String
 

@@ -256,19 +256,19 @@ struct SpendingComparisonView: View {
             }
 
             VStack(spacing: 10) {
-                InsightRow(
+                ComparisonInsightRow(
                     icon: "arrow.down.circle.fill",
                     color: .furgSuccess,
                     text: "Your dining spending decreased by $132.85 (16%) compared to last month."
                 )
 
-                InsightRow(
+                ComparisonInsightRow(
                     icon: "arrow.up.circle.fill",
                     color: .furgWarning,
                     text: "Transportation costs increased by $35.80 (18%). Consider carpooling?"
                 )
 
-                InsightRow(
+                ComparisonInsightRow(
                     icon: "star.fill",
                     color: .furgMint,
                     text: "Overall, you're spending 12.5% less this month. Great progress!"
@@ -423,7 +423,7 @@ struct CategoryComparisonRow: View {
     }
 }
 
-struct InsightRow: View {
+struct ComparisonInsightRow: View {
     let icon: String
     let color: Color
     let text: String

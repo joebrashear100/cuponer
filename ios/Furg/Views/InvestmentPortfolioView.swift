@@ -34,7 +34,7 @@ struct InvestmentPortfolioView: View {
 
                     // Insights
                     if !portfolioManager.insights.isEmpty {
-                        InsightsSection(insights: portfolioManager.insights)
+                        InvestmentInsightsSection(insights: portfolioManager.insights)
                     }
 
                     // Tab Picker
@@ -334,7 +334,7 @@ struct SimplifiedPerformanceChart: View {
 
 // MARK: - Insights Section
 
-struct InsightsSection: View {
+struct InvestmentInsightsSection: View {
     let insights: [InvestmentInsight]
 
     var body: some View {
@@ -1035,12 +1035,12 @@ struct HoldingDetailView: View {
 
                     // Position details
                     VStack(spacing: 12) {
-                        DetailRow(label: "Shares", value: String(format: "%.4f", holding.shares))
-                        DetailRow(label: "Market Value", value: CurrencyFormatter.format(holding.marketValue))
-                        DetailRow(label: "Avg Cost", value: CurrencyFormatter.format(holding.averageCost))
-                        DetailRow(label: "Total Cost", value: CurrencyFormatter.format(holding.averageCost * holding.shares))
-                        DetailRow(label: "Total Gain/Loss", value: CurrencyFormatter.formatSigned(holding.totalGain), isHighlighted: true, isPositive: holding.totalGain >= 0)
-                        DetailRow(label: "Return", value: PercentageFormatter.formatSigned(holding.totalGainPercent), isHighlighted: true, isPositive: holding.totalGain >= 0)
+                        InvestmentDetailRow(label: "Shares", value: String(format: "%.4f", holding.shares))
+                        InvestmentDetailRow(label: "Market Value", value: CurrencyFormatter.format(holding.marketValue))
+                        InvestmentDetailRow(label: "Avg Cost", value: CurrencyFormatter.format(holding.averageCost))
+                        InvestmentDetailRow(label: "Total Cost", value: CurrencyFormatter.format(holding.averageCost * holding.shares))
+                        InvestmentDetailRow(label: "Total Gain/Loss", value: CurrencyFormatter.formatSigned(holding.totalGain), isHighlighted: true, isPositive: holding.totalGain >= 0)
+                        InvestmentDetailRow(label: "Return", value: PercentageFormatter.formatSigned(holding.totalGainPercent), isHighlighted: true, isPositive: holding.totalGain >= 0)
                     }
                     .padding()
                     .background(Color(.systemGray6))
@@ -1054,16 +1054,16 @@ struct HoldingDetailView: View {
                                 .font(.headline)
 
                             if let pe = holding.peRatio {
-                                DetailRow(label: "P/E Ratio", value: String(format: "%.1f", pe))
+                                InvestmentDetailRow(label: "P/E Ratio", value: String(format: "%.1f", pe))
                             }
                             if let yield = holding.dividendYield {
-                                DetailRow(label: "Dividend Yield", value: "\(String(format: "%.2f", yield))%")
+                                InvestmentDetailRow(label: "Dividend Yield", value: "\(String(format: "%.2f", yield))%")
                             }
                             if let high = holding.fiftyTwoWeekHigh {
-                                DetailRow(label: "52-Week High", value: CurrencyFormatter.format(high))
+                                InvestmentDetailRow(label: "52-Week High", value: CurrencyFormatter.format(high))
                             }
                             if let low = holding.fiftyTwoWeekLow {
-                                DetailRow(label: "52-Week Low", value: CurrencyFormatter.format(low))
+                                InvestmentDetailRow(label: "52-Week Low", value: CurrencyFormatter.format(low))
                             }
                         }
                         .padding()
@@ -1100,7 +1100,7 @@ struct HoldingDetailView: View {
     }
 }
 
-struct DetailRow: View {
+private struct InvestmentDetailRow: View {
     let label: String
     let value: String
     var isHighlighted: Bool = false

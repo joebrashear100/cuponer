@@ -8,7 +8,7 @@ struct ShoppingContext: Codable {
     var nearbyStores: [NearbyStore]
     var activeDeals: [ActiveDeal]
     var shoppingList: [ShoppingListItem]
-    var reorderSuggestions: [ReorderSuggestion]
+    var reorderSuggestions: [IntelligenceReorderSuggestion]
     var priceAlerts: [PriceAlert]
     var lastUpdated: Date
 }
@@ -105,7 +105,7 @@ struct ShoppingListItem: Identifiable, Codable {
     }
 }
 
-struct ReorderSuggestion: Identifiable, Codable {
+struct IntelligenceReorderSuggestion: Identifiable, Codable {
     let id: String
     let itemName: String
     let category: String
@@ -191,7 +191,7 @@ class ShoppingIntelligenceManager: ObservableObject {
     @Published var shoppingList: [ShoppingListItem] = []
     @Published var savedDeals: [ActiveDeal] = []
     @Published var priceAlerts: [PriceAlert] = []
-    @Published var reorderSuggestions: [ReorderSuggestion] = []
+    @Published var reorderSuggestions: [IntelligenceReorderSuggestion] = []
     @Published var recommendations: [SmartRecommendation] = []
     @Published var priceComparisons: [PriceComparison] = []
 
@@ -279,7 +279,7 @@ class ShoppingIntelligenceManager: ObservableObject {
             }
 
             saveShoppingList()
-            updateReorderSuggestions()
+            updateIntelligenceReorderSuggestions()
             calculateStats()
         }
     }
@@ -409,8 +409,8 @@ class ShoppingIntelligenceManager: ObservableObject {
 
     // MARK: - Reorder Suggestions
 
-    private func updateReorderSuggestions() {
-        var suggestions: [ReorderSuggestion] = []
+    private func updateIntelligenceReorderSuggestions() {
+        var suggestions: [IntelligenceReorderSuggestion] = []
 
         for (itemName, purchases) in purchaseHistory where purchases.count >= 2 {
             let sortedPurchases = purchases.sorted()
@@ -433,7 +433,7 @@ class ShoppingIntelligenceManager: ObservableObject {
             let confidence = max(0, min(1, 1 - Double(variance) / Double(avgInterval)))
 
             if confidence > 0.5 {
-                suggestions.append(ReorderSuggestion(
+                suggestions.append(IntelligenceReorderSuggestion(
                     id: UUID().uuidString,
                     itemName: itemName.capitalized,
                     category: categorizeItem(itemName),
@@ -448,7 +448,7 @@ class ShoppingIntelligenceManager: ObservableObject {
         }
 
         reorderSuggestions = suggestions.sorted { $0.suggestedReorderDate < $1.suggestedReorderDate }
-        saveReorderSuggestions()
+        saveIntelligenceReorderSuggestions()
     }
 
     // MARK: - Smart Recommendations
@@ -673,7 +673,7 @@ class ShoppingIntelligenceManager: ObservableObject {
         }
 
         if let data = userDefaults.data(forKey: suggestionsKey),
-           let suggestions = try? JSONDecoder().decode([ReorderSuggestion].self, from: data) {
+           let suggestions = try? JSONDecoder().decode([IntelligenceReorderSuggestion].self, from: data) {
             reorderSuggestions = suggestions
         }
 
@@ -701,7 +701,7 @@ class ShoppingIntelligenceManager: ObservableObject {
         }
     }
 
-    private func saveReorderSuggestions() {
+    private func saveIntelligenceReorderSuggestions() {
         if let data = try? JSONEncoder().encode(reorderSuggestions) {
             userDefaults.set(data, forKey: suggestionsKey)
         }

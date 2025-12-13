@@ -796,7 +796,7 @@ class EmotionalSpendingManager: ObservableObject {
                     risk += 10
                 case .boredom, .reward:
                     risk += 8
-                case .stress, .work:
+                case .work:
                     risk += 7
                 default:
                     risk += 3

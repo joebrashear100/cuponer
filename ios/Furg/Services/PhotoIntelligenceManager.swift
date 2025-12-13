@@ -159,6 +159,7 @@ struct ProductScan: Identifiable, Codable {
 
 // MARK: - Photo Intelligence Manager
 
+@MainActor
 class PhotoIntelligenceManager: ObservableObject {
     static let shared = PhotoIntelligenceManager()
 
@@ -173,7 +174,7 @@ class PhotoIntelligenceManager: ObservableObject {
 
     // Price alerts
     @Published var activePriceAlerts: Int = 0
-    @Published var recentPriceDrops: [WishlistItem] = []
+    @Published var recentPriceDrops: [PhotoWishlistItem] = []
 
     // MARK: - Private Properties
     private let userDefaults = UserDefaults.standard
@@ -729,9 +730,9 @@ class PhotoIntelligenceManager: ObservableObject {
 
         if let recommendation = cardOptimizer.getRecommendation(for: retailer ?? category, amount: amount) {
             return (
-                recommendation.card.name,
-                recommendation.estimatedReward,
-                "Best for \(category)"
+                recommendation.recommendedCard.nickname,
+                recommendation.valuePerDollar * amount,
+                recommendation.reasoning
             )
         }
 

@@ -400,12 +400,7 @@ struct CreditFactorsDetailView: View {
 }
 
 // MARK: - Supporting Types
-
-struct ScoreHistoryPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let score: Int
-}
+// ScoreHistoryPoint is defined in FinancialHealthManager.swift
 
 enum ScoreRange: CaseIterable {
     case poor, fair, good, veryGood, excellent

@@ -174,6 +174,7 @@ struct PayoffProjection: Identifiable {
 
 // MARK: - Debt Payoff Manager
 
+@MainActor
 class DebtPayoffManager: ObservableObject {
     static let shared = DebtPayoffManager()
 

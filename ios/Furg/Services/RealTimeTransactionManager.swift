@@ -76,6 +76,7 @@ struct CardRoundUpSettings: Codable, Identifiable {
 
 // MARK: - Real-Time Transaction Manager
 
+@MainActor
 class RealTimeTransactionManager: ObservableObject {
     static let shared = RealTimeTransactionManager()
 

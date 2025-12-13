@@ -13,7 +13,7 @@ import Charts
 
 struct DashboardView: View {
     @State private var animate = false
-    @State private var selectedQuickAction: QuickAction?
+    @State private var selectedQuickAction: DashboardQuickAction?
     @State private var showBudgetCreator = false
     @State private var showCashFlow = false
     @State private var showAccounts = false
@@ -739,7 +739,7 @@ private struct MiniSparklineView: View {
 
 // MARK: - Quick Action Enum
 
-enum QuickAction: String, CaseIterable {
+enum DashboardQuickAction: String, CaseIterable {
     case cashFlow = "Cash Flow"
     case categories = "Categories"
     case transactions = "Transactions"

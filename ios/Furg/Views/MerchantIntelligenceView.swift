@@ -26,7 +26,7 @@ struct MerchantIntelligenceView: View {
 
                     // Active insights
                     if !merchantManager.activeInsights.isEmpty && searchText.isEmpty {
-                        InsightsSection(insights: merchantManager.activeInsights)
+                        MerchantInsightsSection(insights: merchantManager.activeInsights)
                     }
 
                     // Favorite merchants
@@ -166,7 +166,7 @@ struct MerchantCategoryChip: View {
 
 // MARK: - Insights Section
 
-struct InsightsSection: View {
+struct MerchantInsightsSection: View {
     let insights: [MerchantInsight]
 
     var body: some View {
@@ -1016,7 +1016,7 @@ struct TipsTabView: View {
             let insights = manager.generateInsights(for: merchant.id)
 
             ForEach(insights) { insight in
-                TipCard(insight: insight)
+                MerchantTipCard(insight: insight)
             }
 
             // Payment tips
@@ -1127,7 +1127,7 @@ struct TipsTabView: View {
     }
 }
 
-struct TipCard: View {
+struct MerchantTipCard: View {
     let insight: MerchantInsight
 
     var body: some View {

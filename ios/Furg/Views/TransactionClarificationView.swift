@@ -303,7 +303,7 @@ struct ClarificationCard: View {
                         .foregroundColor(.white.opacity(0.6))
 
                     // Suggested categories
-                    FlowLayout(spacing: 8) {
+                    ClarificationFlowLayout(spacing: 8) {
                         ForEach(clarification.suggestedCategories) { suggestion in
                             TransactionCategoryChip(
                                 category: suggestion.category,
@@ -419,7 +419,7 @@ struct LearningStatRow: View {
 
 // MARK: - Flow Layout for Category Chips
 
-struct FlowLayout: Layout {
+struct ClarificationFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

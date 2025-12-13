@@ -250,7 +250,7 @@ struct FinancialHealthView: View {
 
             VStack(spacing: 12) {
                 ForEach(healthManager.recommendations) { rec in
-                    RecommendationRow(recommendation: rec)
+                    HealthRecommendationRow(recommendation: rec)
                 }
             }
         }
@@ -343,7 +343,7 @@ struct ComponentRow: View {
     }
 }
 
-struct RecommendationRow: View {
+struct HealthRecommendationRow: View {
     let recommendation: HealthRecommendation
 
     var body: some View {

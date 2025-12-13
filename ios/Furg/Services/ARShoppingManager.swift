@@ -128,6 +128,7 @@ struct ProductRecognitionResult {
 
 // MARK: - AR Shopping Manager
 
+@MainActor
 class ARShoppingManager: NSObject, ObservableObject {
     static let shared = ARShoppingManager()
 
@@ -547,16 +548,16 @@ class ARShoppingManager: NSObject, ObservableObject {
         let cardOptimizer = CardOptimizer.shared
 
         if let bestCard = cardOptimizer.getBestCard(for: category) {
-            let estimatedReward = price * (bestCard.1.percentage / 100)
+            let estimatedReward = price * (bestCard.1.multiplier / 100)
 
             return ARCardRecommendation(
-                cardName: bestCard.0.name,
+                cardName: bestCard.0.cardName,
                 cardIssuer: bestCard.0.issuer,
-                rewardRate: bestCard.1.percentage,
+                rewardRate: bestCard.1.multiplier,
                 rewardType: bestCard.1.rewardType.rawValue,
                 estimatedReward: estimatedReward,
-                specialOffer: bestCard.1.isRotatingBonus ? "Rotating 5% category this quarter!" : nil,
-                isRotatingCategory: bestCard.1.isRotatingBonus
+                specialOffer: bestCard.1.isRotating ? "Rotating 5% category this quarter!" : nil,
+                isRotatingCategory: bestCard.1.isRotating
             )
         }
 
@@ -710,17 +711,16 @@ extension ARShoppingManager: ARSessionDelegate {
             for result in results {
                 // Get 3D position from AR hit test
                 let screenCenter = CGPoint(x: 0.5, y: 0.5)
-                if let query = frame.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any) {
-                    let results = session.raycast(query)
-                    if let firstResult = results.first {
-                        let position = simd_float3(
-                            firstResult.worldTransform.columns.3.x,
-                            firstResult.worldTransform.columns.3.y,
-                            firstResult.worldTransform.columns.3.z
-                        )
-                        _ = await MainActor.run {
-                            analyzeProduct(result, at: position)
-                        }
+                let query = frame.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
+                let raycastResults = session.raycast(query)
+                if let firstResult = raycastResults.first {
+                    let position = simd_float3(
+                        firstResult.worldTransform.columns.3.x,
+                        firstResult.worldTransform.columns.3.y,
+                        firstResult.worldTransform.columns.3.z
+                    )
+                    _ = await MainActor.run {
+                        analyzeProduct(result, at: position)
                     }
                 }
             }

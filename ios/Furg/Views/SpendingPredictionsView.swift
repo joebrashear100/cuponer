@@ -285,7 +285,7 @@ struct SpendingPredictionsView: View {
                     .foregroundColor(.white.opacity(0.6))
 
                 ForEach(factors) { factor in
-                    FactorRow(factor: factor)
+                    PredictionFactorRow(factor: factor)
                 }
             }
         )
@@ -418,7 +418,7 @@ struct UpcomingEventRow: View {
     }
 }
 
-struct FactorRow: View {
+struct PredictionFactorRow: View {
     let factor: PredictionFactor
 
     var body: some View {

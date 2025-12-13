@@ -98,14 +98,15 @@ final class CacheManager {
 
     func getCodable<T: Codable>(forKey key: String) -> T? {
         // Try memory cache first
-        if let data: Data = get(forKey: key) {
+        if let dataWrapper: NSData = get(forKey: key) {
+            let data = dataWrapper as Data
             return try? JSONDecoder().decode(T.self, from: data)
         }
 
         // Try disk cache
         if let data = loadFromDisk(forKey: key) {
             // Restore to memory cache
-            set(data as AnyObject, forKey: key)
+            set(data as NSData, forKey: key)
             return try? JSONDecoder().decode(T.self, from: data)
         }
 

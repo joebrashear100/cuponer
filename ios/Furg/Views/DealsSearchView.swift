@@ -274,7 +274,7 @@ struct DealsSearchView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                FlowLayout(spacing: 8) {
+                DealsFlowLayout(spacing: 8) {
                     QuickSearchPill("headphones") { searchText = "headphones"; performSearch() }
                     QuickSearchPill("laptop") { searchText = "laptop"; performSearch() }
                     QuickSearchPill("coffee maker") { searchText = "coffee maker"; performSearch() }
@@ -552,7 +552,7 @@ struct ProductSearchCard: View {
 
 // MARK: - Flow Layout
 
-struct FlowLayout: Layout {
+struct DealsFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

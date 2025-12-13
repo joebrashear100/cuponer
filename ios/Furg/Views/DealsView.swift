@@ -108,28 +108,28 @@ struct DealsView: View {
     private func statsCards(_ stats: DealsStats) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                StatCard(
+                DealsStatCard(
                     icon: "eye",
                     value: "\(stats.productsTracked)",
                     label: "Tracking",
                     color: .blue
                 )
 
-                StatCard(
+                DealsStatCard(
                     icon: "arrow.down.circle.fill",
                     value: "\(stats.priceDropsFound)",
                     label: "Price Drops",
                     color: .green
                 )
 
-                StatCard(
+                DealsStatCard(
                     icon: "dollarsign.circle.fill",
                     value: stats.formattedPotentialSavings,
                     label: "Potential Savings",
                     color: .orange
                 )
 
-                StatCard(
+                DealsStatCard(
                     icon: "bookmark.fill",
                     value: "\(stats.savedDeals)",
                     label: "Saved Deals",
@@ -186,7 +186,7 @@ struct DealsView: View {
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
                     ForEach(DealsCategory.allCases.filter { $0 != .all }, id: \.self) { category in
-                        CategoryButton(category: category) {
+                        DealsCategoryButton(category: category) {
                             Task {
                                 await dealsManager.loadDeals(categories: [category])
                             }
@@ -400,7 +400,7 @@ struct DealsView: View {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
+struct DealsStatCard: View {
     let icon: String
     let value: String
     let label: String
@@ -423,7 +423,7 @@ struct StatCard: View {
     }
 }
 
-struct CategoryButton: View {
+struct DealsCategoryButton: View {
     let category: DealsCategory
     let action: () -> Void
 

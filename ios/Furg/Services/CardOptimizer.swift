@@ -98,6 +98,7 @@ struct CardUsageStats: Identifiable {
 
 // MARK: - Card Optimizer
 
+@MainActor
 class CardOptimizer: ObservableObject {
     static let shared = CardOptimizer()
 

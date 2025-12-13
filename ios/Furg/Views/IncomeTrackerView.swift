@@ -484,7 +484,7 @@ struct AddIncomeSourceView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        FurgTextField(placeholder: "Income Source Name", text: $name, icon: "textformat")
+                        FurgTextField("Income Source Name", text: $name, icon: "textformat")
 
                         // Type
                         VStack(alignment: .leading, spacing: 8) {
@@ -517,7 +517,7 @@ struct AddIncomeSourceView: View {
                         }
 
                         HStack(spacing: 12) {
-                            FurgTextField(placeholder: "Amount", text: $amount, icon: "dollarsign")
+                            FurgTextField("Amount", text: $amount, icon: "dollarsign")
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Frequency")
@@ -534,9 +534,9 @@ struct AddIncomeSourceView: View {
                             }
                         }
 
-                        FurgTextField(placeholder: "Employer (optional)", text: $employer, icon: "building.2")
+                        FurgTextField("Employer (optional)", text: $employer, icon: "building.2")
 
-                        FurgTextField(placeholder: "Tax Withholding %", text: $taxWithholding, icon: "percent")
+                        FurgTextField("Tax Withholding %", text: $taxWithholding, icon: "percent")
 
                         DatePicker("Next Payday", selection: $nextPayday, displayedComponents: .date)
                             .datePickerStyle(.compact)
@@ -652,11 +652,11 @@ struct IncomeSourceDetailView: View {
 
                         // Details
                         VStack(spacing: 12) {
-                            DetailRow(label: "Type", value: source.type.rawValue)
-                            DetailRow(label: "Frequency", value: source.frequency.rawValue)
-                            DetailRow(label: "Annual Income", value: "$\(Int(source.annualAmount))")
-                            DetailRow(label: "Tax Withholding", value: "\(Int(source.taxWithholdingPercent * 100))%")
-                            DetailRow(label: "Net per Paycheck", value: "$\(Int(source.netAmount))")
+                            IncomeDetailRow(label: "Type", value: source.type.rawValue)
+                            IncomeDetailRow(label: "Frequency", value: source.frequency.rawValue)
+                            IncomeDetailRow(label: "Annual Income", value: "$\(Int(source.annualAmount))")
+                            IncomeDetailRow(label: "Tax Withholding", value: "\(Int(source.taxWithholdingPercent * 100))%")
+                            IncomeDetailRow(label: "Net per Paycheck", value: "$\(Int(source.netAmount))")
                         }
                         .padding()
                         .background(Color.white.opacity(0.05))
@@ -707,7 +707,7 @@ struct IncomeSourceDetailView: View {
     }
 }
 
-struct DetailRow: View {
+private struct IncomeDetailRow: View {
     let label: String
     let value: String
 

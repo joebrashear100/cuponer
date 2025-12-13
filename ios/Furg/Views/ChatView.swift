@@ -32,7 +32,7 @@ struct ChatView: View {
                     ScrollView(showsIndicators: false) {
                         LazyVStack(spacing: 16) {
                             if chatManager.messages.isEmpty {
-                                EmptyStateView(onSuggestionTap: { suggestion in
+                                ChatEmptyStateView(onSuggestionTap: { suggestion in
                                     messageText = suggestion
                                     sendMessage()
                                 })
@@ -208,7 +208,7 @@ struct ChatView: View {
 
 // MARK: - Empty State View
 
-private struct EmptyStateView: View {
+private struct ChatEmptyStateView: View {
     var onSuggestionTap: (String) -> Void
 
     let suggestions = [

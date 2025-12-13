@@ -40,7 +40,7 @@ struct FurgShortcuts: AppShortcutsProvider {
             phrases: [
                 "Hide money in \(.applicationName)",
                 "Save money in \(.applicationName)",
-                "Hide \(\.$amount) dollars in \(.applicationName)"
+                "Hide some dollars in \(.applicationName)"
             ],
             shortTitle: "Hide Money",
             systemImageName: "eye.slash.fill"
@@ -203,7 +203,7 @@ struct HideMoneyIntent: AppIntent {
     }
 }
 
-// MARK: - Financial Tip Intent
+/// MARK: - Financial Tip Intent
 
 struct GetFinancialTipIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Financial Tip"
@@ -222,7 +222,7 @@ struct GetFinancialTipIntent: AppIntent {
         ]
 
         let tip = tips.randomElement() ?? tips[0]
-        return .result(dialog: tip)
+        return .result(dialog: IntentDialog(stringLiteral: tip))
     }
 }
 
@@ -304,7 +304,7 @@ struct AddExpenseIntent: AppIntent {
     @Parameter(title: "Merchant")
     var merchant: String
 
-    @Parameter(title: "Category", default: "Shopping")
+    @Parameter(title: "Category", default: .shopping)
     var category: ExpenseCategory
 
     func perform() async throws -> some IntentResult & ProvidesDialog {

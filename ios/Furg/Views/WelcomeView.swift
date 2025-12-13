@@ -83,10 +83,10 @@ struct WelcomeView: View {
                 // Features card
                 FloatingCard(padding: 24) {
                     VStack(spacing: 20) {
-                        FeatureRow(icon: "message.fill", title: "Chat-First", subtitle: "Control everything through conversation")
-                        FeatureRow(icon: "shield.lefthalf.filled", title: "Bill Shield", subtitle: "Never miss a payment again")
-                        FeatureRow(icon: "eye.slash.fill", title: "Shadow Banking", subtitle: "Hide money from yourself")
-                        FeatureRow(icon: "sparkles", title: "AI Insights", subtitle: "Smart spending analysis")
+                        WelcomeFeatureRow(icon: "message.fill", title: "Chat-First", subtitle: "Control everything through conversation")
+                        WelcomeFeatureRow(icon: "shield.lefthalf.filled", title: "Bill Shield", subtitle: "Never miss a payment again")
+                        WelcomeFeatureRow(icon: "eye.slash.fill", title: "Shadow Banking", subtitle: "Hide money from yourself")
+                        WelcomeFeatureRow(icon: "sparkles", title: "AI Insights", subtitle: "Smart spending analysis")
                     }
                 }
                 .padding(.horizontal, 24)
@@ -161,7 +161,7 @@ struct WelcomeView: View {
     }
 }
 
-struct FeatureRow: View {
+struct WelcomeFeatureRow: View {
     let icon: String
     let title: String
     let subtitle: String

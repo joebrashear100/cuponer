@@ -167,7 +167,7 @@ struct LoyaltyPointsResult: Codable {
     }
 }
 
-struct ReorderSuggestion: Identifiable, Codable {
+struct ShoppingReorderSuggestion: Identifiable, Codable {
     let id: String
     let item: String
     let lastPurchased: String
@@ -245,7 +245,7 @@ struct RecommendationsResponse: Codable {
 }
 
 struct ReorderSuggestionsResponse: Codable {
-    let suggestions: [ReorderSuggestion]
+    let suggestions: [ShoppingReorderSuggestion]
     let daysAhead: Int
     let estimatedSpend: Double
 
@@ -317,7 +317,7 @@ class ShoppingAssistantManager: ObservableObject {
     @Published var recommendations: [ShoppingRecommendation] = []
     @Published var cardRecommendation: CreditCardRecommendation?
     @Published var loyaltyPoints: LoyaltyPointsResult?
-    @Published var reorderSuggestions: [ReorderSuggestion] = []
+    @Published var reorderSuggestions: [ShoppingReorderSuggestion] = []
 
     // MARK: - Private Properties
 
@@ -520,7 +520,7 @@ class ShoppingAssistantManager: ObservableObject {
     }
 
     /// Get reorder suggestions
-    func getReorderSuggestions(daysAhead: Int = 7) async throws -> [ReorderSuggestion] {
+    func getReorderSuggestions(daysAhead: Int = 7) async throws -> [ShoppingReorderSuggestion] {
         let endpoint = "/api/v1/shopping/reorder-suggestions?days_ahead=\(daysAhead)"
 
         let response: ReorderSuggestionsResponse = try await get(endpoint)

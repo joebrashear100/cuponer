@@ -319,7 +319,7 @@ class LoyaltyProgramManager: ObservableObject {
 
         // Check for transfer opportunities
         for (sourceKey, partners) in transferPartners {
-            guard let sourceProgram = programs.first(where: { knownPrograms.values.first { $0.name == $0.name }?.name == knownPrograms[sourceKey]?.name }) else { continue }
+            guard let sourceProgram = programs.first(where: { $0.name == knownPrograms[sourceKey]?.name }) else { continue }
 
             for (partnerKey, ratio) in partners {
                 guard let partnerProgram = programs.first(where: { $0.name == knownPrograms[partnerKey]?.name }),

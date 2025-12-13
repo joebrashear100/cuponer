@@ -316,7 +316,7 @@ struct AddSpendingLimitSheet: View {
                                 GridItem(.flexible())
                             ], spacing: 12) {
                                 ForEach(SpendingLimitsManager.availableCategories, id: \.self) { category in
-                                    CategoryButton(
+                                    SpendingCategoryButton(
                                         category: category,
                                         isSelected: selectedCategory == category
                                     ) {
@@ -432,7 +432,7 @@ struct AddSpendingLimitSheet: View {
     }
 }
 
-struct CategoryButton: View {
+struct SpendingCategoryButton: View {
     let category: String
     let isSelected: Bool
     let action: () -> Void

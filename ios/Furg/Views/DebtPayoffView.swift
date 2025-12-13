@@ -480,7 +480,7 @@ struct AddDebtView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         // Name
-                        FurgTextField(placeholder: "Debt Name", text: $name, icon: "textformat")
+                        FurgTextField("Debt Name", text: $name, icon: "textformat")
 
                         // Type Picker
                         VStack(alignment: .leading, spacing: 8) {
@@ -513,17 +513,17 @@ struct AddDebtView: View {
 
                         // Amounts
                         HStack(spacing: 12) {
-                            FurgTextField(placeholder: "Current Balance", text: $currentBalance, icon: "dollarsign")
-                            FurgTextField(placeholder: "Original Balance", text: $originalBalance, icon: "dollarsign")
+                            FurgTextField("Current Balance", text: $currentBalance, icon: "dollarsign")
+                            FurgTextField("Original Balance", text: $originalBalance, icon: "dollarsign")
                         }
 
                         HStack(spacing: 12) {
-                            FurgTextField(placeholder: "APR %", text: $interestRate, icon: "percent")
-                            FurgTextField(placeholder: "Min Payment", text: $minimumPayment, icon: "dollarsign")
+                            FurgTextField("APR %", text: $interestRate, icon: "percent")
+                            FurgTextField("Min Payment", text: $minimumPayment, icon: "dollarsign")
                         }
 
                         // Lender
-                        FurgTextField(placeholder: "Lender Name", text: $lender, icon: "building.2")
+                        FurgTextField("Lender Name", text: $lender, icon: "building.2")
 
                         // Due Day
                         HStack {

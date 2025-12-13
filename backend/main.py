@@ -21,11 +21,19 @@ from auth import (
 )
 from database import db
 from rate_limiter import rate_limit, get_remaining_budget
-from services.chat import ChatService
+from services.chat import ChatService  # Legacy single-model service
+from services.chat_v2 import ChatServiceV2  # Multi-model service
 from services.plaid_service import PlaidService
 from services.bill_detection import BillDetector
 from services.shadow_banking import ShadowBankingService
+from services.gemini_service import gemini_service
+from services.grok_service import grok_service
+from services.openai_shopping import ShoppingAssistant, quick_shop
+from services.deals_service import DealsService, PriceTracker
 from ml.categorizer import get_categorizer
+
+# Feature flag for multi-model chat
+USE_MULTI_MODEL_CHAT = os.getenv("USE_MULTI_MODEL_CHAT", "true").lower() == "true"
 
 
 # Lifespan context manager for startup/shutdown
@@ -35,9 +43,24 @@ async def lifespan(app: FastAPI):
     print("🚀 Starting FURG backend...")
     await db.connect()
     print("✅ Database connected")
+
+    # Initialize multi-model chat if enabled
+    if USE_MULTI_MODEL_CHAT:
+        print("🤖 Initializing multi-model chat (Grok + Claude + Gemini)...")
+        await ChatServiceV2.initialize()
+        print("✅ Multi-model router ready")
+        print("   - Grok 4 Fast: Roasting & casual chat")
+        print("   - Claude Sonnet: Financial advice")
+        print("   - Gemini Flash: Routing & categorization")
+    else:
+        print("📝 Using single-model chat (Claude only)")
+
     yield
+
     # Shutdown
     print("👋 Shutting down FURG backend...")
+    await gemini_service.close()
+    await grok_service.close()
     await db.disconnect()
 
 
@@ -80,6 +103,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     message: str
     tokens_used: Optional[Dict[str, int]] = None
+    model: Optional[str] = None  # Which model handled the request
+    intent: Optional[str] = None  # Classified intent (roast, advice, etc.)
+    cost: Optional[float] = None  # Cost in dollars
+    latency_ms: Optional[int] = None  # Response latency
 
 
 class PlaidLinkTokenResponse(BaseModel):
@@ -221,15 +248,11 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
     """
     Send a message to FURG and get a response
 
-    Handles conversation with full context
+    Multi-model routing:
+    - Roasting/casual -> Grok 4 Fast (cheap, fast)
+    - Financial advice -> Claude Sonnet (nuanced)
+    - Categorization -> Gemini Flash (fast)
     """
-    # Check for special commands first
-    command_response = await ChatService.handle_command(user_id, request.message)
-    if command_response:
-        await db.save_message(user_id, "user", request.message)
-        await db.save_message(user_id, "assistant", command_response)
-        return ChatResponse(message=command_response)
-
     # Get user profile
     profile = await db.get_user_profile(user_id)
 
@@ -238,13 +261,40 @@ async def chat(request: ChatRequest, user_id: str = Depends(get_current_user)):
     if request.include_context:
         context = await _build_chat_context(user_id)
 
-    # Get response from ChatService
-    response = await ChatService.chat(user_id, request.message, profile, context)
+    # Use multi-model or legacy single-model chat
+    if USE_MULTI_MODEL_CHAT:
+        # Multi-model chat with intelligent routing
+        response = await ChatServiceV2.chat(
+            user_id=user_id,
+            message=request.message,
+            profile=profile,
+            context=context,
+            life_context=None  # TODO: Wire up iOS life context
+        )
 
-    return ChatResponse(
-        message=response["message"],
-        tokens_used=response.get("tokens_used")
-    )
+        return ChatResponse(
+            message=response["message"],
+            tokens_used=response.get("tokens_used"),
+            model=response.get("model"),
+            intent=response.get("intent"),
+            cost=response.get("cost"),
+            latency_ms=response.get("latency_ms")
+        )
+    else:
+        # Legacy single-model chat (Claude only)
+        command_response = await ChatService.handle_command(user_id, request.message)
+        if command_response:
+            await db.save_message(user_id, "user", request.message)
+            await db.save_message(user_id, "assistant", command_response)
+            return ChatResponse(message=command_response)
+
+        response = await ChatService.chat(user_id, request.message, profile, context)
+
+        return ChatResponse(
+            message=response["message"],
+            tokens_used=response.get("tokens_used"),
+            model="claude-sonnet-4-20250514"
+        )
 
 
 @app.get("/api/v1/chat/history")
@@ -272,6 +322,44 @@ async def clear_chat_history(user_id: str = Depends(get_current_user)):
     """Clear conversation history"""
     await db.clear_conversation_history(user_id)
     return {"message": "Conversation history cleared"}
+
+
+@app.get("/api/v1/chat/routing-stats")
+async def get_routing_stats(user_id: str = Depends(get_current_user)):
+    """
+    Get model routing statistics
+
+    Shows which models are handling requests and associated costs
+    """
+    if not USE_MULTI_MODEL_CHAT:
+        return {
+            "enabled": False,
+            "message": "Multi-model routing is disabled"
+        }
+
+    stats = await ChatServiceV2.get_routing_stats(user_id)
+
+    return {
+        "enabled": True,
+        "user_stats": stats,
+        "models": {
+            "grok-4-fast": {
+                "purpose": "Roasting & casual chat",
+                "cost_per_1m_input": 0.20,
+                "cost_per_1m_output": 0.50
+            },
+            "claude-sonnet-4-20250514": {
+                "purpose": "Financial advice & complex questions",
+                "cost_per_1m_input": 3.00,
+                "cost_per_1m_output": 15.00
+            },
+            "gemini-2.0-flash": {
+                "purpose": "Routing & categorization",
+                "cost_per_1m_input": 0.075,
+                "cost_per_1m_output": 0.30
+            }
+        }
+    }
 
 
 # ==================== PLAID ENDPOINTS ====================
@@ -1389,6 +1477,315 @@ async def mark_wishlist_purchased(
     return {"message": "Item marked as purchased"}
 
 
+# ==================== SHOPPING ASSISTANT ENDPOINTS ====================
+# ChatGPT-style shopping mode with AI-powered product search, deals, and recommendations
+
+class ShoppingChatRequest(BaseModel):
+    message: str
+    include_context: bool = True
+
+
+class ShoppingChatResponse(BaseModel):
+    message: str
+    actions: list = []
+    function_results: list = []
+    tokens_used: Optional[Dict[str, int]] = None
+
+
+class ProductSearchRequest(BaseModel):
+    query: str
+    category: Optional[str] = None
+    max_price: Optional[float] = None
+    min_price: Optional[float] = None
+    sort_by: str = "relevance"
+    limit: int = 10
+
+
+class DealSearchRequest(BaseModel):
+    query: str
+    retailer: Optional[str] = None
+    discount_type: Optional[str] = None
+    min_discount: Optional[float] = None
+
+
+class PriceCompareRequest(BaseModel):
+    product_name: str
+    include_used: bool = False
+
+
+class ShoppingListItemRequest(BaseModel):
+    item_name: str
+    quantity: int = 1
+    category: Optional[str] = None
+    target_price: Optional[float] = None
+    preferred_store: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PriceAlertRequest(BaseModel):
+    product_name: str
+    target_price: float
+
+
+# Store shopping assistant sessions per user
+_shopping_sessions: Dict[str, ShoppingAssistant] = {}
+
+
+def get_shopping_assistant(user_id: str) -> ShoppingAssistant:
+    """Get or create a shopping assistant for a user"""
+    if user_id not in _shopping_sessions:
+        _shopping_sessions[user_id] = ShoppingAssistant(user_id)
+    return _shopping_sessions[user_id]
+
+
+@app.post("/api/v1/shopping/chat", response_model=ShoppingChatResponse)
+@rate_limit
+async def shopping_chat(
+    request: ShoppingChatRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Chat with the AI shopping assistant (ChatGPT shopping mode).
+
+    Ask questions like:
+    - "Find me running shoes under $100"
+    - "What deals are available at Target?"
+    - "Compare prices for AirPods Pro"
+    - "Add milk to my shopping list"
+    - "What credit card should I use at Amazon?"
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    # Build context if requested
+    context = None
+    if request.include_context:
+        context = await _build_shopping_context(user_id)
+
+    # Get response from shopping assistant
+    response = await assistant.chat(request.message, context)
+
+    return ShoppingChatResponse(
+        message=response["message"],
+        actions=response.get("actions", []),
+        function_results=response.get("function_results", []),
+        tokens_used=response.get("tokens_used")
+    )
+
+
+@app.delete("/api/v1/shopping/chat/history")
+async def clear_shopping_history(user_id: str = Depends(get_current_user)):
+    """Clear shopping chat history"""
+    if user_id in _shopping_sessions:
+        _shopping_sessions[user_id].clear_history()
+    return {"message": "Shopping chat history cleared"}
+
+
+@app.post("/api/v1/shopping/search")
+async def search_products(
+    request: ProductSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Search for products directly without chat.
+    Returns product results with prices, ratings, and deals.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._search_products(
+        query=request.query,
+        category=request.category,
+        max_price=request.max_price,
+        min_price=request.min_price,
+        sort_by=request.sort_by,
+        limit=request.limit
+    )
+
+    return results
+
+
+@app.post("/api/v1/shopping/deals")
+async def find_deals(
+    request: DealSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Find deals and coupons for products or categories.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._find_deals(
+        query=request.query,
+        retailer=request.retailer,
+        discount_type=request.discount_type,
+        min_discount=request.min_discount
+    )
+
+    return results
+
+
+@app.post("/api/v1/shopping/compare")
+async def compare_prices(
+    request: PriceCompareRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Compare prices for a product across multiple retailers.
+    """
+    assistant = get_shopping_assistant(user_id)
+
+    results = await assistant._compare_prices(
+        product_name=request.product_name,
+        include_used=request.include_used
+    )
+
+    return results
+
+
+@app.get("/api/v1/shopping/list")
+async def get_shopping_list(user_id: str = Depends(get_current_user)):
+    """Get user's shopping list"""
+    assistant = get_shopping_assistant(user_id)
+    return await assistant._get_shopping_list()
+
+
+@app.post("/api/v1/shopping/list")
+async def add_to_shopping_list(
+    request: ShoppingListItemRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Add item to shopping list"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._add_to_shopping_list(
+        item_name=request.item_name,
+        quantity=request.quantity,
+        category=request.category,
+        target_price=request.target_price,
+        preferred_store=request.preferred_store,
+        notes=request.notes
+    )
+
+    return result
+
+
+@app.post("/api/v1/shopping/price-alert")
+async def create_price_alert(
+    request: PriceAlertRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Create a price drop alert"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._create_price_alert(
+        product_name=request.product_name,
+        target_price=request.target_price
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/recommendations")
+async def get_shopping_recommendations(
+    category: Optional[str] = None,
+    budget: Optional[float] = None,
+    use_case: Optional[str] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Get personalized product recommendations"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._get_recommendations(
+        category=category,
+        budget=budget,
+        use_case=use_case
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/best-card")
+async def get_best_card(
+    merchant: str,
+    amount: Optional[float] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Find the best credit card to use for a purchase"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._find_best_card(
+        merchant=merchant,
+        amount=amount
+    )
+
+    return result
+
+
+@app.get("/api/v1/shopping/loyalty-points")
+async def get_loyalty_points(
+    retailer: Optional[str] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """Check loyalty points balance across programs"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._check_loyalty_points(retailer=retailer)
+
+    return result
+
+
+@app.get("/api/v1/shopping/reorder-suggestions")
+async def get_reorder_suggestions(
+    days_ahead: int = 7,
+    user_id: str = Depends(get_current_user)
+):
+    """Get suggestions for items that may need reordering"""
+    assistant = get_shopping_assistant(user_id)
+
+    result = await assistant._get_reorder_suggestions(days_ahead=days_ahead)
+
+    return result
+
+
+@app.post("/api/v1/shopping/quick")
+@rate_limit
+async def quick_shopping_query(
+    request: ShoppingChatRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Quick shopping query without maintaining conversation state.
+    Good for one-off questions.
+    """
+    context = await _build_shopping_context(user_id) if request.include_context else None
+    result = await quick_shop(user_id, request.message, context)
+
+    return ShoppingChatResponse(
+        message=result["message"],
+        actions=result.get("actions", []),
+        function_results=result.get("function_results", []),
+        tokens_used=result.get("tokens_used")
+    )
+
+
+async def _build_shopping_context(user_id: str) -> Dict[str, Any]:
+    """Build context for shopping assistant"""
+    # Get balance for budget context
+    balance_summary = await ShadowBankingService.get_balance_summary(user_id)
+
+    # Get profile for preferences
+    profile = await db.get_user_profile(user_id)
+
+    # Simplified shopping context
+    context = {
+        "budget": balance_summary.get("visible_balance", 0),
+        "shopping_list": [],  # Would fetch from shopping list table
+        "preferred_retailers": profile.get("preferred_retailers", []) if profile else [],
+        "credit_cards": profile.get("credit_cards", []) if profile else []
+    }
+
+    return context
+
+
 # ==================== ACHIEVEMENTS ENDPOINTS ====================
 
 @app.get("/api/v1/achievements")
@@ -1477,6 +1874,478 @@ async def get_achievements(user_id: str = Depends(get_current_user)):
         "achievements": achievements,
         "total_earned": len([a for a in achievements if a.get("earned")]),
         "total_available": len(achievements)
+    }
+
+
+# ==================== DEALS ENDPOINTS ====================
+# Amazon Shopping AI - Price Tracking, Deals & Smart Shopping
+
+class DealsSearchRequest(BaseModel):
+    keywords: str
+    category: Optional[str] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    min_rating: Optional[float] = None
+    prime_only: bool = False
+    sort_by: str = "Relevance"
+
+
+class DealsTrackRequest(BaseModel):
+    asin: str
+    target_price: Optional[float] = None
+
+
+class DealsSaveDealRequest(BaseModel):
+    asin: str
+    title: str
+    price: float
+    original_price: Optional[float] = None
+    savings_percent: Optional[float] = None
+    image_url: Optional[str] = None
+    url: Optional[str] = None
+    deal_type: str = "saved"
+
+
+@app.get("/api/v1/deals")
+async def deals_home(user_id: str = Depends(get_current_user)):
+    """
+    Deals home - Get overview and personalized recommendations
+
+    Returns stats, tracked products with price drops, and deal suggestions
+    """
+    # Get user stats
+    stats = await db.get_deals_stats(user_id)
+
+    # Get tracked products with price drops
+    tracked = await db.get_deals_tracked_products(user_id)
+    price_drops = [t for t in tracked if t.get("price_drop_detected")]
+
+    # Get saved deals
+    saved_deals = await db.get_deals_saved_deals(user_id)
+
+    # Find deals matching user's budget (from financial data)
+    balance = await ShadowBankingService.get_balance_summary(user_id)
+    disposable = balance.get("visible_balance", 100)
+
+    # Get personalized deal suggestions
+    deals = await DealsService.find_deals(max_price=disposable * 0.5)  # Max 50% of balance
+
+    return {
+        "greeting": "Hey! Ready to help you. Let me help you save some money!",
+        "stats": stats,
+        "price_drops": [
+            {
+                "asin": t["asin"],
+                "title": t["title"],
+                "current_price": float(t["current_price"]),
+                "target_price": float(t["target_price"]),
+                "savings": float(t.get("last_checked_price", t["current_price"]) - t["current_price"]),
+                "image_url": t.get("image_url")
+            }
+            for t in price_drops[:5]
+        ],
+        "saved_deals_count": len(saved_deals),
+        "suggested_deals": [d.to_dict() for d in deals[:6]],
+        "tip": "Track products on your wishlist and I'll alert you when prices drop!"
+    }
+
+
+@app.post("/api/v1/deals/search")
+async def deals_search(
+    request: DealsSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Search Amazon products for deals
+
+    Searches Amazon's catalog with optional filters
+    """
+    products = await DealsService.search_products(
+        keywords=request.keywords,
+        category=request.category,
+        min_price=request.min_price,
+        max_price=request.max_price,
+        min_rating=request.min_rating,
+        prime_only=request.prime_only,
+        sort_by=request.sort_by
+    )
+
+    # Log search for personalization
+    # await db.save_deals_search(user_id, request.keywords, len(products))
+
+    return {
+        "query": request.keywords,
+        "results_count": len(products),
+        "products": [p.to_dict() for p in products],
+        "deals_tip": (
+            "Want to track any of these? I'll alert you when the price drops!"
+            if products else
+            "No products found. Try different keywords!"
+        )
+    }
+
+
+@app.get("/api/v1/deals/deals")
+async def deals_get_deals(
+    categories: Optional[str] = None,  # Comma-separated
+    max_price: Optional[float] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Get current Amazon deals
+
+    Finds active deals, optionally filtered by category and price
+    """
+    category_list = categories.split(",") if categories else None
+
+    deals = await DealsService.find_deals(
+        categories=category_list,
+        max_price=max_price
+    )
+
+    # Group by deal type
+    by_type = {}
+    for deal in deals:
+        deal_type = deal.deal_type
+        if deal_type not in by_type:
+            by_type[deal_type] = []
+        by_type[deal_type].append(deal.to_dict())
+
+    return {
+        "total_deals": len(deals),
+        "by_type": by_type,
+        "deals": [d.to_dict() for d in deals],
+        "last_updated": datetime.utcnow().isoformat()
+    }
+
+
+@app.get("/api/v1/deals/product/{asin}")
+async def deals_get_product(
+    asin: str,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Get detailed product information
+
+    Returns current price, deal status, and price prediction
+    """
+    product = await DealsService.get_product_by_asin(asin)
+    if not product:
+        raise HTTPException(404, "Product not found")
+
+    # Check if user is tracking this product
+    tracked = await db.get_deals_tracked_product(user_id, asin)
+
+    # Get price prediction
+    prediction = await DealsService.get_price_prediction(asin)
+
+    # Get price history
+    history = await db.get_deals_price_history(asin, days=30)
+
+    return {
+        "product": product.to_dict(),
+        "is_tracked": tracked is not None,
+        "tracking_target": float(tracked["target_price"]) if tracked else None,
+        "price_prediction": prediction,
+        "price_history": [
+            {
+                "price": float(h["price"]),
+                "date": h["recorded_at"].isoformat() if hasattr(h["recorded_at"], "isoformat") else str(h["recorded_at"])
+            }
+            for h in history[:30]
+        ],
+        "deals_verdict": prediction.get("reason", "Check back for price analysis!")
+    }
+
+
+@app.post("/api/v1/deals/track")
+async def deals_track_product(
+    request: DealsTrackRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Start tracking a product for price drops
+
+    We will monitor the price and alert when it drops
+    """
+    result = await PriceTracker.track_product(
+        user_id=user_id,
+        asin=request.asin,
+        target_price=request.target_price,
+        db=db
+    )
+
+    if "error" in result:
+        raise HTTPException(400, result["error"])
+
+    return {
+        "success": True,
+        "message": result["message"],
+        "tracking": {
+            "asin": request.asin,
+            "current_price": result["current_price"],
+            "target_price": result["target_price"],
+            "potential_savings": result["savings_if_hit"]
+        },
+        "deals_says": f"I'm on it! I'll let you know when this drops below ${result['target_price']:.2f}"
+    }
+
+
+@app.get("/api/v1/deals/tracked")
+async def deals_get_tracked(user_id: str = Depends(get_current_user)):
+    """
+    Get all tracked products
+
+    Returns list of products being monitored for price drops
+    """
+    tracked = await db.get_deals_tracked_products(user_id)
+
+    total_potential_savings = 0
+    for t in tracked:
+        if t.get("last_checked_price") and t["current_price"] < t["last_checked_price"]:
+            total_potential_savings += float(t["last_checked_price"] - t["current_price"])
+
+    return {
+        "tracked_count": len(tracked),
+        "total_potential_savings": round(total_potential_savings, 2),
+        "products": [
+            {
+                "asin": t["asin"],
+                "title": t["title"],
+                "current_price": float(t["current_price"]),
+                "target_price": float(t["target_price"]),
+                "price_dropped": t.get("price_drop_detected", False),
+                "last_checked": t.get("last_checked_at"),
+                "image_url": t.get("image_url")
+            }
+            for t in tracked
+        ]
+    }
+
+
+@app.delete("/api/v1/deals/tracked/{asin}")
+async def deals_untrack_product(
+    asin: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Stop tracking a product"""
+    success = await db.delete_deals_tracked_product(user_id, asin)
+
+    if not success:
+        raise HTTPException(404, "Product not being tracked")
+
+    return {"message": "Stopped tracking product", "asin": asin}
+
+
+@app.post("/api/v1/deals/deals/save")
+async def deals_save_deal(
+    request: DealsSaveDealRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Save a deal for later"""
+    deal_id = await db.save_deals_deal(user_id, {
+        "asin": request.asin,
+        "title": request.title,
+        "price": request.price,
+        "original_price": request.original_price,
+        "savings_percent": request.savings_percent,
+        "image_url": request.image_url,
+        "url": request.url,
+        "deal_type": request.deal_type
+    })
+
+    return {
+        "success": True,
+        "message": "Deal saved!",
+        "deal_id": deal_id,
+        "deals_tip": "Don't wait too long - deals can expire!"
+    }
+
+
+@app.get("/api/v1/deals/deals/saved")
+async def deals_get_saved_deals(user_id: str = Depends(get_current_user)):
+    """Get all saved deals"""
+    deals = await db.get_deals_saved_deals(user_id)
+
+    total_savings = sum(
+        float(d.get("original_price", d["price"]) - d["price"])
+        for d in deals
+        if d.get("original_price")
+    )
+
+    return {
+        "saved_count": len(deals),
+        "total_savings_available": round(total_savings, 2),
+        "deals": [
+            {
+                "asin": d["asin"],
+                "title": d["title"],
+                "price": float(d["price"]),
+                "original_price": float(d["original_price"]) if d.get("original_price") else None,
+                "savings_percent": float(d["savings_percent"]) if d.get("savings_percent") else None,
+                "image_url": d.get("image_url"),
+                "url": d.get("url"),
+                "deal_type": d.get("deal_type", "saved"),
+                "saved_at": d["created_at"].isoformat() if hasattr(d["created_at"], "isoformat") else str(d["created_at"])
+            }
+            for d in deals
+        ]
+    }
+
+
+@app.delete("/api/v1/deals/deals/saved/{asin}")
+async def deals_remove_saved_deal(
+    asin: str,
+    user_id: str = Depends(get_current_user)
+):
+    """Remove a saved deal"""
+    success = await db.delete_deals_saved_deal(user_id, asin)
+
+    if not success:
+        raise HTTPException(404, "Deal not found")
+
+    return {"message": "Deal removed", "asin": asin}
+
+
+@app.get("/api/v1/deals/alternatives/{asin}")
+async def deals_find_alternatives(
+    asin: str,
+    max_price: Optional[float] = None,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Find cheaper alternatives to a product
+
+    Searching for similar products at lower prices
+    """
+    alternatives = await DealsService.find_alternatives(asin, max_price)
+
+    if not alternatives:
+        return {
+            "original_asin": asin,
+            "alternatives_count": 0,
+            "alternatives": [],
+            "deals_says": "This already looks like a great deal! Couldn't find cheaper alternatives."
+        }
+
+    return {
+        "original_asin": asin,
+        "alternatives_count": len(alternatives),
+        "alternatives": [p.to_dict() for p in alternatives],
+        "deals_says": f"Found {len(alternatives)} cheaper options! Check them out."
+    }
+
+
+@app.post("/api/v1/deals/wishlist-deals")
+async def deals_match_wishlist(user_id: str = Depends(get_current_user)):
+    """
+    Find Amazon deals matching wishlist items
+
+    Scans the user's wishlist and finds matching deals on Amazon
+    """
+    # Get user's wishlist
+    wishlist = await db.get_wishlist(user_id)
+
+    if not wishlist:
+        return {
+            "matches_count": 0,
+            "matches": {},
+            "deals_says": "Add some items to your wishlist and I'll find deals for you!"
+        }
+
+    # Convert to format expected by DealsService
+    wishlist_items = [
+        {"name": item["name"], "price": float(item["price"])}
+        for item in wishlist
+        if not item.get("is_purchased")
+    ]
+
+    # Find matches
+    matches = await DealsService.match_wishlist_deals(wishlist_items)
+
+    total_matches = sum(len(deals) for deals in matches.values())
+
+    return {
+        "matches_count": total_matches,
+        "wishlist_items_checked": len(wishlist_items),
+        "matches": {
+            name: [d.to_dict() for d in deals]
+            for name, deals in matches.items()
+        },
+        "deals_says": (
+            f"Found {total_matches} deals matching your wishlist!"
+            if total_matches > 0 else
+            "No deals found right now, but I'll keep looking!"
+        )
+    }
+
+
+@app.get("/api/v1/deals/price-prediction/{asin}")
+async def deals_price_prediction(
+    asin: str,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Get price prediction for a product
+
+    Analyzing price history and predicts if now is a good time to buy
+    """
+    prediction = await DealsService.get_price_prediction(asin)
+
+    if "error" in prediction:
+        raise HTTPException(404, prediction["error"])
+
+    return {
+        "asin": asin,
+        "prediction": prediction,
+        "deals_verdict": (
+            "Buy now! This is a great price."
+            if prediction.get("recommendation") == "buy" else
+            f"Consider waiting. {prediction.get('reason', 'Price may drop.')}"
+        )
+    }
+
+
+@app.post("/api/v1/deals/chat")
+async def deals_chat_search(
+    message: str,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Natural language shopping search
+
+    Search to find deals in plain English
+    Example: "find me a good deal on wireless headphones under $100"
+    """
+    # Get user's budget context
+    balance = await ShadowBankingService.get_balance_summary(user_id)
+    budget = balance.get("visible_balance", 500) * 0.3  # Max 30% of balance by default
+
+    result = await DealsService.smart_search_for_chat(message, budget)
+
+    return {
+        "query": message,
+        "response_type": result["type"],
+        "message": result["message"],
+        "products": result.get("products", []),
+        "deals_tip": result.get("deals_tip", ""),
+        "budget_aware": f"Based on your balance, keeping suggestions under ${budget:.2f}"
+    }
+
+
+@app.get("/api/v1/deals/stats")
+async def deals_get_stats(user_id: str = Depends(get_current_user)):
+    """Get Deals usage statistics"""
+    stats = await db.get_deals_stats(user_id)
+
+    return {
+        "stats": stats,
+        "deals_message": (
+            f"You're tracking {stats['products_tracked']} products. "
+            f"I've found ${stats['potential_savings']:.2f} in potential savings!"
+            if stats['products_tracked'] > 0 else
+            "Start tracking products and I'll help you save money!"
+        )
     }
 
 

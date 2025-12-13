@@ -41,10 +41,22 @@ GET_IT_ON_YOUR_PHONE_TONIGHT.md
 - 🔥 **Roasting Personality**: Mocks bad spending to motivate ("Nice $47 Uber for a 10min walk, athlete")
 - 🛡️ **Bill Protection**: Always keeps 2× upcoming bills + $500 buffer safe
 - 🏦 **Multi-Bank Support**: Plaid integration for all major banks
-- 🤖 **AI-Powered Categorization**: Claude-based transaction categorization
+- 🤖 **Multi-Model AI**: Intelligent routing between Grok, Claude, and Gemini (94% cost savings)
 - 📊 **Smart Bill Detection**: Automatically detects recurring bills
 - 💰 **Shadow Banking**: Hide money from yourself for forced savings
 - 🍎 **Deep Apple Integration**: Sign in with Apple, ready for FinanceKit & Shortcuts
+
+## AI Architecture
+
+FURG uses intelligent multi-model routing to optimize for both cost and quality:
+
+| Model | Purpose | Traffic |
+|-------|---------|---------|
+| **Grok 4 Fast** | Roasting & casual chat | 60% |
+| **Claude Sonnet** | Financial advice | 25% |
+| **Gemini Flash** | Routing & categorization | 15% |
+
+See [docs/MULTI_MODEL_ARCHITECTURE.md](docs/MULTI_MODEL_ARCHITECTURE.md) for full details.
 
 ## Quick Start
 
@@ -53,7 +65,10 @@ GET_IT_ON_YOUR_PHONE_TONIGHT.md
 - Python 3.11+
 - PostgreSQL 15+ with TimescaleDB
 - Docker & Docker Compose (recommended)
-- Anthropic API key ([get one here](https://console.anthropic.com/))
+- API Keys:
+  - Anthropic (Claude): [console.anthropic.com](https://console.anthropic.com/)
+  - xAI (Grok): [console.x.ai](https://console.x.ai/)
+  - Google (Gemini): [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 - Plaid account ([sign up](https://plaid.com/))
 
 ### 1. Clone & Setup

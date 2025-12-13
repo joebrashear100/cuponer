@@ -110,6 +110,18 @@ struct Config {
         static let plaidSync = "/api/v1/plaid/sync-all"
         static let profile = "/api/v1/profile"
         static let savingsGoal = "/api/v1/savings-goal"
+
+        // Shopping Assistant (ChatGPT-style shopping mode)
+        static let shoppingChat = "/api/v1/shopping/chat"
+        static let shoppingSearch = "/api/v1/shopping/search"
+        static let shoppingDeals = "/api/v1/shopping/deals"
+        static let shoppingCompare = "/api/v1/shopping/compare"
+        static let shoppingList = "/api/v1/shopping/list"
+        static let shoppingPriceAlert = "/api/v1/shopping/price-alert"
+        static let shoppingRecommendations = "/api/v1/shopping/recommendations"
+        static let shoppingBestCard = "/api/v1/shopping/best-card"
+        static let shoppingLoyaltyPoints = "/api/v1/shopping/loyalty-points"
+        static let shoppingReorderSuggestions = "/api/v1/shopping/reorder-suggestions"
     }
 
     // MARK: - App Settings

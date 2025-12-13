@@ -1,0 +1,585 @@
+name: iOS Screenshots
+
+on:
+  push:
+    branches: [ 'claude/*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+    - name: Create Demo SwiftUI Project
+      run: |
+        mkdir -p CuponerDemo
+        cd CuponerDemo
+
+        # Create Swift Package structure for simpler build
+        cat > Package.swift << 'PACKAGE'
+        // swift-tools-version:5.9
+        import PackageDescription
+
+        let package = Package(
+            name: "CuponerDemo",
+            platforms: [.iOS(.v17)],
+            products: [
+                .library(name: "CuponerViews", targets: ["CuponerViews"])
+            ],
+            targets: [
+                .target(name: "CuponerViews", path: "Sources")
+            ]
+        )
+        PACKAGE
+
+        mkdir -p Sources
+
+        # Create SwiftUI Views representing a Cuponer app
+        cat > Sources/CuponerViews.swift << 'SWIFT'
+        import SwiftUI
+
+        // MARK: - Color Theme
+        extension Color {
+            static let cuponerPrimary = Color(red: 0.2, green: 0.6, blue: 0.4)
+            static let cuponerAccent = Color(red: 1.0, green: 0.6, blue: 0.2)
+            static let cuponerBackground = Color(red: 0.97, green: 0.97, blue: 0.98)
+        }
+
+        // MARK: - Data Models
+        public struct Coupon: Identifiable {
+            public let id = UUID()
+            let brand: String
+            let discount: String
+            let description: String
+            let expiresIn: String
+            let category: String
+            let color: Color
+        }
+
+        // MARK: - Home View
+        public struct HomeView: View {
+            let coupons = [
+                Coupon(brand: "Target", discount: "25% OFF", description: "Electronics & Home", expiresIn: "3 days", category: "Retail", color: .red),
+                Coupon(brand: "Whole Foods", discount: "$10 OFF", description: "Orders over $50", expiresIn: "5 days", category: "Grocery", color: .green),
+                Coupon(brand: "Nike", discount: "30% OFF", description: "Running Shoes", expiresIn: "1 week", category: "Sports", color: .orange),
+                Coupon(brand: "Starbucks", discount: "FREE", description: "Medium Drink", expiresIn: "Today", category: "Food", color: .brown),
+                Coupon(brand: "Amazon", discount: "15% OFF", description: "Prime Members Only", expiresIn: "2 days", category: "Online", color: .blue)
+            ]
+
+            public init() {}
+
+            public var body: some View {
+                NavigationStack {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Featured Banner
+                            FeaturedBanner()
+
+                            // Categories
+                            CategorySection()
+
+                            // Coupon List
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Today's Deals")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .padding(.horizontal)
+
+                                ForEach(coupons) { coupon in
+                                    CouponCard(coupon: coupon)
+                                }
+                            }
+                        }
+                        .padding(.vertical)
+                    }
+                    .background(Color.cuponerBackground)
+                    .navigationTitle("Cuponer")
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Image(systemName: "bell.badge")
+                                .foregroundColor(.cuponerPrimary)
+                        }
+                    }
+                }
+            }
+        }
+
+        // MARK: - Featured Banner
+        struct FeaturedBanner: View {
+            var body: some View {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(LinearGradient(
+                            colors: [.cuponerPrimary, .cuponerPrimary.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("WEEKEND SPECIAL")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white.opacity(0.8))
+
+                            Text("Up to 50% OFF")
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+
+                            Text("On selected brands")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.9))
+
+                            Button("Shop Now") {
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.white)
+                            .foregroundColor(.cuponerPrimary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "tag.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    .padding(24)
+                }
+                .frame(height: 180)
+                .padding(.horizontal)
+            }
+        }
+
+        // MARK: - Category Section
+        struct CategorySection: View {
+            let categories = [
+                ("cart.fill", "Grocery", Color.green),
+                ("tshirt.fill", "Fashion", Color.purple),
+                ("fork.knife", "Food", Color.orange),
+                ("laptopcomputer", "Tech", Color.blue),
+                ("house.fill", "Home", Color.pink)
+            ]
+
+            var body: some View {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(categories, id: \.1) { icon, name, color in
+                            VStack(spacing: 8) {
+                                Circle()
+                                    .fill(color.opacity(0.15))
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: icon)
+                                            .font(.title2)
+                                            .foregroundColor(color)
+                                    )
+
+                                Text(name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+
+        // MARK: - Coupon Card
+        struct CouponCard: View {
+            let coupon: Coupon
+
+            var body: some View {
+                HStack(spacing: 0) {
+                    // Left colored section
+                    Rectangle()
+                        .fill(coupon.color)
+                        .frame(width: 8)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(coupon.brand)
+                                .font(.headline)
+                                .fontWeight(.bold)
+
+                            Text(coupon.description)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            HStack {
+                                Image(systemName: "clock")
+                                    .font(.caption)
+                                Text("Expires: \(coupon.expiresIn)")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        VStack {
+                            Text(coupon.discount)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(coupon.color)
+
+                            Button("Clip") {
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.cuponerPrimary)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding()
+                }
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+                .padding(.horizontal)
+            }
+        }
+
+        // MARK: - Wallet View
+        public struct WalletView: View {
+            public init() {}
+
+            let savedCoupons = [
+                ("Target", "25% OFF Electronics", "3 days left"),
+                ("Starbucks", "Free Medium Drink", "Today only"),
+                ("Nike", "30% OFF Running Shoes", "5 days left")
+            ]
+
+            public var body: some View {
+                NavigationStack {
+                    List {
+                        Section {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("Total Savings")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Text("$127.50")
+                                        .font(.largeTitle)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.cuponerPrimary)
+                                }
+                                Spacer()
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.cuponerPrimary.opacity(0.3))
+                            }
+                            .padding(.vertical, 8)
+                        }
+
+                        Section("Clipped Coupons") {
+                            ForEach(savedCoupons, id: \.0) { brand, discount, expires in
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(brand)
+                                            .fontWeight(.semibold)
+                                        Text(discount)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Text(expires)
+                                        .font(.caption)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.cuponerAccent.opacity(0.2))
+                                        .cornerRadius(8)
+                                }
+                            }
+                        }
+
+                        Section("Recently Used") {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                VStack(alignment: .leading) {
+                                    Text("Whole Foods - $10 OFF")
+                                        .fontWeight(.medium)
+                                    Text("Used yesterday")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    .navigationTitle("My Wallet")
+                }
+            }
+        }
+
+        // MARK: - Scan View
+        public struct ScanView: View {
+            public init() {}
+
+            public var body: some View {
+                NavigationStack {
+                    VStack(spacing: 24) {
+                        Spacer()
+
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.cuponerPrimary, lineWidth: 3)
+                                .frame(width: 250, height: 250)
+
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.cuponerPrimary.opacity(0.1))
+                                .frame(width: 250, height: 250)
+
+                            VStack(spacing: 16) {
+                                Image(systemName: "barcode.viewfinder")
+                                    .font(.system(size: 80))
+                                    .foregroundColor(.cuponerPrimary)
+
+                                Text("Scan Barcode")
+                                    .font(.headline)
+                                    .foregroundColor(.cuponerPrimary)
+                            }
+                        }
+
+                        Text("Point your camera at a product barcode\nto find available coupons")
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.secondary)
+
+                        HStack(spacing: 40) {
+                            VStack {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.title2)
+                                Text("Gallery")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.cuponerPrimary)
+
+                            VStack {
+                                Image(systemName: "flashlight.off.fill")
+                                    .font(.title2)
+                                Text("Flash")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.cuponerPrimary)
+                        }
+
+                        Spacer()
+                    }
+                    .navigationTitle("Scan")
+                }
+            }
+        }
+
+        // MARK: - Profile View
+        public struct ProfileView: View {
+            public init() {}
+
+            public var body: some View {
+                NavigationStack {
+                    List {
+                        Section {
+                            HStack(spacing: 16) {
+                                Circle()
+                                    .fill(Color.cuponerPrimary)
+                                    .frame(width: 70, height: 70)
+                                    .overlay(
+                                        Text("JD")
+                                            .font(.title)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                    )
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("John Doe")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    Text("Premium Member")
+                                        .font(.subheadline)
+                                        .foregroundColor(.cuponerAccent)
+                                    Text("Member since 2024")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                        }
+
+                        Section("Statistics") {
+                            StatRow(icon: "tag.fill", title: "Coupons Used", value: "47")
+                            StatRow(icon: "dollarsign.circle.fill", title: "Total Saved", value: "$523.40")
+                            StatRow(icon: "flame.fill", title: "Current Streak", value: "12 days")
+                        }
+
+                        Section("Settings") {
+                            Label("Notifications", systemImage: "bell.fill")
+                            Label("Payment Methods", systemImage: "creditcard.fill")
+                            Label("Linked Stores", systemImage: "storefront.fill")
+                            Label("Privacy", systemImage: "lock.fill")
+                        }
+
+                        Section {
+                            Label("Help & Support", systemImage: "questionmark.circle.fill")
+                            Label("Rate the App", systemImage: "star.fill")
+                        }
+                    }
+                    .navigationTitle("Profile")
+                }
+            }
+        }
+
+        struct StatRow: View {
+            let icon: String
+            let title: String
+            let value: String
+
+            var body: some View {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundColor(.cuponerPrimary)
+                        .frame(width: 30)
+                    Text(title)
+                    Spacer()
+                    Text(value)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.cuponerPrimary)
+                }
+            }
+        }
+
+        // MARK: - Main Tab View
+        public struct CuponerTabView: View {
+            public init() {}
+
+            public var body: some View {
+                TabBar {
+                    HomeView()
+                        .tabItem {
+                            Label("Home", systemImage: "house.fill")
+                        }
+
+                    WalletView()
+                        .tabItem {
+                            Label("Wallet", systemImage: "wallet.pass.fill")
+                        }
+
+                    ScanView()
+                        .tabItem {
+                            Label("Scan", systemImage: "barcode.viewfinder")
+                        }
+
+                    ProfileView()
+                        .tabItem {
+                            Label("Profile", systemImage: "person.fill")
+                        }
+                }
+                .tint(.cuponerPrimary)
+            }
+        }
+        SWIFT
+
+    - name: Create Screenshot Test App
+      run: |
+        cd CuponerDemo
+
+        # Create a macOS command-line tool that renders SwiftUI to images
+        cat > Sources/ScreenshotGenerator.swift << 'SWIFT'
+        #if canImport(AppKit)
+        import AppKit
+        import SwiftUI
+
+        @main
+        struct ScreenshotGenerator {
+            static func main() async {
+                let outputDir = FileManager.default.currentDirectoryPath + "/screenshots"
+                try? FileManager.default.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
+
+                // Render each view
+                await captureView(HomeView(), name: "01_home", size: CGSize(width: 390, height: 844))
+                await captureView(WalletView(), name: "02_wallet", size: CGSize(width: 390, height: 844))
+                await captureView(ScanView(), name: "03_scan", size: CGSize(width: 390, height: 844))
+                await captureView(ProfileView(), name: "04_profile", size: CGSize(width: 390, height: 844))
+
+                print("Screenshots saved to: \(outputDir)")
+            }
+
+            @MainActor
+            static func captureView<V: View>(_ view: V, name: String, size: CGSize) async {
+                let outputDir = FileManager.default.currentDirectoryPath + "/screenshots"
+
+                let hostingView = NSHostingView(rootView: view.frame(width: size.width, height: size.height))
+                hostingView.frame = CGRect(origin: .zero, size: size)
+
+                // Force layout
+                hostingView.layoutSubtreeIfNeeded()
+
+                guard let bitmapRep = hostingView.bitmapImageRepForCachingDisplay(in: hostingView.bounds) else {
+                    print("Failed to create bitmap for \(name)")
+                    return
+                }
+
+                hostingView.cacheDisplay(in: hostingView.bounds, to: bitmapRep)
+
+                guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
+                    print("Failed to create PNG for \(name)")
+                    return
+                }
+
+                let filePath = "\(outputDir)/\(name).png"
+                do {
+                    try pngData.write(to: URL(fileURLWithPath: filePath))
+                    print("Saved: \(name).png")
+                } catch {
+                    print("Error saving \(name): \(error)")
+                }
+            }
+        }
+        #endif
+        SWIFT
+
+        # Update Package.swift for macOS executable
+        cat > Package.swift << 'PACKAGE'
+        // swift-tools-version:5.9
+        import PackageDescription
+
+        let package = Package(
+            name: "CuponerDemo",
+            platforms: [.macOS(.v14)],
+            products: [
+                .executable(name: "ScreenshotGenerator", targets: ["ScreenshotGenerator"])
+            ],
+            targets: [
+                .executableTarget(
+                    name: "ScreenshotGenerator",
+                    path: "Sources",
+                    swiftSettings: [
+                        .define("SCREENSHOT_MODE")
+                    ]
+                )
+            ]
+        )
+        PACKAGE
+
+    - name: Build and Run Screenshot Generator
+      run: |
+        cd CuponerDemo
+        swift build -c release
+        .build/release/ScreenshotGenerator
+
+    - name: List Generated Screenshots
+      run: |
+        echo "Generated screenshots:"
+        ls -la CuponerDemo/screenshots/
+
+    - name: Upload Screenshots
+      uses: actions/upload-artifact@v4
+      with:
+        name: cuponer-screenshots
+        path: CuponerDemo/screenshots/*.png
+        retention-days: 30

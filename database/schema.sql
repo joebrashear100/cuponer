@@ -406,6 +406,172 @@ BEFORE UPDATE ON user_profiles
 FOR EACH ROW
 EXECUTE FUNCTION update_profile_timestamp();
 
+-- ==================== DEALS TABLES ====================
+-- Amazon Shopping AI Integration - Price Tracking & Deals
+
+-- Deals: Tracked products for price alerts
+CREATE TABLE deals_tracked_products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    asin VARCHAR(20) NOT NULL, -- Amazon Standard Identification Number
+    title VARCHAR(500) NOT NULL,
+    current_price DECIMAL(10,2) NOT NULL,
+    target_price DECIMAL(10,2) NOT NULL, -- Alert when price drops below this
+    last_checked_price DECIMAL(10,2),
+    last_checked_at TIMESTAMP,
+    lowest_price_seen DECIMAL(10,2),
+    highest_price_seen DECIMAL(10,2),
+    image_url TEXT,
+    url TEXT,
+    category VARCHAR(100),
+    price_drop_detected BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, asin)
+);
+
+CREATE INDEX idx_deals_tracked_user ON deals_tracked_products(user_id, is_active);
+CREATE INDEX idx_deals_tracked_asin ON deals_tracked_products(asin);
+CREATE INDEX idx_deals_price_drops ON deals_tracked_products(user_id, price_drop_detected) WHERE price_drop_detected = TRUE;
+
+-- Deals: Price history for products (TimescaleDB hypertable)
+CREATE TABLE deals_price_history (
+    id UUID DEFAULT gen_random_uuid(),
+    asin VARCHAR(20) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    original_price DECIMAL(10,2), -- List price if on sale
+    deal_badge VARCHAR(100), -- "Lightning Deal", "Black Friday", etc
+    recorded_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    PRIMARY KEY (id, recorded_at)
+);
+
+-- Convert to hypertable for efficient time-series queries
+SELECT create_hypertable('deals_price_history', 'recorded_at', if_not_exists => TRUE);
+
+CREATE INDEX idx_deals_price_history_asin ON deals_price_history(asin, recorded_at DESC);
+
+-- Deals: Saved deals
+CREATE TABLE deals_saved_deals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    asin VARCHAR(20) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    original_price DECIMAL(10,2),
+    savings_percent DECIMAL(5,2),
+    image_url TEXT,
+    url TEXT,
+    deal_type VARCHAR(50) DEFAULT 'saved', -- lightning, daily, prime, price_drop, wishlist_match
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, asin)
+);
+
+CREATE INDEX idx_deals_saved_deals_user ON deals_saved_deals(user_id, is_active);
+CREATE INDEX idx_deals_saved_deals_type ON deals_saved_deals(deal_type, is_active);
+
+-- Deals: Search history for personalization
+CREATE TABLE deals_search_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    query VARCHAR(500) NOT NULL,
+    category VARCHAR(100),
+    max_price DECIMAL(10,2),
+    results_count INTEGER,
+    clicked_asin VARCHAR(20), -- Product they clicked on
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_deals_search_history_user ON deals_search_history(user_id, created_at DESC);
+
+-- Deals: Deal notifications
+CREATE TABLE deals_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    asin VARCHAR(20) NOT NULL,
+    notification_type VARCHAR(50) NOT NULL, -- price_drop, target_reached, deal_found, wishlist_match
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    old_price DECIMAL(10,2),
+    new_price DECIMAL(10,2),
+    savings_amount DECIMAL(10,2),
+    is_read BOOLEAN DEFAULT FALSE,
+    is_sent BOOLEAN DEFAULT FALSE,
+    sent_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_deals_notifications_user ON deals_notifications(user_id, is_read, created_at DESC);
+CREATE INDEX idx_deals_notifications_unsent ON deals_notifications(is_sent) WHERE is_sent = FALSE;
+
+-- View: Deals user statistics
+CREATE VIEW deals_user_stats AS
+SELECT
+    u.id AS user_id,
+    (SELECT COUNT(*) FROM deals_tracked_products WHERE user_id = u.id AND is_active = TRUE) AS products_tracked,
+    (SELECT COUNT(*) FROM deals_tracked_products WHERE user_id = u.id AND price_drop_detected = TRUE AND is_active = TRUE) AS active_price_drops,
+    (SELECT COUNT(*) FROM deals_saved_deals WHERE user_id = u.id AND is_active = TRUE) AS saved_deals,
+    (SELECT COALESCE(SUM(original_price - price), 0) FROM deals_saved_deals WHERE user_id = u.id AND is_active = TRUE AND original_price IS NOT NULL) AS potential_savings,
+    (SELECT COUNT(*) FROM deals_notifications WHERE user_id = u.id AND is_read = FALSE) AS unread_notifications
+FROM users u;
+
+-- Function: Check for price drops across all tracked products
+CREATE OR REPLACE FUNCTION deals_check_price_drops(p_user_id UUID)
+RETURNS TABLE (
+    asin VARCHAR(20),
+    title VARCHAR(500),
+    old_price DECIMAL(10,2),
+    current_price DECIMAL(10,2),
+    target_price DECIMAL(10,2),
+    savings DECIMAL(10,2),
+    hit_target BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        rtp.asin,
+        rtp.title,
+        rtp.last_checked_price AS old_price,
+        rtp.current_price,
+        rtp.target_price,
+        (rtp.last_checked_price - rtp.current_price) AS savings,
+        (rtp.current_price <= rtp.target_price) AS hit_target
+    FROM deals_tracked_products rtp
+    WHERE rtp.user_id = p_user_id
+    AND rtp.is_active = TRUE
+    AND rtp.last_checked_price IS NOT NULL
+    AND rtp.current_price < rtp.last_checked_price;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function: Get price statistics for a product
+CREATE OR REPLACE FUNCTION deals_get_price_stats(p_asin VARCHAR(20), p_days INTEGER DEFAULT 30)
+RETURNS TABLE (
+    avg_price DECIMAL(10,2),
+    min_price DECIMAL(10,2),
+    max_price DECIMAL(10,2),
+    price_volatility DECIMAL(5,2),
+    days_tracked INTEGER,
+    data_points INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        ROUND(AVG(rph.price)::numeric, 2) AS avg_price,
+        MIN(rph.price) AS min_price,
+        MAX(rph.price) AS max_price,
+        ROUND(STDDEV(rph.price)::numeric, 2) AS price_volatility,
+        EXTRACT(DAY FROM (MAX(rph.recorded_at) - MIN(rph.recorded_at)))::INTEGER AS days_tracked,
+        COUNT(*)::INTEGER AS data_points
+    FROM deals_price_history rph
+    WHERE rph.asin = p_asin
+    AND rph.recorded_at >= NOW() - (p_days || ' days')::INTERVAL;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Initial data / defaults
 
 -- Create a test user for development (remove in production)

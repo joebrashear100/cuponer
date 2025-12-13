@@ -31,6 +31,7 @@ final class AppContainer: ObservableObject {
     lazy var forecastingManager = ForecastingManager()
     lazy var spendingLimitsManager = SpendingLimitsManager()
     lazy var navigationState = NavigationState()
+    lazy var dealsManager = DealsManager()
 
     // Singleton managers
     // TODO: Add HealthKitManager and NotificationManager to Xcode project
@@ -100,6 +101,7 @@ struct FurgApp: App {
                 .environmentObject(container.roundUpManager)
                 .environmentObject(container.forecastingManager)
                 .environmentObject(container.spendingLimitsManager)
+                .environmentObject(container.dealsManager)
                 // Navigation
                 .environmentObject(container.navigationState)
                 // Singleton managers

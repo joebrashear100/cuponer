@@ -372,17 +372,19 @@ class CardOptimizer: ObservableObject {
     func calculateUsageStats() {
         var stats: [CardUsageStats] = []
 
-        let transactions: [[String: Any]] = []
+        // Get real transactions from FinanceManager
+        let financeManager = FinanceManager.shared
+        let transactions = financeManager.transactions
 
         for card in userCards {
             // Filter transactions for this card (simplified - in real app would match by card ID)
             let cardTransactions = transactions.filter { trans in
-                (trans["cardLast4"] as? String) == card.last4
+                (trans.paymentMethod?.contains(card.last4) ?? false) ||
+                trans.merchant.lowercased().contains("credit")
             }
 
             let totalSpent = cardTransactions.reduce(0.0) { acc, trans in
-                let amount = (trans["amount"] as? Double) ?? 0
-                return acc + abs(amount)
+                return acc + abs(trans.amount)
             }
 
             // Calculate rewards earned
@@ -390,10 +392,10 @@ class CardOptimizer: ObservableObject {
             var categorySpending: [String: Double] = [:]
 
             for transaction in cardTransactions {
-                let amount = (transaction["amount"] as? Double) ?? 0
+                let amount = transaction.amount
                 guard amount < 0 else { continue }
 
-                let category = (transaction["category"] as? String) ?? "Other"
+                let category = transaction.category?.rawValue ?? "Other"
                 let absAmount = abs(amount)
 
                 categorySpending[category, default: 0] += absAmount

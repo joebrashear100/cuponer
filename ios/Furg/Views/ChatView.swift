@@ -32,10 +32,11 @@ struct ChatView: View {
                     ScrollView(showsIndicators: false) {
                         LazyVStack(spacing: 16) {
                             if chatManager.messages.isEmpty {
-                                EmptyStateView(onSuggestionTap: { suggestion in
-                                    messageText = suggestion
-                                    sendMessage()
-                                })
+                                EmptyStateView(
+                                    title: "Start a Conversation",
+                                    message: "Ask questions about your finances, budgeting tips, and more",
+                                    icon: "bubble.left"
+                                )
                                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
                             } else {
                                 ForEach(Array(chatManager.messages.enumerated()), id: \.element.id) { index, message in
@@ -260,142 +261,6 @@ struct ChatView: View {
         withAnimation(.spring(response: 0.4)) {
             scrollProxy?.scrollTo(lastMessage.id, anchor: .bottom)
         }
-    }
-}
-
-// MARK: - Empty State View
-
-private struct EmptyStateView: View {
-    var onSuggestionTap: (String) -> Void
-    @State private var selectedCategory = 0
-
-    let categories = ["Quick", "Budget", "Goals", "Analytics"]
-
-    let suggestionsByCategory: [[SuggestionItem]] = [
-        // Quick
-        [
-            SuggestionItem(text: "How am I doing?", icon: "chart.line.uptrend.xyaxis", color: .furgMint),
-            SuggestionItem(text: "Can I afford $500?", icon: "dollarsign.circle", color: .furgSuccess),
-            SuggestionItem(text: "What's my spending power?", icon: "creditcard.fill", color: .blue),
-            SuggestionItem(text: "Surprise me with a tip", icon: "lightbulb.fill", color: .yellow)
-        ],
-        // Budget
-        [
-            SuggestionItem(text: "Create a budget for me", icon: "chart.pie.fill", color: .purple),
-            SuggestionItem(text: "Where am I overspending?", icon: "exclamationmark.triangle.fill", color: .furgWarning),
-            SuggestionItem(text: "How to save $500/month?", icon: "banknote.fill", color: .furgMint),
-            SuggestionItem(text: "Review my subscriptions", icon: "repeat", color: .indigo)
-        ],
-        // Goals
-        [
-            SuggestionItem(text: "Help me save for vacation", icon: "airplane", color: .cyan),
-            SuggestionItem(text: "Emergency fund advice", icon: "shield.fill", color: .furgSuccess),
-            SuggestionItem(text: "Debt payoff strategy", icon: "creditcard.trianglebadge.exclamationmark.fill", color: .furgDanger),
-            SuggestionItem(text: "Investment suggestions", icon: "chart.bar.fill", color: .purple)
-        ],
-        // Analytics
-        [
-            SuggestionItem(text: "Analyze my spending habits", icon: "magnifyingglass", color: .blue),
-            SuggestionItem(text: "Compare to last month", icon: "calendar", color: .orange),
-            SuggestionItem(text: "My financial health score", icon: "heart.fill", color: .red),
-            SuggestionItem(text: "Predict next month's spending", icon: "wand.and.stars", color: .furgMint)
-        ]
-    ]
-
-    var body: some View {
-        VStack(spacing: 28) {
-            // Animated icon
-            ZStack {
-                // Outer glow
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [.furgMint.opacity(0.3), .clear],
-                            center: .center,
-                            startRadius: 30,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 140, height: 140)
-
-                // Glass circle
-                Circle()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(width: 80, height: 80)
-                    .overlay(
-                        Circle()
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.3), .white.opacity(0.05)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-
-                // Icon
-                Image(systemName: "brain.head.profile")
-                    .font(.system(size: 28))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.furgMint, .furgSeafoam],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
-
-            // Text
-            VStack(spacing: 6) {
-                Text("Chat with FURG")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-
-                Text("Your brutally honest financial AI")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.5))
-            }
-
-            // Category tabs
-            HStack(spacing: 6) {
-                ForEach(Array(categories.enumerated()), id: \.offset) { index, category in
-                    Button {
-                        withAnimation(.spring(response: 0.3)) {
-                            selectedCategory = index
-                        }
-                    } label: {
-                        Text(category)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(selectedCategory == index ? .furgCharcoal : .white.opacity(0.6))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(selectedCategory == index ? Color.furgMint : Color.white.opacity(0.08))
-                            )
-                    }
-                }
-            }
-
-            // Suggestion chips based on category
-            VStack(spacing: 10) {
-                ForEach(suggestionsByCategory[selectedCategory], id: \.text) { suggestion in
-                    RichSuggestionChip(item: suggestion) {
-                        onSuggestionTap(suggestion.text)
-                    }
-                }
-            }
-
-            // Quick stats footer
-            HStack(spacing: 24) {
-                QuickStatBadge(icon: "checkmark.circle.fill", value: "24/7", label: "Available", color: .furgSuccess)
-                QuickStatBadge(icon: "bolt.fill", value: "< 1s", label: "Response", color: .furgWarning)
-                QuickStatBadge(icon: "lock.fill", value: "100%", label: "Private", color: .furgMint)
-            }
-            .padding(.top, 8)
-        }
-        .padding(.vertical, 32)
     }
 }
 

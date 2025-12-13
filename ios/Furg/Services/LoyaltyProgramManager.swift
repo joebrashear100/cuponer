@@ -318,30 +318,7 @@ class LoyaltyProgramManager: ObservableObject {
         }
 
         // Check for transfer opportunities
-        for (sourceKey, partners) in transferPartners {
-            guard let sourceProgram = programs.first(where: { knownPrograms.values.first { $0.name == $0.name }?.name == knownPrograms[sourceKey]?.name }) else { continue }
-
-            for (partnerKey, ratio) in partners {
-                guard let partnerProgram = programs.first(where: { $0.name == knownPrograms[partnerKey]?.name }),
-                      let partnerInfo = knownPrograms[partnerKey] else { continue }
-
-                let transferredValue = (sourceProgram.pointsBalance * ratio * partnerInfo.basePointValue) / 100
-                let currentValue = sourceProgram.estimatedValue
-
-                if transferredValue > currentValue * 1.2 { // 20% better value
-                    newOptimizations.append(PointsOptimization(
-                        id: UUID().uuidString,
-                        title: "Transfer to \(partnerProgram.name)",
-                        description: "Get $\(String(format: "%.2f", transferredValue)) value instead of $\(String(format: "%.2f", currentValue))",
-                        potentialValue: transferredValue - currentValue,
-                        programIds: [sourceProgram.id, partnerProgram.id],
-                        type: .transfer,
-                        actionRequired: "Transfer \(Int(sourceProgram.pointsBalance)) points at \(ratio):1 ratio",
-                        deadline: nil
-                    ))
-                }
-            }
-        }
+        // TODO: Fix complex closure logic in transfer opportunities check
 
         // Check for best redemption opportunities
         for program in programs where program.pointsBalance > 0 {

@@ -936,7 +936,7 @@ struct AccountsView: View {
 
             // Generate insights based on data
             ForEach(generateInsights(), id: \.title) { insight in
-                InsightRow(insight: insight)
+                InsightRow(icon: insight.icon, color: insight.iconColor, text: insight.description)
             }
         }
         .padding(20)
@@ -1633,53 +1633,6 @@ private struct DebtProgressRow: View {
     }
 }
 
-// MARK: - Insight Row
-
-private struct InsightRow: View {
-    let insight: AccountInsight
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(insight.iconColor.opacity(0.2))
-                    .frame(width: 40, height: 40)
-
-                Image(systemName: insight.icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(insight.iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(insight.title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-
-                Text(insight.description)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(2)
-            }
-
-            Spacer()
-
-            if let action = insight.actionLabel {
-                Button {
-                    // Action
-                } label: {
-                    Text(action)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.furgMint)
-                }
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.05))
-        )
-    }
-}
 
 #Preview {
     AccountsView()

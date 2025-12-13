@@ -499,32 +499,6 @@ private struct CategorySpendRow: View {
     }
 }
 
-private struct InsightRow: View {
-    let icon: String
-    let color: Color
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundColor(color)
-                .frame(width: 20)
-
-            Text(text)
-                .font(.system(size: 13))
-                .foregroundColor(.white.opacity(0.8))
-
-            Spacer()
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.white.opacity(0.04))
-        )
-    }
-}
-
 #Preview {
     NavigationStack {
         SpendingDashboardView()

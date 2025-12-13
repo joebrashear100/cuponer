@@ -313,26 +313,8 @@ struct CreditFactorsDetailView: View {
 
     private var factorsBreakdown: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Score Factors")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-
-                Spacer()
-
-                Text("Tap for details")
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.4))
-            }
-
-            ForEach(factors) { factor in
-                Button {
-                    selectedFactor = factor
-                } label: {
-                    FactorRow(factor: factor)
-                }
-                .buttonStyle(.plain)
-            }
+            factorsHeader
+            factorsList
         }
         .padding(20)
         .background(
@@ -343,6 +325,89 @@ struct CreditFactorsDetailView: View {
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
                 )
         )
+    }
+
+    private var factorsHeader: some View {
+        HStack {
+            Text("Score Factors")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            Text("Tap for details")
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.4))
+        }
+    }
+
+    private var factorsList: some View {
+        VStack(spacing: 12) {
+            ForEach(factors) { factor in
+                Button {
+                    selectedFactor = factor
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: factor.icon)
+                            .font(.system(size: 16))
+                            .foregroundColor(.furgMint)
+                            .frame(width: 36, height: 36)
+                            .background(Color.furgMint.opacity(0.2))
+                            .clipShape(Circle())
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(factor.name)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                            Text(factor.currentValue)
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.6))
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            Text("\(factor.weight)%")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.furgMint)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.white.opacity(0.03))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+        }
+    }
+
+    // MARK: - Simulator Rows
+
+    private var simulatorRows: some View {
+        VStack(spacing: 12) {
+            SimulatorRow(
+                action: "Pay off credit card balance",
+                impact: "+15 to +25 pts",
+                isPositive: true
+            )
+
+            SimulatorRow(
+                action: "Open new credit card",
+                impact: "-5 to -15 pts (short term)",
+                isPositive: false
+            )
+
+            SimulatorRow(
+                action: "Increase credit limit",
+                impact: "+5 to +10 pts",
+                isPositive: true
+            )
+
+            SimulatorRow(
+                action: "Miss a payment",
+                impact: "-60 to -110 pts",
+                isPositive: false
+            )
+        }
     }
 
     // MARK: - Score Simulator
@@ -361,31 +426,7 @@ struct CreditFactorsDetailView: View {
                 .font(.system(size: 13))
                 .foregroundColor(.white.opacity(0.6))
 
-            VStack(spacing: 12) {
-                SimulatorRow(
-                    action: "Pay off credit card balance",
-                    impact: "+15 to +25 pts",
-                    isPositive: true
-                )
-
-                SimulatorRow(
-                    action: "Open new credit card",
-                    impact: "-5 to -15 pts (short term)",
-                    isPositive: false
-                )
-
-                SimulatorRow(
-                    action: "Increase credit limit",
-                    impact: "+5 to +10 pts",
-                    isPositive: true
-                )
-
-                SimulatorRow(
-                    action: "Miss a payment",
-                    impact: "-60 to -110 pts",
-                    isPositive: false
-                )
-            }
+            simulatorRows
         }
         .padding(20)
         .background(
@@ -439,73 +480,6 @@ struct DetailedCreditFactor: Identifiable {
 }
 
 // MARK: - Supporting Views
-
-private struct FactorRow: View {
-    let factor: DetailedCreditFactor
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(factor.status.color.opacity(0.2))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: factor.icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(factor.status.color)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(factor.name)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Text(factor.currentValue)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-
-                HStack {
-                    Text("\(factor.weight)% of score")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
-
-                    Spacer()
-
-                    Text(statusLabel(factor.status))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(factor.status.color)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule().fill(factor.status.color.opacity(0.15))
-                        )
-                }
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white.opacity(0.3))
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.03))
-        )
-    }
-
-    private func statusLabel(_ status: FactorStatus) -> String {
-        switch status {
-        case .excellent: return "Excellent"
-        case .good: return "Good"
-        case .fair: return "Fair"
-        case .poor: return "Poor"
-        }
-    }
-}
 
 private struct SimulatorRow: View {
     let action: String

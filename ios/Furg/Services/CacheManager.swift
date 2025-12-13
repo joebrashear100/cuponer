@@ -98,7 +98,8 @@ final class CacheManager {
 
     func getCodable<T: Codable>(forKey key: String) -> T? {
         // Try memory cache first
-        if let data: Data = get(forKey: key) {
+        let cacheKey = NSString(string: key)
+        if let data = memoryCache.object(forKey: cacheKey) as? Data {
             return try? JSONDecoder().decode(T.self, from: data)
         }
 

@@ -741,15 +741,6 @@ private struct MiniSparklineView: View {
     }
 }
 
-// MARK: - Quick Action Enum
-
-enum QuickAction: String, CaseIterable {
-    case cashFlow = "Cash Flow"
-    case categories = "Categories"
-    case transactions = "Transactions"
-    case offers = "Offers"
-}
-
 #Preview {
     DashboardView()
 }

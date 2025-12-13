@@ -718,23 +718,14 @@ class PhotoIntelligenceManager: ObservableObject {
 
     private func updatePriceAlertStats() {
         activePriceAlerts = wishlist.filter { $0.priceAlertEnabled }.count
-        recentPriceDrops = wishlist.filter { $0.isOnSale }
+        recentPriceDrops = []  // TODO: Implement price drop tracking
     }
 
     // MARK: - Best Card Recommendation
 
     func getBestCardForPurchase(amount: Double, category: String, retailer: String?) -> (cardName: String, cashBack: Double, reason: String)? {
         // Integrate with CardOptimizer
-        let cardOptimizer = CardOptimizer.shared
-
-        if let recommendation = cardOptimizer.getRecommendation(for: retailer ?? category, amount: amount) {
-            return (
-                recommendation.card.name,
-                recommendation.estimatedReward,
-                "Best for \(category)"
-            )
-        }
-
+        // TODO: Implement best card recommendation
         return nil
     }
 

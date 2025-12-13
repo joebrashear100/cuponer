@@ -63,7 +63,7 @@ final class Throttler {
 
 /// Optimized list that loads items lazily with prefetching
 struct LazyLoadingList<Data: RandomAccessCollection, Content: View, Placeholder: View>: View
-where Data.Element: Identifiable {
+where Data.Element: Identifiable, Data.Index: Hashable {
 
     let data: Data
     let content: (Data.Element) -> Content

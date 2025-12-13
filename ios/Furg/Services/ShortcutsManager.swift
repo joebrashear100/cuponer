@@ -35,16 +35,17 @@ struct FurgShortcuts: AppShortcutsProvider {
             systemImageName: "chart.bar.fill"
         )
 
-        AppShortcut(
-            intent: HideMoneyIntent(),
-            phrases: [
-                "Hide money in \(.applicationName)",
-                "Save money in \(.applicationName)",
-                "Hide \(\.$amount) dollars in \(.applicationName)"
-            ],
-            shortTitle: "Hide Money",
-            systemImageName: "eye.slash.fill"
-        )
+        // TODO: Fix HideMoneyIntent with proper AppEntity for amount parameter
+        // AppShortcut(
+        //     intent: HideMoneyIntent(),
+        //     phrases: [
+        //         "Hide money in \(.applicationName)",
+        //         "Save money in \(.applicationName)",
+        //         "Hide \(\.$amount) dollars in \(.applicationName)"
+        //     ],
+        //     shortTitle: "Hide Money",
+        //     systemImageName: "eye.slash.fill"
+        // )
 
         AppShortcut(
             intent: GetFinancialTipIntent(),
@@ -221,8 +222,8 @@ struct GetFinancialTipIntent: AppIntent {
             "Track every expense for a month. You'll be surprised where money goes."
         ]
 
-        let tip = tips.randomElement() ?? tips[0]
-        return .result(dialog: tip)
+        let tip: String = tips.randomElement() ?? tips[0]
+        return .result(dialog: IntentDialog(stringLiteral: tip))
     }
 }
 
@@ -304,13 +305,14 @@ struct AddExpenseIntent: AppIntent {
     @Parameter(title: "Merchant")
     var merchant: String
 
-    @Parameter(title: "Category", default: "Shopping")
-    var category: ExpenseCategory
+    @Parameter(title: "Category")
+    var category: ExpenseCategory?
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         // In production, add to FinanceManager
+        let categoryName = category?.rawValue ?? "Other"
         return .result(
-            dialog: "Added $\(Int(amount)) expense at \(merchant) in \(category.rawValue)."
+            dialog: "Added $\(Int(amount)) expense at \(merchant) in \(categoryName)."
         )
     }
 }

@@ -119,20 +119,13 @@ struct MainTabView: View {
                     removal: .move(edge: .leading)
                 ))
         case .tools:
-            // TODO: ToolsHubView is fully implemented in Furg/Views/ToolsHubView.swift
-            // Once pbxproj file references are manually added through Xcode, uncomment:
-            // ToolsHubView()
-            //     .transition(.asymmetric(
-            //         insertion: .move(edge: .trailing),
-            //         removal: .move(edge: .leading)
-            //     ))
-            //     .environmentObject(navigationState)
-            PremiumToolsPlaceholder()
+            Text("Tools Hub (TODO)")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(red: 0.08, green: 0.08, blue: 0.12))
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing),
                     removal: .move(edge: .leading)
                 ))
-                .environmentObject(navigationState)
         case .settings:
             SettingsView()
                 .transition(.asymmetric(
@@ -150,85 +143,6 @@ struct MainTabView: View {
     private func handleNotifications() {
         // TODO: Navigate to notifications view
         print("Notifications tapped")
-    }
-}
-
-// MARK: - Premium Tools Placeholder
-// Temporary display for Tools Hub (ToolsHubView.swift is fully implemented)
-struct PremiumToolsPlaceholder: View {
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.08),
-                    Color(red: 0.08, green: 0.08, blue: 0.12)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Premium Tools")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-
-                    Text("ToolsHubView.swift is fully implemented with:")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding(.horizontal, 20)
-
-                    VStack(spacing: 12) {
-                        FeatureItem(title: "Debt Payoff", icon: "chart.line.downtrend.xyaxis", color: Color(red: 0.95, green: 0.4, blue: 0.4))
-                        FeatureItem(title: "Card Optimizer", icon: "creditcard.fill", color: Color(red: 0.6, green: 0.4, blue: 0.9))
-                        FeatureItem(title: "Investments", icon: "chart.pie.fill", color: Color(red: 0.7, green: 0.4, blue: 0.9))
-                        FeatureItem(title: "Merchant Intel", icon: "building.2.fill", color: Color(red: 0.4, green: 0.8, blue: 0.9))
-                        FeatureItem(title: "Life Integration", icon: "heart.text.square.fill", color: Color(red: 0.9, green: 0.4, blue: 0.7))
-                    }
-                    .padding(.horizontal, 20)
-
-                    Spacer(minLength: 100)
-                }
-            }
-        }
-    }
-}
-
-struct FeatureItem: View {
-    let title: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(color)
-                .frame(width: 40)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.white)
-                Text("Feature implemented and ready")
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.5))
-            }
-
-            Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(color)
-        }
-        .padding(12)
-        .background(Color.white.opacity(0.03))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(color.opacity(0.2), lineWidth: 1)
-        )
     }
 }
 

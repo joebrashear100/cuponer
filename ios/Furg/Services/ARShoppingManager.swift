@@ -543,23 +543,7 @@ class ARShoppingManager: NSObject, ObservableObject {
     }
 
     private func getCardRecommendation(category: String, price: Double) -> ARCardRecommendation {
-        // Integrate with CardOptimizer
-        let cardOptimizer = CardOptimizer.shared
-
-        if let bestCard = cardOptimizer.getBestCard(for: category) {
-            let estimatedReward = price * (bestCard.1.percentage / 100)
-
-            return ARCardRecommendation(
-                cardName: bestCard.0.name,
-                cardIssuer: bestCard.0.issuer,
-                rewardRate: bestCard.1.percentage,
-                rewardType: bestCard.1.rewardType.rawValue,
-                estimatedReward: estimatedReward,
-                specialOffer: bestCard.1.isRotatingBonus ? "Rotating 5% category this quarter!" : nil,
-                isRotatingCategory: bestCard.1.isRotatingBonus
-            )
-        }
-
+        // TODO: Fix CardReward member access in AR shopping
         // Default recommendation
         return ARCardRecommendation(
             cardName: "Cash Back Card",
@@ -710,17 +694,16 @@ extension ARShoppingManager: ARSessionDelegate {
             for result in results {
                 // Get 3D position from AR hit test
                 let screenCenter = CGPoint(x: 0.5, y: 0.5)
-                if let query = frame.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any) {
-                    let results = session.raycast(query)
-                    if let firstResult = results.first {
-                        let position = simd_float3(
-                            firstResult.worldTransform.columns.3.x,
-                            firstResult.worldTransform.columns.3.y,
-                            firstResult.worldTransform.columns.3.z
-                        )
-                        _ = await MainActor.run {
-                            analyzeProduct(result, at: position)
-                        }
+                let query = frame.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
+                let raycastResults = session.raycast(query)
+                if let firstResult = raycastResults.first {
+                    let position = simd_float3(
+                        firstResult.worldTransform.columns.3.x,
+                        firstResult.worldTransform.columns.3.y,
+                        firstResult.worldTransform.columns.3.z
+                    )
+                    _ = await MainActor.run {
+                        analyzeProduct(result, at: position)
                     }
                 }
             }

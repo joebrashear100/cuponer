@@ -126,6 +126,13 @@
 		F10000010000000000000300 /* NavigationHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000300 /* NavigationHeader.swift */; };
 		F10000010000000000000301 /* PillTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000301 /* PillTabBar.swift */; };
 		F10000010000000000000302 /* UnifiedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000302 /* UnifiedComponents.swift */; };
+		/* NEW FILES - Merged branch files */
+		F10000010000000000000400 /* DealsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000400 /* DealsModels.swift */; };
+		F10000010000000000000401 /* DealsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000401 /* DealsManager.swift */; };
+		F10000010000000000000402 /* ShoppingAssistantManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000402 /* ShoppingAssistantManager.swift */; };
+		F10000010000000000000403 /* DealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000403 /* DealsView.swift */; };
+		F10000010000000000000404 /* DealsSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000404 /* DealsSearchView.swift */; };
+		F10000010000000000000405 /* ShoppingChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000405 /* ShoppingChatView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -250,6 +257,13 @@
 		F20000010000000000000300 /* NavigationHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationHeader.swift; sourceTree = "<group>"; };
 		F20000010000000000000301 /* PillTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillTabBar.swift; sourceTree = "<group>"; };
 		F20000010000000000000302 /* UnifiedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedComponents.swift; sourceTree = "<group>"; };
+		/* NEW FILES - Merged branch files */
+		F20000010000000000000400 /* DealsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsModels.swift; sourceTree = "<group>"; };
+		F20000010000000000000401 /* DealsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsManager.swift; sourceTree = "<group>"; };
+		F20000010000000000000402 /* ShoppingAssistantManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingAssistantManager.swift; sourceTree = "<group>"; };
+		F20000010000000000000403 /* DealsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsView.swift; sourceTree = "<group>"; };
+		F20000010000000000000404 /* DealsSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsSearchView.swift; sourceTree = "<group>"; };
+		F20000010000000000000405 /* ShoppingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingChatView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -299,10 +313,11 @@
 		F40000010000000000000003 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				F20000010000000000000003 /* Models.swift */,
-				F20000010000000000000004 /* WishlistModels.swift */,
+				F20000010000000000000400 /* DealsModels.swift */,
 				F20000010000000000000022 /* GoalsModels.swift */,
+				F20000010000000000000003 /* Models.swift */,
 				F20000010000000000000023 /* SubscriptionModels.swift */,
+				F20000010000000000000004 /* WishlistModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -320,6 +335,7 @@
 				F20000010000000000000037 /* ClaudeService.swift */,
 				F20000010000000000000104 /* ConversationMemoryManager.swift */,
 				F20000010000000000000105 /* DataExportManager.swift */,
+				F20000010000000000000401 /* DealsManager.swift */,
 				F20000010000000000000106 /* DebtPayoffManager.swift */,
 				F20000010000000000000107 /* EmailIntelligenceManager.swift */,
 				F20000010000000000000108 /* EmotionalSpendingManager.swift */,
@@ -350,6 +366,7 @@
 				F20000010000000000000126 /* RetailerConnectionManager.swift */,
 				F20000010000000000000026 /* RoundUpManager.swift */,
 				F20000010000000000000127 /* SharedBudgetManager.swift */,
+				F20000010000000000000402 /* ShoppingAssistantManager.swift */,
 				F20000010000000000000128 /* ShoppingIntelligenceManager.swift */,
 				F20000010000000000000129 /* ShortcutsManager.swift */,
 				F20000010000000000000130 /* SmartBudgetAlertManager.swift */,
@@ -384,6 +401,8 @@
 				F20000010000000000000045 /* ConnectBankView.swift */,
 				F20000010000000000000207 /* CreditFactorsDetailView.swift */,
 				F20000010000000000000041 /* DashboardView.swift */,
+				F20000010000000000000404 /* DealsSearchView.swift */,
+				F20000010000000000000403 /* DealsView.swift */,
 				F20000010000000000000208 /* DebtPayoffView.swift */,
 				F20000010000000000000209 /* EnhancedOnboardingView.swift */,
 				F20000010000000000000210 /* EnhancedRoundUpsView.swift */,
@@ -409,6 +428,7 @@
 				F20000010000000000000220 /* SavingsRateDetailView.swift */,
 				F20000010000000000000016 /* SettingsView.swift */,
 				F20000010000000000000221 /* SharedComponents.swift */,
+				F20000010000000000000405 /* ShoppingChatView.swift */,
 				F20000010000000000000034 /* SpendingAnalyticsView.swift */,
 				F20000010000000000000222 /* SpendingComparisonView.swift */,
 				F20000010000000000000049 /* SpendingDashboardView.swift */,
@@ -528,6 +548,7 @@
 				F10000010000000000000004 /* WishlistModels.swift in Sources */,
 				F10000010000000000000022 /* GoalsModels.swift in Sources */,
 				F10000010000000000000023 /* SubscriptionModels.swift in Sources */,
+				F10000010000000000000400 /* DealsModels.swift in Sources */,
 				F10000010000000000000005 /* APIClient.swift in Sources */,
 				F10000010000000000000100 /* ARShoppingManager.swift in Sources */,
 				F10000010000000000000101 /* AchievementsManager.swift in Sources */,
@@ -538,6 +559,7 @@
 				F10000010000000000000037 /* ClaudeService.swift in Sources */,
 				F10000010000000000000104 /* ConversationMemoryManager.swift in Sources */,
 				F10000010000000000000105 /* DataExportManager.swift in Sources */,
+				F10000010000000000000401 /* DealsManager.swift in Sources */,
 				F10000010000000000000106 /* DebtPayoffManager.swift in Sources */,
 				F10000010000000000000107 /* EmailIntelligenceManager.swift in Sources */,
 				F10000010000000000000108 /* EmotionalSpendingManager.swift in Sources */,
@@ -568,6 +590,7 @@
 				F10000010000000000000126 /* RetailerConnectionManager.swift in Sources */,
 				F10000010000000000000026 /* RoundUpManager.swift in Sources */,
 				F10000010000000000000127 /* SharedBudgetManager.swift in Sources */,
+				F10000010000000000000402 /* ShoppingAssistantManager.swift in Sources */,
 				F10000010000000000000128 /* ShoppingIntelligenceManager.swift in Sources */,
 				F10000010000000000000129 /* ShortcutsManager.swift in Sources */,
 				F10000010000000000000130 /* SmartBudgetAlertManager.swift in Sources */,
@@ -594,6 +617,8 @@
 				F10000010000000000000045 /* ConnectBankView.swift in Sources */,
 				F10000010000000000000207 /* CreditFactorsDetailView.swift in Sources */,
 				F10000010000000000000041 /* DashboardView.swift in Sources */,
+				F10000010000000000000404 /* DealsSearchView.swift in Sources */,
+				F10000010000000000000403 /* DealsView.swift in Sources */,
 				F10000010000000000000208 /* DebtPayoffView.swift in Sources */,
 				F10000010000000000000209 /* EnhancedOnboardingView.swift in Sources */,
 				F10000010000000000000210 /* EnhancedRoundUpsView.swift in Sources */,
@@ -619,6 +644,7 @@
 				F10000010000000000000220 /* SavingsRateDetailView.swift in Sources */,
 				F10000010000000000000016 /* SettingsView.swift in Sources */,
 				F10000010000000000000221 /* SharedComponents.swift in Sources */,
+				F10000010000000000000405 /* ShoppingChatView.swift in Sources */,
 				F10000010000000000000034 /* SpendingAnalyticsView.swift in Sources */,
 				F10000010000000000000222 /* SpendingComparisonView.swift in Sources */,
 				F10000010000000000000048 /* SpendingDashboardView.swift in Sources */,

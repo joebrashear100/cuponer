@@ -3,7 +3,6 @@ import Charts
 
 struct InvestmentPortfolioView: View {
     @StateObject private var investmentManager = InvestmentPortfolioManager.shared
-    @State private var selectedHolding: Investment?
     @State private var selectedPeriod: TimePeriod = .oneMonth
     @State private var showingDividends = false
 
@@ -262,7 +261,7 @@ struct AssetAllocationRow: View {
 }
 
 struct HoldingRow: View {
-    let holding: Investment
+    let holding: Holding
 
     var gainLoss: Double {
         holding.currentValue - holding.costBasis
@@ -311,7 +310,7 @@ struct HoldingRow: View {
 // MARK: - Helper Views
 
 struct HoldingDetailView: View {
-    let holding: Investment
+    let holding: Holding
     @Environment(\.dismiss) var dismiss
 
     var body: some View {

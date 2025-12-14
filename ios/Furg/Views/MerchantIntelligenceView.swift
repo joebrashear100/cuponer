@@ -70,14 +70,14 @@ struct MerchantIntelligenceView: View {
                         // Category filter
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 10) {
-                                FilterChip(
+                                MerchantFilterChip(
                                     label: "All",
                                     isSelected: selectedCategory == nil,
                                     action: { selectedCategory = nil }
                                 )
 
                                 ForEach(categories, id: \.self) { category in
-                                    FilterChip(
+                                    MerchantFilterChip(
                                         label: category,
                                         isSelected: selectedCategory == category,
                                         action: { selectedCategory = category }
@@ -96,7 +96,7 @@ struct MerchantIntelligenceView: View {
                                     .padding(.horizontal, 20)
 
                                 ForEach(topInsights) { insight in
-                                    InsightCard(insight: insight)
+                                    MerchantInsightCard(insight: insight)
                                         .padding(.horizontal, 20)
                                 }
                             }
@@ -127,7 +127,7 @@ struct MerchantIntelligenceView: View {
 
                                 ForEach(filteredMerchants) { merchant in
                                     NavigationLink(destination: MerchantDetailView(merchant: merchant)) {
-                                        MerchantRow(merchant: merchant)
+                                        MerchantDetailRow(merchant: merchant)
                                     }
                                     .padding(.horizontal, 20)
                                 }
@@ -146,7 +146,7 @@ struct MerchantIntelligenceView: View {
 
 // MARK: - Supporting Views
 
-struct FilterChip: View {
+struct MerchantFilterChip: View {
     let label: String
     let isSelected: Bool
     let action: () -> Void
@@ -164,7 +164,7 @@ struct FilterChip: View {
     }
 }
 
-struct InsightCard: View {
+struct MerchantInsightCard: View {
     let insight: MerchantInsight
 
     var body: some View {
@@ -204,7 +204,7 @@ struct InsightCard: View {
     }
 }
 
-struct MerchantRow: View {
+struct MerchantDetailRow: View {
     let merchant: MerchantProfile
 
     var body: some View {

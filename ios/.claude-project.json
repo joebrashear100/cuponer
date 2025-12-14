@@ -1,0 +1,39 @@
+{
+  "name": "Cuponer iOS",
+  "description": "Financial AI assistant iOS app with SwiftUI",
+  "mcpServers": {
+    "cuponer-mcp": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "env": {
+        "PROJECT_ROOT": "/Users/joebrashear/cuponer/ios"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "cache-and-return-file",
+      "description": "Returns file from cache, auto-invalidates on change. Saves 800+ tokens vs reading raw file."
+    },
+    {
+      "name": "indexed-search",
+      "description": "Search codebase index instead of grep. Saves 300+ tokens per search."
+    },
+    {
+      "name": "get-git-state-smart",
+      "description": "Returns git state with auto-fetch every 30 min. Saves 200+ tokens per check."
+    },
+    {
+      "name": "build-file-index",
+      "description": "Build file index for instant lookups. Saves 350+ tokens per operation."
+    },
+    {
+      "name": "query-file-index",
+      "description": "Query pre-built file index instead of glob."
+    },
+    {
+      "name": "index-swift-code",
+      "description": "Index Swift code structure for fast searches. Saves 400+ tokens per complex search."
+    }
+  ]
+}

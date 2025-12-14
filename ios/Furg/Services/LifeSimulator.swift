@@ -153,22 +153,14 @@ class LifeSimulator: ObservableObject {
     private let defaults = UserDefaults.standard
 
     init() {
-        // Load profile from defaults or create placeholder
-        if let profileData = defaults.data(forKey: "UserFinancialProfile"),
-           let profile = try? JSONDecoder().decode(UserFinancialProfile.self, from: profileData) {
-            self.userProfile = profile
-        } else {
-            self.userProfile = .placeholder()
-        }
-
+        // Initialize with placeholder profile
+        self.userProfile = .placeholder()
         loadScenarios()
     }
 
     func updateProfile(_ profile: UserFinancialProfile) {
         self.userProfile = profile
-        if let encoded = try? JSONEncoder().encode(profile) {
-            defaults.set(encoded, forKey: "UserFinancialProfile")
-        }
+        // Profile is updated in memory; persistence would be handled separately
     }
 
     // MARK: - Simulation Methods
@@ -431,7 +423,7 @@ class LifeSimulator: ObservableObject {
             )
         }
 
-        let yearsToRetirement = profile.yearsUntilRetirement > 0 ? Double(profile.yearsUntilRetirement) : nil
+        let yearsToRetirement: Double? = profile.retirementAgeGoal > profile.currentAge ? Double(profile.retirementAgeGoal - profile.currentAge) : nil
 
         let summary = FinancialProjection.ProjectionSummary(
             totalIncome: totalIncome,

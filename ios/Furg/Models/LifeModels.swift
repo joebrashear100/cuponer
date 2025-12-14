@@ -9,28 +9,32 @@ import Foundation
 
 // MARK: - User Financial Profile
 
-struct UserFinancialProfile: Codable {
+struct UserFinancialProfile {
     // Basic demographics
     var currentAge: Int
     var retirementAgeGoal: Int
 
     // Income
     var annualIncome: Double
-    var monthlyIncome: Double {
-        annualIncome / 12
-    }
     var additionalMonthlyIncome: Double = 0
 
     // Expenses
     var monthlyExpenses: Double
-    var annualExpenses: Double {
-        monthlyExpenses * 12
-    }
 
     // Savings & Net Worth
     var currentSavingsBalance: Double = 0
     var currentNetWorth: Double = 0
     var investmentBalance: Double = 0
+
+    // Computed properties
+    var monthlyIncome: Double {
+        annualIncome / 12
+    }
+
+    var annualExpenses: Double {
+        monthlyExpenses * 12
+    }
+
     var savingsRate: Double { // Between 0 and 1
         guard monthlyIncome > 0 else { return 0 }
         let monthlyAfterExpenses = (monthlyIncome + additionalMonthlyIncome) - monthlyExpenses
@@ -98,42 +102,6 @@ struct UserFinancialProfile: Codable {
 
         // Calculate retirement savings target (25x annual expenses, simplified)
         self.retirementSavingsTarget = annualIncome * 25
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case currentAge = "current_age"
-        case retirementAgeGoal = "retirement_age_goal"
-        case annualIncome = "annual_income"
-        case additionalMonthlyIncome = "additional_monthly_income"
-        case monthlyExpenses = "monthly_expenses"
-        case currentSavingsBalance = "current_savings_balance"
-        case currentNetWorth = "current_net_worth"
-        case investmentBalance = "investment_balance"
-        case totalDebt = "total_debt"
-        case studentDebt = "student_debt"
-        case creditCardDebt = "credit_card_debt"
-        case mortgageBalance = "mortgage_balance"
-        case otherDebt = "other_debt"
-        case debtInterestRate = "debt_interest_rate"
-        case monthlyRent = "monthly_rent"
-        case homeValue = "home_value"
-        case propertyTaxMonthly = "property_tax_monthly"
-        case homeInsuranceMonthly = "home_insurance_monthly"
-        case investmentReturnRate = "investment_return_rate"
-        case investmentAllocation = "investment_allocation"
-        case numberOfDependents = "number_of_dependents"
-        case childcareExpenseMonthly = "childcare_expense_monthly"
-        case effectiveTaxRate = "effective_tax_rate"
-        case healthInsuranceMonthly = "health_insurance_monthly"
-        case lifeInsuranceMonthly = "life_insurance_monthly"
-        case disabilityInsuranceMonthly = "disability_insurance_monthly"
-        case currentCity = "current_city"
-        case currentState = "current_state"
-        case stateTaxRate = "state_tax_rate"
-        case emergencyFundTarget = "emergency_fund_target"
-        case retirementSavingsTarget = "retirement_savings_target"
-        case createdAt = "created_at"
-        case lastUpdatedAt = "last_updated_at"
     }
 
     // Computed properties for financial health

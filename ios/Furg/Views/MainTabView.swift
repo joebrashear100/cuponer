@@ -119,9 +119,7 @@ struct MainTabView: View {
                     removal: .move(edge: .leading)
                 ))
         case .tools:
-            Text("Tools Hub (TODO)")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(red: 0.08, green: 0.08, blue: 0.12))
+            ToolsHubView()
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing),
                     removal: .move(edge: .leading)

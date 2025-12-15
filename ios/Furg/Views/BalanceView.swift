@@ -51,8 +51,7 @@ struct BalanceView: View {
                 VStack(spacing: 28) {
                     headerSection
                     heroBalanceSection
-                    balanceTrendSection
-                    spendingBreakdownChart
+                    moneyFlowChart
                     weeklyComparisonChart
                     cashFlowSection
                     metricsSection
@@ -147,11 +146,109 @@ struct BalanceView: View {
         .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: animate)
     }
 
-    private var balanceTrendSection: some View {
-        PlotlyWaterfallView()
-            .opacity(animate ? 1 : 0)
-            .offset(y: animate ? 0 : 20)
-            .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: animate)
+    private var moneyFlowChart: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Money Flow")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+
+            Text("Where your money goes")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white.opacity(0.5))
+                .padding(.horizontal, 16)
+
+            // Income → Spending flow
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    // Income box
+                    VStack(spacing: 2) {
+                        Text("$6,500")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                        Text("Income")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(10)
+                    .background(Color.furgSuccess.opacity(0.2))
+                    .cornerRadius(8)
+
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.furgMint.opacity(0.6))
+
+                    // Spending boxes
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            VStack(spacing: 2) {
+                                Text("$650")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("Food")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(Color.furgSuccess.opacity(0.15))
+                            .cornerRadius(6)
+
+                            VStack(spacing: 2) {
+                                Text("$420")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("Shop")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(Color.furgDanger.opacity(0.15))
+                            .cornerRadius(6)
+                        }
+
+                        HStack(spacing: 6) {
+                            VStack(spacing: 2) {
+                                Text("$280")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("Transport")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(Color.furgWarning.opacity(0.15))
+                            .cornerRadius(6)
+
+                            VStack(spacing: 2) {
+                                Text("$5,150")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.furgMint)
+                                Text("Saved")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(8)
+                            .background(Color.furgSuccess.opacity(0.1))
+                            .cornerRadius(6)
+                        }
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color.white.opacity(0.04))
+            .cornerRadius(12)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+        .background(Color(red: 0.08, green: 0.08, blue: 0.12))
+        .cornerRadius(16)
+        .padding(.horizontal, 16)
     }
 
     private var spendingBreakdownChart: some View {
@@ -910,272 +1007,24 @@ private struct ToolQuickAccessCard: View {
     }
 }
 
-// MARK: - Plotly Waterfall Chart
-struct PlotlyWaterfallView: View {
-    @State private var timeRange: String = "month"
+// MARK: - Category Flow Badge
+struct CategoryFlowBadge: View {
+    let category: String
+    let amount: String
+    let color: Color
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Time range selector
-            HStack(spacing: 12) {
-                ForEach(["day", "week", "month"], id: \.self) { range in
-                    Button(action: { timeRange = range }) {
-                        Text(range.capitalized)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(timeRange == range ? .furgMint : .white.opacity(0.6))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 32)
-                            .background(timeRange == range ? Color.furgMint.opacity(0.2) : Color.white.opacity(0.05))
-                            .cornerRadius(8)
-                    }
-                }
-            }
-            .padding(16)
-
-            // Web view with Plotly
-            WaterfallChartWebView(timeRange: timeRange)
-                .frame(height: 300)
+        VStack(alignment: .center, spacing: 2) {
+            Text(category)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(.white.opacity(0.7))
+            Text(amount)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(color)
         }
-        .background(Color(red: 0.08, green: 0.08, blue: 0.12))
-        .cornerRadius(16)
-        .padding(16)
-    }
-}
-
-struct WaterfallChartWebView: UIViewRepresentable {
-    let timeRange: String
-
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.backgroundColor = UIColor(red: 0.08, green: 0.08, blue: 0.12, alpha: 1.0)
-        webView.isOpaque = false
-
-        let htmlString = generateWaterfallHTML(timeRange: timeRange)
-        webView.loadHTMLString(htmlString, baseURL: nil)
-
-        return webView
-    }
-
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        let htmlString = generateWaterfallHTML(timeRange: timeRange)
-        uiView.loadHTMLString(htmlString, baseURL: nil)
-    }
-
-    private func generateWaterfallHTML(timeRange: String) -> String {
-        // Generate stacked bar chart data
-        let stackedData = getStackedBarData(timeRange: timeRange)
-
-        // Calculate totals per period for sorting
-        var periodTotals: [(index: Int, name: String, total: Double)] = []
-        for (idx, period) in stackedData.periods.enumerated() {
-            let total = stackedData.data.reduce(0) { $0 + $1[idx] }
-            periodTotals.append((idx, period, total))
-        }
-        // Sort by total (highest first)
-        periodTotals.sort { $0.total > $1.total }
-
-        // Create sorted labels and reorganized data
-        let sortedLabels = periodTotals.map { $0.name }
-        let periodLabels = sortedLabels.map { "\"\($0)\"" }.joined(separator: ",")
-
-        // Reorganize data arrays to match sorted order
-        var sortedData: [[Double]] = Array(repeating: [], count: stackedData.categories.count)
-        for categoryIdx in 0..<stackedData.categories.count {
-            for (sortedPos, periodInfo) in periodTotals.enumerated() {
-                sortedData[categoryIdx].append(stackedData.data[categoryIdx][periodInfo.index])
-            }
-        }
-
-        // Category colors - matching Furg's design system
-        let colors = [
-            "#4FBF85", // Groceries - mint green
-            "#FFD93D", // Dining - yellow
-            "#FF6B6B", // Transport - red
-            "#A8E6CF", // Entertainment - light green
-            "#FFB3BA", // Shopping - light red
-            "#BAE1FF"  // Other - light blue
-        ]
-
-        // Build trace for each category
-        var tracesCode = ""
-        for (idx, category) in stackedData.categories.enumerated() {
-            let values = sortedData[idx].map { String($0) }.joined(separator: ",")
-            let color = idx < colors.count ? colors[idx] : "#999"
-            tracesCode += """
-            {
-                name: "\(category)",
-                x: [\(periodLabels)],
-                y: [\(values)],
-                type: "bar",
-                marker: {color: "\(color)"},
-                hovertemplate: '<b>\(category)</b><br>$%{y:,.0f}<extra></extra>'
-            },
-            """
-        }
-        // Remove trailing comma
-        tracesCode = String(tracesCode.dropLast(1))
-
-        // Calculate budget threshold (average spending)
-        let avgSpending = periodTotals.reduce(0) { $0 + $1.total } / Double(periodTotals.count)
-        let budgetThreshold = avgSpending * 1.1  // 10% above average
-
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-            <style>
-                html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #13131f; }
-                #chart { width: 100%; height: 100%; }
-            </style>
-        </head>
-        <body>
-            <div id="chart"></div>
-            <script>
-                var data = [\(tracesCode)];
-
-                var layout = {
-                    barmode: "stack",
-                    margin: {l: 50, r: 30, t: 30, b: 50},
-                    paper_bgcolor: "#13131f",
-                    plot_bgcolor: "#13131f",
-                    font: {color: "#999", family: "system-ui, -apple-system, sans-serif", size: 11},
-                    xaxis: {
-                        showgrid: false,
-                        zeroline: false,
-                        color: "#666",
-                        tickfont: {size: 10}
-                    },
-                    yaxis: {
-                        showgrid: true,
-                        gridcolor: "rgba(255,255,255,0.1)",
-                        gridwidth: 1,
-                        zeroline: false,
-                        color: "#666",
-                        tickformat: "$.0f",
-                        tickfont: {size: 10}
-                    },
-                    hovermode: "x unified",
-                    autosize: true,
-                    legend: {
-                        x: 1.02,
-                        y: 1,
-                        xanchor: "left",
-                        yanchor: "top",
-                        bgcolor: "rgba(0,0,0,0.5)",
-                        bordercolor: "#666",
-                        borderwidth: 1
-                    },
-                    shapes: [{
-                        type: "line",
-                        xref: "paper",
-                        yref: "y",
-                        x0: 0,
-                        x1: 1,
-                        y0: \(budgetThreshold),
-                        y1: \(budgetThreshold),
-                        line: {
-                            color: "#FFA500",
-                            width: 2,
-                            dash: "dash"
-                        }
-                    }],
-                    annotations: [{
-                        x: 0.98,
-                        y: \(budgetThreshold),
-                        xref: "paper",
-                        yref: "y",
-                        text: "Budget Threshold",
-                        showarrow: false,
-                        xanchor: "right",
-                        yanchor: "bottom",
-                        font: {color: "#FFA500", size: 10},
-                        bgcolor: "rgba(0,0,0,0.6)",
-                        bordercolor: "#FFA500",
-                        borderwidth: 1,
-                        borderpad: 4
-                    }]
-                };
-
-                var config = {
-                    responsive: true,
-                    displayModeBar: false,
-                    staticPlot: false
-                };
-
-                Plotly.newPlot('chart', data, layout, config);
-            </script>
-        </body>
-        </html>
-        """
-    }
-
-    private struct StackedBarChartData {
-        let periods: [String]
-        let categories: [String]
-        let data: [[Double]]
-    }
-
-    private func getStackedBarData(timeRange: String) -> StackedBarChartData {
-        let categories = ["Groceries", "Dining", "Transport", "Entertainment", "Shopping", "Other"]
-
-        var periods: [String] = []
-        var data: [[Double]] = Array(repeating: [], count: categories.count)
-
-        if timeRange == "day" {
-            // Daily view - last 7 days
-            periods = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-            let dailyData: [(Double, Double, Double, Double, Double, Double)] = [
-                (45, 20, 15, 30, 40, 10), (50, 25, 18, 35, 45, 12), (40, 18, 12, 25, 35, 8),
-                (55, 30, 20, 40, 50, 15), (48, 22, 16, 32, 42, 11), (60, 35, 25, 45, 55, 20),
-                (52, 28, 18, 38, 48, 14)
-            ]
-            // Extract data by category
-            for idx in 0..<categories.count {
-                for day in 0..<7 {
-                    switch idx {
-                    case 0: data[idx].append(dailyData[day].0)  // Groceries
-                    case 1: data[idx].append(dailyData[day].1)  // Dining
-                    case 2: data[idx].append(dailyData[day].2)  // Transport
-                    case 3: data[idx].append(dailyData[day].3)  // Entertainment
-                    case 4: data[idx].append(dailyData[day].4)  // Shopping
-                    case 5: data[idx].append(dailyData[day].5)  // Other
-                    default: break
-                    }
-                }
-            }
-        } else if timeRange == "week" {
-            // Weekly view - last 4 weeks
-            periods = ["Week 1", "Week 2", "Week 3", "Week 4"]
-            let weeklyData: [[Double]] = [
-                [285, 320, 295, 310],  // Groceries
-                [155, 175, 160, 180],  // Dining
-                [105, 115, 110, 120],  // Transport
-                [210, 240, 225, 250],  // Entertainment
-                [270, 310, 290, 320],  // Shopping
-                [85, 95, 80, 100]      // Other
-            ]
-            data = weeklyData
-        } else {
-            // Monthly view - last 6 months
-            periods = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"]
-            let monthlyData: [[Double]] = [
-                [1200, 1350, 1280, 1400, 1320, 1450],  // Groceries
-                [680, 750, 720, 800, 760, 850],        // Dining
-                [450, 520, 480, 560, 500, 600],        // Transport
-                [900, 1050, 980, 1100, 1020, 1150],    // Entertainment
-                [1200, 1400, 1300, 1500, 1400, 1600],  // Shopping
-                [380, 420, 400, 450, 420, 500]         // Other
-            ]
-            data = monthlyData
-        }
-
-        return StackedBarChartData(periods: periods, categories: categories, data: data)
-    }
-
-    private func getWaterfallData(timeRange: String) -> ([String], [Double], [String]) {
-        // Kept for backward compatibility, but not used
-        return ([], [], [])
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(color.opacity(0.15))
+        .cornerRadius(6)
     }
 }

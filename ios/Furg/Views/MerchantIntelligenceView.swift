@@ -8,29 +8,29 @@ struct MerchantIntelligenceView: View {
     @State private var selectedCategory: String?
 
     var filteredMerchants: [MerchantProfile] {
-        let allMerchants = merchantManager.merchants
+        let allMerchants = merchantManager.recentMerchants
         var filtered = allMerchants
 
         if !searchText.isEmpty {
             filtered = filtered.filter { merchant in
                 merchant.name.lowercased().contains(searchText.lowercased()) ||
-                merchant.category.lowercased().contains(searchText.lowercased())
+                merchant.category.rawValue.lowercased().contains(searchText.lowercased())
             }
         }
 
         if let category = selectedCategory {
-            filtered = filtered.filter { $0.category == category }
+            filtered = filtered.filter { $0.category.rawValue == category }
         }
 
-        return filtered.sorted { $0.visitCount > $1.visitCount }
+        return filtered.sorted { ($0.userStats?.visitCount ?? 0) > ($1.userStats?.visitCount ?? 0) }
     }
 
     var categories: [String] {
-        Array(Set(merchantManager.merchants.map { $0.category })).sorted()
+        Array(Set(merchantManager.recentMerchants.map { $0.category.rawValue })).sorted()
     }
 
     var topInsights: [MerchantInsight] {
-        merchantManager.insights.sorted { $0.priority > $1.priority }.prefix(3).map { $0 }
+        merchantManager.activeInsights.sorted { $0.priority > $1.priority }.prefix(3).map { $0 }
     }
 
     var body: some View {
@@ -186,16 +186,18 @@ struct MerchantInsightCard: View {
                     .foregroundColor(.furgWarning)
             }
 
-            HStack {
-                Image(systemName: "arrowtriangle.up.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.furgSuccess)
+            if insight.actionable, let action = insight.action {
+                HStack {
+                    Image(systemName: "arrowtriangle.up.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.furgSuccess)
 
-                Text(insight.actionable)
-                    .font(.system(size: 12))
-                    .foregroundColor(.furgSuccess)
+                    Text(action)
+                        .font(.system(size: 12))
+                        .foregroundColor(.furgSuccess)
 
-                Spacer()
+                    Spacer()
+                }
             }
         }
         .padding(14)
@@ -225,7 +227,7 @@ struct MerchantDetailRow: View {
                     .foregroundColor(.white)
 
                 HStack(spacing: 8) {
-                    Text(merchant.category)
+                    Text(merchant.category.rawValue)
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.5))
 
@@ -233,7 +235,7 @@ struct MerchantDetailRow: View {
                         .fill(Color.white.opacity(0.2))
                         .frame(width: 3, height: 3)
 
-                    Text("\(merchant.visitCount) visits")
+                    Text("\(merchant.userStats?.visitCount ?? 0) visits")
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -242,11 +244,11 @@ struct MerchantDetailRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("$\(Int(merchant.totalSpent))")
+                Text("$\(Int(merchant.userStats?.totalSpent ?? 0))")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.furgMint)
 
-                Text("avg $\(Int(merchant.averageTransaction))")
+                Text("avg $\(Int(merchant.userStats?.averageTransaction ?? 0))")
                     .font(.system(size: 11))
                     .foregroundColor(.white.opacity(0.5))
             }

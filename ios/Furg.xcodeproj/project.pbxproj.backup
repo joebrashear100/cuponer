@@ -23,8 +23,6 @@
 		F10000010000000000000012 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000012 /* ChatView.swift */; };
 		F10000010000000000000013 /* FinancingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000013 /* FinancingCalculatorView.swift */; };
 		F10000010000000000000014 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000014 /* MainTabView.swift */; };
-		1e22f432fa1c45c6bc8f4bd1 /* MerchantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6251fb8d3b4043ea805425dd /* MerchantDetailView.swift */; };
-		e9c6596972424a90be2fa93c /* ToolsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = fc5c9a1c85bd4b5ba82df544 /* ToolsHubView.swift */; };
 		F10000010000000000000015 /* PurchasePlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000015 /* PurchasePlanView.swift */; };
 		F10000010000000000000016 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000016 /* SettingsView.swift */; };
 		F10000010000000000000017 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000017 /* TransactionsView.swift */; };
@@ -135,6 +133,29 @@
 		F10000010000000000000403 /* DealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000403 /* DealsView.swift */; };
 		F10000010000000000000404 /* DealsSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000404 /* DealsSearchView.swift */; };
 		F10000010000000000000405 /* ShoppingChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000405 /* ShoppingChatView.swift */; };
+		F10000010000000000000406 /* LifeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000406 /* LifeModels.swift */; };
+		F10000010000000000000407 /* ToolsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000407 /* ToolsHubView.swift */; };
+		F10000010000000000000408 /* MerchantDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000408 /* MerchantDetailView.swift */; };
+		F10000010000000000000409 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000409 /* KeychainHelper.swift */; };
+		/* V2 FILES */
+		F10000010000000000000500 /* DesignSystemV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000500 /* DesignSystemV2.swift */; };
+		F10000010000000000000501 /* FurgAppV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000501 /* FurgAppV2.swift */; };
+		F10000010000000000000502 /* DashboardPageV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000502 /* DashboardPageV2.swift */; };
+		F10000010000000000000503 /* SpendingPageV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000503 /* SpendingPageV2.swift */; };
+		F10000010000000000000504 /* AccountsPageV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000504 /* AccountsPageV2.swift */; };
+		F10000010000000000000505 /* ChatViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000505 /* ChatViewV2.swift */; };
+		F10000010000000000000506 /* GoalsV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000506 /* GoalsV2.swift */; };
+		F10000010000000000000507 /* InsightsV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000507 /* InsightsV2.swift */; };
+		F10000010000000000000508 /* TransactionsV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000508 /* TransactionsV2.swift */; };
+		F10000010000000000000509 /* SubscriptionsViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000509 /* SubscriptionsViewV2.swift */; };
+		F10000010000000000000510 /* ForecastViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000510 /* ForecastViewV2.swift */; };
+		F10000010000000000000511 /* ReceiptScannerV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000511 /* ReceiptScannerV2.swift */; };
+		F10000010000000000000512 /* WishlistViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000512 /* WishlistViewV2.swift */; };
+		F10000010000000000000513 /* FinancingCalculatorV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000513 /* FinancingCalculatorV2.swift */; };
+		F10000010000000000000514 /* ConnectBankViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000514 /* ConnectBankViewV2.swift */; };
+		F10000010000000000000515 /* SpendingLimitsViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000515 /* SpendingLimitsViewV2.swift */; };
+		F10000010000000000000516 /* OffersViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000516 /* OffersViewV2.swift */; };
+		F10000010000000000000517 /* SettingsViewV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000517 /* SettingsViewV2.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -155,8 +176,6 @@
 		F20000010000000000000012 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		F20000010000000000000013 /* FinancingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancingCalculatorView.swift; sourceTree = "<group>"; };
 		F20000010000000000000014 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		6251fb8d3b4043ea805425dd /* MerchantDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantDetailView.swift; sourceTree = "<group>"; };
-		fc5c9a1c85bd4b5ba82df544 /* ToolsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsHubView.swift; sourceTree = "<group>"; };
 		F20000010000000000000015 /* PurchasePlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchasePlanView.swift; sourceTree = "<group>"; };
 		F20000010000000000000016 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000017 /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
@@ -268,6 +287,29 @@
 		F20000010000000000000403 /* DealsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000404 /* DealsSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsSearchView.swift; sourceTree = "<group>"; };
 		F20000010000000000000405 /* ShoppingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingChatView.swift; sourceTree = "<group>"; };
+		F20000010000000000000406 /* LifeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeModels.swift; sourceTree = "<group>"; };
+		F20000010000000000000407 /* ToolsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsHubView.swift; sourceTree = "<group>"; };
+		F20000010000000000000408 /* MerchantDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantDetailView.swift; sourceTree = "<group>"; };
+		F20000010000000000000409 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		/* V2 FILES */
+		F20000010000000000000500 /* DesignSystemV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystemV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000501 /* FurgAppV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FurgAppV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000502 /* DashboardPageV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardPageV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000503 /* SpendingPageV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingPageV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000504 /* AccountsPageV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsPageV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000505 /* ChatViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000506 /* GoalsV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000507 /* InsightsV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000508 /* TransactionsV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000509 /* SubscriptionsViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionsViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000510 /* ForecastViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000511 /* ReceiptScannerV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptScannerV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000512 /* WishlistViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WishlistViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000513 /* FinancingCalculatorV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancingCalculatorV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000514 /* ConnectBankViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectBankViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000515 /* SpendingLimitsViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingLimitsViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000516 /* OffersViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffersViewV2.swift; sourceTree = "<group>"; };
+		F20000010000000000000517 /* SettingsViewV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewV2.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -308,6 +350,7 @@
 				F20000010000000000000001 /* FurgApp.swift */,
 				F20000010000000000000002 /* Config.swift */,
 				F20000010000000000000021 /* DesignSystem.swift */,
+				F20000010000000000000500 /* DesignSystemV2.swift */,
 				F20000010000000000000050 /* Formatters.swift */,
 				F20000010000000000000051 /* ThemeManager.swift */,
 			);
@@ -319,6 +362,7 @@
 			children = (
 				F20000010000000000000400 /* DealsModels.swift */,
 				F20000010000000000000022 /* GoalsModels.swift */,
+				F20000010000000000000406 /* LifeModels.swift */,
 				F20000010000000000000003 /* Models.swift */,
 				F20000010000000000000023 /* SubscriptionModels.swift */,
 				F20000010000000000000004 /* WishlistModels.swift */,
@@ -352,6 +396,7 @@
 				F20000010000000000000111 /* IncomeManager.swift */,
 				F20000010000000000000112 /* InvestmentPortfolioManager.swift */,
 				F20000010000000000000044 /* KeychainService.swift */,
+				F20000010000000000000409 /* KeychainHelper.swift */,
 				F20000010000000000000113 /* LifeContextManager.swift */,
 				F20000010000000000000114 /* LifeEventDetector.swift */,
 				F20000010000000000000115 /* LifeSimulator.swift */,
@@ -389,6 +434,7 @@
 			isa = PBXGroup;
 			children = (
 				F40000010000000000000007 /* Components */,
+				F40000010000000000000008 /* V2 */,
 				F20000010000000000000200 /* ARShoppingView.swift */,
 				F20000010000000000000201 /* AccountDetailView.swift */,
 				F20000010000000000000039 /* AccountsView.swift */,
@@ -420,9 +466,8 @@
 				F20000010000000000000214 /* LifeIntegrationView.swift */,
 				F20000010000000000000215 /* LocationInsightsView.swift */,
 				F20000010000000000000014 /* MainTabView.swift */,
-				6251fb8d3b4043ea805425dd /* MerchantDetailView.swift */,
-				fc5c9a1c85bd4b5ba82df544 /* ToolsHubView.swift */,
 				F20000010000000000000216 /* MerchantIntelligenceView.swift */,
+				F20000010000000000000408 /* MerchantDetailView.swift */,
 				F20000010000000000000217 /* MoneyMindfulnessView.swift */,
 				F20000010000000000000042 /* OffersView.swift */,
 				F20000010000000000000032 /* OnboardingView.swift */,
@@ -444,6 +489,7 @@
 				F20000010000000000000224 /* TransactionClarificationView.swift */,
 				F20000010000000000000040 /* TransactionsListView.swift */,
 				F20000010000000000000017 /* TransactionsView.swift */,
+				F20000010000000000000407 /* ToolsHubView.swift */,
 				F20000010000000000000018 /* WelcomeView.swift */,
 				F20000010000000000000019 /* WishlistView.swift */,
 			);
@@ -466,6 +512,30 @@
 				F20000010000000000000302 /* UnifiedComponents.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		F40000010000000000000008 /* V2 */ = {
+			isa = PBXGroup;
+			children = (
+				F20000010000000000000501 /* FurgAppV2.swift */,
+				F20000010000000000000502 /* DashboardPageV2.swift */,
+				F20000010000000000000503 /* SpendingPageV2.swift */,
+				F20000010000000000000504 /* AccountsPageV2.swift */,
+				F20000010000000000000505 /* ChatViewV2.swift */,
+				F20000010000000000000506 /* GoalsV2.swift */,
+				F20000010000000000000507 /* InsightsV2.swift */,
+				F20000010000000000000508 /* TransactionsV2.swift */,
+				F20000010000000000000509 /* SubscriptionsViewV2.swift */,
+				F20000010000000000000510 /* ForecastViewV2.swift */,
+				F20000010000000000000511 /* ReceiptScannerV2.swift */,
+				F20000010000000000000512 /* WishlistViewV2.swift */,
+				F20000010000000000000513 /* FinancingCalculatorV2.swift */,
+				F20000010000000000000514 /* ConnectBankViewV2.swift */,
+				F20000010000000000000515 /* SpendingLimitsViewV2.swift */,
+				F20000010000000000000516 /* OffersViewV2.swift */,
+				F20000010000000000000517 /* SettingsViewV2.swift */,
+			);
+			path = V2;
 			sourceTree = "<group>";
 		};
 		F40000010000000000000099 /* Products */ = {
@@ -555,6 +625,10 @@
 				F10000010000000000000022 /* GoalsModels.swift in Sources */,
 				F10000010000000000000023 /* SubscriptionModels.swift in Sources */,
 				F10000010000000000000400 /* DealsModels.swift in Sources */,
+				F10000010000000000000406 /* LifeModels.swift in Sources */,
+				F10000010000000000000407 /* ToolsHubView.swift in Sources */,
+				F10000010000000000000408 /* MerchantDetailView.swift in Sources */,
+				F10000010000000000000409 /* KeychainHelper.swift in Sources */,
 				F10000010000000000000005 /* APIClient.swift in Sources */,
 				F10000010000000000000100 /* ARShoppingManager.swift in Sources */,
 				F10000010000000000000101 /* AchievementsManager.swift in Sources */,
@@ -638,8 +712,6 @@
 				F10000010000000000000214 /* LifeIntegrationView.swift in Sources */,
 				F10000010000000000000215 /* LocationInsightsView.swift in Sources */,
 				F10000010000000000000014 /* MainTabView.swift in Sources */,
-				1e22f432fa1c45c6bc8f4bd1 /* MerchantDetailView.swift in Sources */,
-				e9c6596972424a90be2fa93c /* ToolsHubView.swift in Sources */,
 				F10000010000000000000216 /* MerchantIntelligenceView.swift in Sources */,
 				F10000010000000000000217 /* MoneyMindfulnessView.swift in Sources */,
 				F10000010000000000000042 /* OffersView.swift in Sources */,
@@ -667,6 +739,25 @@
 				F10000010000000000000300 /* NavigationHeader.swift in Sources */,
 				F10000010000000000000301 /* PillTabBar.swift in Sources */,
 				F10000010000000000000302 /* UnifiedComponents.swift in Sources */,
+				/* V2 Files */
+				F10000010000000000000500 /* DesignSystemV2.swift in Sources */,
+				F10000010000000000000501 /* FurgAppV2.swift in Sources */,
+				F10000010000000000000502 /* DashboardPageV2.swift in Sources */,
+				F10000010000000000000503 /* SpendingPageV2.swift in Sources */,
+				F10000010000000000000504 /* AccountsPageV2.swift in Sources */,
+				F10000010000000000000505 /* ChatViewV2.swift in Sources */,
+				F10000010000000000000506 /* GoalsV2.swift in Sources */,
+				F10000010000000000000507 /* InsightsV2.swift in Sources */,
+				F10000010000000000000508 /* TransactionsV2.swift in Sources */,
+				F10000010000000000000509 /* SubscriptionsViewV2.swift in Sources */,
+				F10000010000000000000510 /* ForecastViewV2.swift in Sources */,
+				F10000010000000000000511 /* ReceiptScannerV2.swift in Sources */,
+				F10000010000000000000512 /* WishlistViewV2.swift in Sources */,
+				F10000010000000000000513 /* FinancingCalculatorV2.swift in Sources */,
+				F10000010000000000000514 /* ConnectBankViewV2.swift in Sources */,
+				F10000010000000000000515 /* SpendingLimitsViewV2.swift in Sources */,
+				F10000010000000000000516 /* OffersViewV2.swift in Sources */,
+				F10000010000000000000517 /* SettingsViewV2.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

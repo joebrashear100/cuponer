@@ -1,0 +1,10 @@
+# Add these lines to project.pbxproj:
+
+## In PBXBuildFile section (after line with "SettingsViewV2.swift in Sources"):
+F10000010000000000000600 /* UIVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000600 /* UIVerifier.swift */; };
+
+## In PBXFileReference section (add in alphabetical order with other files):
+F20000010000000000000600 /* UIVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVerifier.swift; sourceTree = "<group>"; };
+
+## In PBXSourcesBuildPhase section (in the list of files under "/* Sources */"):
+F10000010000000000000600 /* UIVerifier.swift in Sources */,

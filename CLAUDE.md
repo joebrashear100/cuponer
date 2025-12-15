@@ -15,7 +15,8 @@
 5. [UI Verification System](#ui-verification-system)
 6. [Token Optimization](#token-optimization)
 7. [Common Pitfalls](#common-pitfalls)
-8. [Decision Framework](#decision-framework)
+8. [SwiftUI Development & Debugging](#swiftui-development--debugging)
+9. [Decision Framework](#decision-framework)
 
 ---
 
@@ -432,6 +433,156 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Furg*
 
 ---
 
+## SwiftUI Development & Debugging
+
+### 🔍 View Not Rendering (But No Build Error)
+
+**Common Causes:**
+
+1. **Animation opacity starting at 0**
+   ```swift
+   // ❌ BAD - View starts invisible
+   Text("Money Flow")
+       .opacity(animate ? 1 : 0)  // Starts at 0 on load
+
+   // ✅ GOOD - Use offset animation instead
+   Text("Money Flow")
+       .offset(y: animate ? 0 : 20)  // Still visible, just moved
+   ```
+
+2. **Missing frame constraints**
+   ```swift
+   // ❌ BAD - VStack may collapse if content is empty
+   VStack(spacing: 8) {
+       // content...
+   }  // No explicit frame
+
+   // ✅ GOOD - Set minimum height
+   VStack(spacing: 8) {
+       // content...
+   }
+   .frame(minHeight: 80)
+   ```
+
+3. **View removed from hierarchy**
+   - Check the parent VStack/HStack still includes the section
+   - Comment out other sections to isolate the problem
+   - Use `.border(.red, width: 1)` temporarily to see layout bounds
+
+**Debugging Steps:**
+1. Add temporary `.border(.red, width: 1)` to see if view has space
+2. Check Animation closures - remove animations temporarily to see underlying layout
+3. Verify `.padding()` isn't collapsing the view
+4. Use SwiftUI Preview if possible to test in isolation
+
+### 📦 View Hierarchy & Component Replacement
+
+**When replacing a component with a new one:**
+
+1. **Remove the old view completely** - don't leave orphaned code
+   ```swift
+   // ❌ BAD - Old section left in code
+   balanceTrendSection
+   spendingBreakdownChart  // Remove this completely
+
+   // ✅ GOOD - Replace, not append
+   moneyFlowChart  // Single new section
+   ```
+
+2. **Verify parent VStack includes the new component**
+   ```swift
+   VStack(spacing: 28) {
+       headerSection
+       heroBalanceSection
+       moneyFlowChart        // ✅ Listed here
+       weeklyComparisonChart
+       // ...
+   }
+   ```
+
+3. **Check for duplicate struct definitions**
+   - If two files define `PlotlyWaterfallView`, one will cause ambiguous use error
+   - Use `grep -r "struct PlotlyWaterfallView"` to find duplicates
+   - Keep one canonical version, delete the rest
+
+### 🔄 Build Caching Issues
+
+**When code changes don't appear after rebuild:**
+
+1. **First, clean derived data:**
+   ```bash
+   rm -rf ~/Library/Developer/Xcode/DerivedData/Furg*
+   ```
+
+2. **Do a clean build:**
+   ```bash
+   xcodebuild clean -scheme Furg
+   xcodebuild build -scheme Furg -destination "platform=iOS Simulator,name=iPhone 16 Pro"
+   ```
+
+3. **If still not working, restart simulator:**
+   ```bash
+   xcrun simctl shutdown "iPhone 16 Pro"
+   sleep 2
+   xcrun simctl boot "iPhone 16 Pro"
+   sleep 8  # Wait for boot
+   ```
+
+**When to clean:**
+- After adding/removing files from Xcode project
+- After large refactors
+- When Preview shows old UI
+- When simulator shows outdated app
+
+### 🎨 Design System Versions
+
+**CRITICAL:** Do not mix DesignSystem.swift and DesignSystemV2.swift
+
+- **DesignSystem.swift** - Current live system (use this)
+  - Colors: `Color.furgSuccess`, `Color.furgDanger`, `Color.furgWarning`, `Color.furgMint`
+  - Established in app, tested, safe
+
+- **DesignSystemV2.swift** - In development (don't use yet)
+  - Colors: `Color.v2CategoryFood`, etc. (not in current system)
+  - References undefined colors → compile errors
+  - For future work only
+
+**When adding UI:**
+1. Check DesignSystem.swift for existing colors
+2. Use those colors only
+3. Don't reference V2 colors in non-V2 views
+
+### 📐 Component Architecture
+
+**When designing new dashboard components:**
+
+1. **Understand the parent view structure first**
+   - Check how other components are positioned
+   - Match spacing and padding conventions
+   - Review existing color palette
+
+2. **Build sections as computed properties**
+   ```swift
+   private var moneyFlowChart: some View {
+       VStack(alignment: .leading, spacing: 12) {
+           // Self-contained section
+       }
+   }
+   ```
+
+3. **Test in isolation**
+   - Add `.border(.red)` to verify layout
+   - Check all color references exist
+   - Verify data sources are mocked/real
+
+4. **When replacing existing component:**
+   - Remove the old section from body VStack
+   - Delete the old computed property
+   - Verify build succeeds
+   - Test on simulator
+
+---
+
 ## Decision Framework
 
 ### When Implementing Features
@@ -570,6 +721,11 @@ git pull origin main --no-ff
 
 | Date | Change |
 |------|--------|
+| Dec 14, 2024 | Added SwiftUI Development & Debugging section |
+| | Documented view rendering issues (animation opacity, frame constraints) |
+| | Added component replacement patterns and hierarchy debugging |
+| | Documented design system version separation (v1 vs v2) |
+| | Added build cache management procedures |
 | Dec 2024 | Reset from diverged state, added CLAUDE.md + KeychainHelper |
 | | Documented distributed workflow, MCP v2, common pitfalls |
 | | Established clean main from origin with premium features |

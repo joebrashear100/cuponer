@@ -12,9 +12,10 @@
 2. [Architecture & Structure](#architecture--structure)
 3. [Git Workflow (Distributed)](#git-workflow-distributed)
 4. [Build & Deployment](#build--deployment)
-5. [Token Optimization](#token-optimization)
-6. [Common Pitfalls](#common-pitfalls)
-7. [Decision Framework](#decision-framework)
+5. [UI Verification System](#ui-verification-system)
+6. [Token Optimization](#token-optimization)
+7. [Common Pitfalls](#common-pitfalls)
+8. [Decision Framework](#decision-framework)
 
 ---
 
@@ -222,6 +223,136 @@ xcodebuild install -scheme Furg -destination "platform=iOS Simulator,name=iPhone
 - ❌ NEVER store in UserDefaults
 - ❌ NEVER hardcode secrets
 - ❌ NEVER commit .env files with real values
+
+---
+
+## UI Verification System
+
+**Automated view testing to catch bugs before manual testing.**
+
+### Overview
+
+The UI Verification System provides automated checks for SwiftUI views to ensure they:
+- Render without crashing
+- Have expected interactive elements
+- Properly manage state
+- Include navigation when needed
+
+### Files
+
+- **UIVerifier.swift** - Core verification logic (`Furg/Utils/UIVerifier.swift`)
+- **UIVerificationTests.swift** - Test cases for all views (`FurgTests/UIVerificationTests.swift`)
+
+### Setup
+
+1. **Add UIVerifier.swift to Xcode project:**
+   - Open Furg.xcodeproj in Xcode
+   - Right-click on the "Furg" group → "Add Files to Furg..."
+   - Select `Furg/Utils/UIVerifier.swift`
+   - Ensure "Furg" target is checked
+
+2. **Add UIVerificationTests.swift to test target:**
+   - If no test target exists, create one: File → New → Target → Unit Testing Bundle
+   - Add `FurgTests/UIVerificationTests.swift` to the test target
+   - Ensure it imports `@testable import Furg`
+
+### Usage - MANDATORY WORKFLOW
+
+**After creating or modifying ANY SwiftUI view:**
+
+1. **Add view to UIVerificationTests.swift:**
+   ```swift
+   func testYourNewView() {
+       let financeManager = FinanceManager()
+
+       let view = YourNewView()
+           .environmentObject(financeManager)
+
+       UIVerifier.verifyView(view, name: "YourNewView")
+   }
+   ```
+
+2. **Run verification:**
+   ```bash
+   xcodebuild test -scheme Furg -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+   ```
+
+3. **Review output and report to user:**
+   ```
+   ==================================================
+   🔍 UI VERIFICATION: YourNewView
+   ==================================================
+   ✅ RENDER CHECK: View renders without crash
+   ✅ NAVIGATION: NavigationLink detected
+   ✅ INTERACTIVITY: Button elements detected
+   ⚠️  INPUT: No TextField elements found
+   ✅ STATE: @State variables detected
+   ==================================================
+   ✅ VERIFICATION COMPLETE: YourNewView
+   ==================================================
+   ```
+
+### Verification Checks
+
+| Check | Meaning | Action if Missing |
+|-------|---------|-------------------|
+| **RENDER CHECK** | View instantiates without crash | ❌ Critical - fix immediately |
+| **NAVIGATION** | Has NavigationLink | ⚠️  OK if not a navigation view |
+| **INTERACTIVITY** | Has Button/Tap elements | ⚠️  OK if static display |
+| **INPUT** | Has TextField/TextEditor | ℹ️  Only needed for input views |
+| **DATA** | Has List/ForEach | ℹ️  Only needed for collection views |
+| **STATE** | Has @State/@StateObject | ℹ️  Only needed for stateful views |
+
+### When to Verify
+
+**Always verify after:**
+- Creating a new view file
+- Adding navigation between views
+- Modifying view structure or layout
+- Adding/removing interactive elements
+- Changing state management
+
+**Never skip verification** - even for "small" changes.
+
+### Critical Rules
+
+1. ✅ **ALWAYS include verification output** in your response to the user
+2. ✅ **STOP and ask for help** if verification fails - don't ignore errors
+3. ✅ **Update UIVerificationTests.swift** every time you create a new view
+4. ✅ **Run verification BEFORE** telling the user the work is complete
+5. ❌ **NEVER skip verification** - even for trivial changes
+
+### Example - Good Workflow
+
+```
+User: "Add a new settings view"
+
+Claude: "I've created SettingsView.swift. Running verification...
+
+UI Verification Results:
+==================================================
+🔍 UI VERIFICATION: SettingsView
+==================================================
+✅ RENDER CHECK: View renders without crash
+✅ NAVIGATION: NavigationLink detected
+✅ INTERACTIVITY: Button elements detected
+✅ STATE: @State variables detected
+==================================================
+✅ VERIFICATION COMPLETE: SettingsView
+==================================================
+
+The view successfully passes all verification checks."
+```
+
+### Example - Bad Workflow (Don't Do This)
+
+```
+User: "Add a new settings view"
+
+Claude: "Here's SettingsView.swift [provides code]"
+// ❌ No verification run
+// ❌ No verification output included
+```
 
 ---
 

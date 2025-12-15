@@ -29,7 +29,7 @@ enum KeychainHelper {
         let status = SecItemAdd(query as CFDictionary, nil)
 
         guard status == errSecSuccess else {
-            throw KeychainError.saveFailed(status)
+            throw KeychainHelperError.saveFailed(status)
         }
     }
 
@@ -121,7 +121,7 @@ enum KeychainHelper {
 
 // MARK: - Error Handling
 
-enum KeychainError: Error {
+enum KeychainHelperError: Error {
     case saveFailed(OSStatus)
     case readFailed
     case deleteFailed

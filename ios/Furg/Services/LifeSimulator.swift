@@ -140,6 +140,24 @@ struct CityData: Codable {
     let stateTaxRate: Double
 }
 
+// MARK: - User Profile Stub
+struct UserFinancialProfile: Codable {
+    var annualIncome: Double = 78000
+    var monthlyIncome: Double = 6500
+    var monthlyExpenses: Double = 3500
+    var numberOfDependents: Int = 0
+    var homeValue: Double = 0
+    var mortgageBalance: Double = 0
+    var totalDebt: Double = 0
+    var currentNetWorth: Double = 50000
+    var investmentBalance: Double = 25000
+    var currentSavingsBalance: Double = 15000
+    var investmentReturnRate: Double = 0.07
+    var effectiveTaxRate: Double = 0.22
+    var currentAge: Int = 35
+    var retirementAgeGoal: Int = 65
+}
+
 // MARK: - Life Simulator
 
 class LifeSimulator: ObservableObject {
@@ -153,8 +171,8 @@ class LifeSimulator: ObservableObject {
     private let defaults = UserDefaults.standard
 
     init() {
-        // Initialize with placeholder profile
-        self.userProfile = .placeholder()
+        // Initialize with default profile
+        self.userProfile = UserFinancialProfile()
         loadScenarios()
     }
 
@@ -174,7 +192,7 @@ class LifeSimulator: ObservableObject {
             parameters.salaryChangePercentage = (multiplier - 1.0) * 100
         }
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
         scenarioProfile.monthlyExpenses *= costOfLivingMultiplier
         if let multiplier = newSalaryMultiplier {
@@ -203,7 +221,7 @@ class LifeSimulator: ObservableObject {
         parameters.additionalMonthlyExpenses = Double(transitionCostMonths) > 0 ? (5000 / Double(transitionCostMonths)) : 0
         parameters.timeHorizonYears = timeHorizonYears
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
         scenarioProfile.annualIncome = newSalary
 
@@ -234,7 +252,7 @@ class LifeSimulator: ObservableObject {
         parameters.additionalMonthlyExpenses = childcareCostMonthly
         parameters.timeHorizonYears = timeHorizonYears
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
         scenarioProfile.monthlyExpenses += childcareCostMonthly
         scenarioProfile.numberOfDependents = userProfile.numberOfDependents + 1
@@ -268,7 +286,7 @@ class LifeSimulator: ObservableObject {
         let numPayments = mortgageYears * 12
         let monthlyPayment = loanAmount * (monthlyRate * pow(1 + monthlyRate, Double(numPayments))) / (pow(1 + monthlyRate, Double(numPayments)) - 1)
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
         scenarioProfile.homeValue = homePrice
         scenarioProfile.mortgageBalance = loanAmount
@@ -296,7 +314,7 @@ class LifeSimulator: ObservableObject {
         parameters.monthlyPayment = monthlyPaymentGoal
         parameters.timeHorizonYears = timeHorizonYears
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
         scenarioProfile.totalDebt = max(0, targetDebtAmount)
 
@@ -320,7 +338,7 @@ class LifeSimulator: ObservableObject {
         var params = parameters
         params.timeHorizonYears = timeHorizonYears
 
-        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: nil)
+        let baselineProjection = projectCashFlow(months: timeHorizonYears * 12, profile: userProfile, parameters: ScenarioParameters())
         var scenarioProfile = userProfile
 
         // Apply parameter changes to profile

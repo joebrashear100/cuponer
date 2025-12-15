@@ -283,7 +283,10 @@ struct ScenarioBuilderView: View {
                                     .foregroundColor(.furgMint)
                             }
 
-                            Slider(value: Double($timeHorizon), in: 1...30, step: 1)
+                            Slider(value: Binding(
+                                get: { Double(timeHorizon) },
+                                set: { timeHorizon = Int($0) }
+                            ), in: 1...30, step: 1)
                                 .tint(.furgMint)
                         }
                         .padding(16)
@@ -331,7 +334,7 @@ struct ScenarioBuilderView: View {
         isSimulating = true
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let parameters = ScenarioParameters()
+            var parameters = ScenarioParameters()
             parameters.timeHorizonYears = timeHorizon
 
             let scenario = lifeSimulator.simulateGenericScenario(

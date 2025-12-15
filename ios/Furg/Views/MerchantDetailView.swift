@@ -21,6 +21,7 @@ struct MerchantDetailView: View {
     var spendingTrend: [Double] {
         var monthlySpends: [Double] = []
         let calendar = Calendar.current
+        let dateFormatter = ISO8601DateFormatter()
 
         for monthOffset in (0..<6).reversed() {
             let monthDate = calendar.date(byAdding: .month, value: -monthOffset, to: Date()) ?? Date()
@@ -28,8 +29,9 @@ struct MerchantDetailView: View {
             let yearComponent = calendar.component(.year, from: monthDate)
 
             let monthTotal = merchantTransactions.filter { transaction in
-                let txMonth = calendar.component(.month, from: transaction.date)
-                let txYear = calendar.component(.year, from: transaction.date)
+                guard let txDate = dateFormatter.date(from: transaction.date) else { return false }
+                let txMonth = calendar.component(.month, from: txDate)
+                let txYear = calendar.component(.year, from: txDate)
                 return txMonth == monthComponent && txYear == yearComponent
             }.reduce(0) { $0 + abs($1.amount) }
 
@@ -62,7 +64,7 @@ struct MerchantDetailView: View {
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
 
-                                Text(merchant.category)
+                                Text(merchant.category.rawValue)
                                     .font(.system(size: 14))
                                     .foregroundColor(.white.opacity(0.6))
                             }
@@ -73,32 +75,32 @@ struct MerchantDetailView: View {
                         // Key Stats
                         VStack(spacing: 12) {
                             HStack(spacing: 12) {
-                                StatBox(
+                                MerchantStatBox(
                                     title: "Total Spent",
-                                    value: "$\(Int(merchant.totalSpent))",
+                                    value: "$\(Int(merchant.userStats?.totalSpent ?? 0))",
                                     icon: "dollarsign.circle.fill",
                                     color: .furgMint
                                 )
 
-                                StatBox(
+                                MerchantStatBox(
                                     title: "Visit Count",
-                                    value: "\(merchant.visitCount)",
+                                    value: "\(merchant.userStats?.visitCount ?? 0)",
                                     icon: "mappin.circle.fill",
                                     color: .furgInfo
                                 )
                             }
 
                             HStack(spacing: 12) {
-                                StatBox(
+                                MerchantStatBox(
                                     title: "Avg Transaction",
-                                    value: "$\(Int(merchant.averageTransaction))",
+                                    value: "$\(Int(merchant.userStats?.averageTransaction ?? 0))",
                                     icon: "creditcard.circle.fill",
                                     color: .furgSuccess
                                 )
 
-                                StatBox(
+                                MerchantStatBox(
                                     title: "Last Visit",
-                                    value: merchant.lastVisitDate.formatted(.dateTime.month(.abbreviated).day()),
+                                    value: merchant.userStats?.lastVisit?.formatted(.dateTime.month(.abbreviated).day()) ?? "N/A",
                                     icon: "calendar.circle.fill",
                                     color: .furgWarning
                                 )
@@ -143,7 +145,7 @@ struct MerchantDetailView: View {
                                     .padding(.horizontal, 20)
 
                                 ForEach(merchantTransactions.prefix(5)) { transaction in
-                                    TransactionRow(transaction: transaction)
+                                    MerchantTransactionRow(transaction: transaction)
                                         .padding(.horizontal, 20)
                                 }
 
@@ -184,7 +186,7 @@ struct MerchantDetailView: View {
 
 // MARK: - Supporting Views
 
-struct StatBox: View {
+private struct MerchantStatBox: View {
     let title: String
     let value: String
     let icon: String
@@ -217,7 +219,7 @@ struct StatBox: View {
     }
 }
 
-struct TransactionRow: View {
+private struct MerchantTransactionRow: View {
     let transaction: Transaction
 
     var body: some View {
@@ -236,7 +238,7 @@ struct TransactionRow: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white)
 
-                Text(transaction.date.formatted(.dateTime.month(.abbreviated).day().year()))
+                Text(transaction.date)
                     .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.5))
             }
@@ -248,11 +250,9 @@ struct TransactionRow: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.furgMint)
 
-                if let category = transaction.category {
-                    Text(category.rawValue)
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.5))
-                }
+                Text(transaction.category)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.5))
             }
         }
         .padding(12)
@@ -261,16 +261,3 @@ struct TransactionRow: View {
     }
 }
 
-#Preview {
-    MerchantDetailView(merchant: MerchantProfile(
-        id: "1",
-        name: "Starbucks",
-        category: "Food & Dining",
-        totalSpent: 456.78,
-        visitCount: 24,
-        averageTransaction: 19.03,
-        lastVisitDate: Date(),
-        rewards: 0
-    ))
-    .environmentObject(FinanceManager())
-}

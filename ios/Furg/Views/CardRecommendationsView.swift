@@ -14,11 +14,11 @@ struct CardRecommendationsView: View {
     @State private var selectedCard: CardRecommendation?
     @State private var showingApplySheet = false
 
-    // Compute spending data from CardOptimizer
+    // Compute spending data from RealTimeTransactionManager
     var monthlySpending: [String: Double] {
         var spending: [String: Double] = [:]
-        for transaction in cardOptimizer.transactions {
-            let category = transaction.category?.rawValue ?? "Other"
+        for transaction in RealTimeTransactionManager.shared.recentTransactions {
+            let category = transaction.category
             spending[category, default: 0] += abs(transaction.amount)
         }
         return spending

@@ -133,6 +133,7 @@
 		F10000010000000000000403 /* DealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000403 /* DealsView.swift */; };
 		F10000010000000000000404 /* DealsSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000404 /* DealsSearchView.swift */; };
 		F10000010000000000000405 /* ShoppingChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000405 /* ShoppingChatView.swift */; };
+		F10000010000000000000500 /* ToolsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000010000000000000500 /* ToolsHubView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -264,6 +265,7 @@
 		F20000010000000000000403 /* DealsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsView.swift; sourceTree = "<group>"; };
 		F20000010000000000000404 /* DealsSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DealsSearchView.swift; sourceTree = "<group>"; };
 		F20000010000000000000405 /* ShoppingChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingChatView.swift; sourceTree = "<group>"; };
+		F20000010000000000000500 /* ToolsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsHubView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -436,6 +438,7 @@
 				F20000010000000000000223 /* SpendingPredictionsView.swift */,
 				F20000010000000000000036 /* SubscriptionsView.swift */,
 				F20000010000000000000224 /* TransactionClarificationView.swift */,
+				F20000010000000000000500 /* ToolsHubView.swift */,
 				F20000010000000000000040 /* TransactionsListView.swift */,
 				F20000010000000000000017 /* TransactionsView.swift */,
 				F20000010000000000000018 /* WelcomeView.swift */,
@@ -652,6 +655,7 @@
 				F10000010000000000000223 /* SpendingPredictionsView.swift in Sources */,
 				F10000010000000000000036 /* SubscriptionsView.swift in Sources */,
 				F10000010000000000000224 /* TransactionClarificationView.swift in Sources */,
+				F10000010000000000000500 /* ToolsHubView.swift in Sources */,
 				F10000010000000000000040 /* TransactionsListView.swift in Sources */,
 				F10000010000000000000017 /* TransactionsView.swift in Sources */,
 				F10000010000000000000018 /* WelcomeView.swift in Sources */,

@@ -283,7 +283,7 @@ struct LoanOffer: Identifiable {
 
 // MARK: - User Profile for Recommendations
 
-struct UserFinancialProfile {
+struct RecommendationUserProfile {
     var monthlyIncome: Double
     var totalSavings: Double
     var checkingBalance: Double
@@ -316,7 +316,7 @@ class RecommendationEngine: ObservableObject {
     @Published var savingsAccounts: [SavingsAccountOffer] = []
     @Published var creditCards: [CreditCardOffer] = []
 
-    private var userProfile: UserFinancialProfile?
+    private var userProfile: RecommendationUserProfile?
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -390,7 +390,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Profile Building
 
-    private func buildUserProfile() -> UserFinancialProfile {
+    private func buildUserProfile() -> RecommendationUserProfile {
         let incomeManager = IncomeManager.shared
         let debtManager = DebtPayoffManager.shared
 
@@ -404,7 +404,7 @@ class RecommendationEngine: ObservableObject {
         // Get debts
         let debts = debtManager.debts.map { ($0.type.rawValue, $0.currentBalance, $0.interestRate) }
 
-        return UserFinancialProfile(
+        return RecommendationUserProfile(
             monthlyIncome: incomeManager.totalMonthlyIncome,
             totalSavings: 15000, // Demo value
             checkingBalance: 5000, // Demo value
@@ -425,7 +425,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Savings Account Recommendations
 
-    private func generateSavingsAccountRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateSavingsAccountRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Find best high-yield savings based on balance
@@ -505,7 +505,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Checking Account Recommendations
 
-    private func generateCheckingAccountRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateCheckingAccountRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Recommend checking with no fees and good perks
@@ -537,7 +537,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Credit Card Recommendations
 
-    private func generateCreditCardRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateCreditCardRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Analyze spending to recommend best cards
@@ -589,7 +589,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Card Optimization Recommendations
 
-    private func generateCardOptimizationRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateCardOptimizationRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Recommend which card to use for each category
@@ -643,7 +643,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Sign-up Bonus Recommendations
 
-    private func generateSignupBonusRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateSignupBonusRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Find cards with valuable sign-up bonuses user doesn't have
@@ -677,7 +677,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Insurance Recommendations
 
-    private func generateInsuranceRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateInsuranceRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Auto insurance savings
@@ -757,7 +757,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Loan Recommendations
 
-    private func generateLoanRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateLoanRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         for debt in profile.debts {
@@ -876,7 +876,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Subscription Recommendations
 
-    private func generateSubscriptionRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateSubscriptionRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         let totalSubCost = profile.currentSubscriptions.values.reduce(0, +)
@@ -940,7 +940,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Bill Recommendations
 
-    private func generateBillRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateBillRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Phone plan optimization
@@ -991,7 +991,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Investment Recommendations
 
-    private func generateInvestmentRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateInvestmentRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Emergency fund check
@@ -1070,7 +1070,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Lifestyle Recommendations
 
-    private func generateLifestyleRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateLifestyleRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // Food spending optimization
@@ -1127,7 +1127,7 @@ class RecommendationEngine: ObservableObject {
 
     // MARK: - Tax Recommendations
 
-    private func generateTaxRecommendations(profile: UserFinancialProfile) -> [Recommendation] {
+    private func generateTaxRecommendations(profile: RecommendationUserProfile) -> [Recommendation] {
         var recommendations: [Recommendation] = []
 
         // HSA recommendation

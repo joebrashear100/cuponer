@@ -5,6 +5,8 @@
 //  Main dashboard providing high-level financial overview
 //  with drill-down capabilities to detailed metrics
 //
+//  FURG Design System - Cyber-Premium Dark Mode
+//
 
 import SwiftUI
 import Charts
@@ -34,7 +36,8 @@ struct DashboardView: View {
 
     var body: some View {
         ZStack {
-            CopilotBackground()
+            // True Black background for OLED
+            Color.furgTrueBlack.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
@@ -187,95 +190,105 @@ struct DashboardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(greetingText)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
+                        .font(.furgSubheadline)
+                        .foregroundColor(.furgSecondaryLabel)
 
                     Text("Your Finances")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .font(.furgTitle)
+                        .foregroundColor(.furgPrimaryLabel)
                 }
 
                 Spacer()
 
-                // Profile avatar
+                // Profile avatar with Indigo/Violet gradient
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.furgMint, .furgSeafoam],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(FurgGradients.indigoVioletGradient)
                         .frame(width: 44, height: 44)
 
                     Text("JB")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.furgHeadline)
                         .foregroundColor(.white)
                 }
             }
             .padding(.top, 60)
 
-            // Net Worth Card
+            // Net Worth Card with Balance Hero styling
             Button {
                 showAccounts = true
             } label: {
-                VStack(spacing: 12) {
-                    HStack {
-                        Text("NET WORTH")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(1)
-
-                        Spacer()
-
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 10, weight: .bold))
-                            Text("+\(formatCurrency(netWorthChange))")
-                                .font(.system(size: 12, weight: .semibold))
-                        }
-                        .foregroundColor(.furgSuccess)
-                    }
-
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("$")
-                            .font(.system(size: 24, weight: .medium, design: .rounded))
-                            .foregroundColor(.furgMint)
-
-                        Text(formatLargeNumber(netWorth))
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.4))
-                    }
-
-                    // Mini sparkline
-                    MiniSparklineView()
-                        .frame(height: 40)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .padding(20)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .background(
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color.white.opacity(0.03))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.2), .white.opacity(0.05)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
+                ZStack {
+                    // Subtle Indigo glow background
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.furgIndigo.opacity(0.25), Color.furgIndigo.opacity(0.08), Color.clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 180
+                            )
                         )
-                )
+                        .frame(width: 360, height: 360)
+                        .blur(radius: 50)
+                        .offset(y: -30)
+
+                    VStack(spacing: 12) {
+                        HStack {
+                            Text("NET WORTH")
+                                .font(.furgCaption)
+                                .foregroundColor(.furgTertiaryLabel)
+                                .tracking(1.5)
+
+                            Spacer()
+
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("+\(formatCurrency(netWorthChange))")
+                                    .font(.furgCaption)
+                            }
+                            .foregroundColor(.furgNeonGreen)
+                        }
+
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text("$")
+                                .font(.furgCurrencySymbol)
+                                .foregroundColor(.furgIndigo)
+
+                            Text(formatLargeNumber(netWorth))
+                                .font(.furgBalanceHero)
+                                .foregroundColor(.furgPrimaryLabel)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.furgTertiaryLabel)
+                        }
+
+                        // Mini sparkline with Indigo gradient
+                        MiniSparklineView()
+                            .frame(height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(Color.furgOffBlack)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [Color.furgIndigo.opacity(0.6), Color.furgIndigo.opacity(0.15), Color.clear],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                }
             }
             .buttonStyle(.plain)
         }
@@ -318,7 +331,7 @@ struct DashboardView: View {
             showFinancialHealth = true
         } label: {
             HStack(spacing: 16) {
-                // Credit Score Gauge
+                // Credit Score Gauge with Indigo/Violet gradient
                 ZStack {
                     Circle()
                         .stroke(Color.white.opacity(0.1), lineWidth: 8)
@@ -328,7 +341,7 @@ struct DashboardView: View {
                         .trim(from: 0, to: CGFloat(creditScore - 300) / 550)
                         .stroke(
                             LinearGradient(
-                                colors: [.furgMint, .furgSeafoam],
+                                colors: [.furgIndigo, .furgViolet],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             ),
@@ -339,43 +352,51 @@ struct DashboardView: View {
 
                     VStack(spacing: 0) {
                         Text("\(creditScore)")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
+                            .font(.furgTitle2)
+                            .foregroundColor(.furgPrimaryLabel)
                         Text("Score")
-                            .font(.system(size: 9))
-                            .foregroundColor(.white.opacity(0.5))
+                            .font(.furgCaption2)
+                            .foregroundColor(.furgTertiaryLabel)
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Financial Health")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .font(.furgHeadline)
+                        .foregroundColor(.furgPrimaryLabel)
 
                     Text("Very Good")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.furgMint)
+                        .font(.furgSubheadline)
+                        .foregroundColor(.furgIndigo)
 
                     Text("Credit score up 12 pts this month")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
+                        .font(.furgCaption)
+                        .foregroundColor(.furgTertiaryLabel)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.4))
+                    .foregroundColor(.furgTertiaryLabel)
             }
             .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white.opacity(0.03))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.furgOffBlack)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.furgIndigo.opacity(0.4), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
                     )
             )
+            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
         }
         .buttonStyle(.plain)
     }
@@ -385,8 +406,8 @@ struct DashboardView: View {
     private var quickActionsGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white.opacity(0.6))
+                .font(.furgSubheadline)
+                .foregroundColor(.furgSecondaryLabel)
 
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: 12),
@@ -394,16 +415,16 @@ struct DashboardView: View {
                 GridItem(.flexible(), spacing: 12),
                 GridItem(.flexible(), spacing: 12)
             ], spacing: 12) {
-                DashboardQuickActionButton(icon: "dollarsign.circle.fill", label: "Cash Flow", color: .furgMint) {
+                DashboardQuickActionButton(icon: "dollarsign.circle.fill", label: "Cash Flow", color: .furgIndigo) {
                     showCashFlow = true
                 }
-                DashboardQuickActionButton(icon: "cart.fill", label: "Shop AI", color: .pink) {
+                DashboardQuickActionButton(icon: "cart.fill", label: "Shop AI", color: .furgViolet) {
                     showShoppingAssistant = true
                 }
-                DashboardQuickActionButton(icon: "chart.bar.fill", label: "Analytics", color: .cyan) {
+                DashboardQuickActionButton(icon: "chart.bar.fill", label: "Analytics", color: .furgIndigo) {
                     showSpendingAnalytics = true
                 }
-                DashboardQuickActionButton(icon: "tag.fill", label: "Offers", color: .orange) {
+                DashboardQuickActionButton(icon: "tag.fill", label: "Offers", color: .furgNeonAmber) {
                     showOffers = true
                 }
             }
@@ -411,17 +432,18 @@ struct DashboardView: View {
     }
 
     // MARK: - AI Insights Section
+    // Sarcastic personality: "The UI copy should reflect the AI's roast persona"
 
     private var aiInsightsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "brain.head.profile")
                     .font(.system(size: 14))
-                    .foregroundColor(.furgMint)
+                    .foregroundColor(.furgIndigo)
 
                 Text("FURG Says")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(.furgSubheadline)
+                    .foregroundColor(.furgSecondaryLabel)
 
                 Spacer()
             }
@@ -429,8 +451,8 @@ struct DashboardView: View {
             VStack(spacing: 10) {
                 AIInsightRow(
                     icon: "exclamationmark.triangle.fill",
-                    iconColor: .furgWarning,
-                    message: "You've spent 40% more on dining this week than usual.",
+                    iconColor: .furgNeonAmber,
+                    message: "Survival? Dramatic much? You've blown 40% more on food this week.",
                     actionText: "See Details"
                 ) {
                     showCategories = true
@@ -438,15 +460,15 @@ struct DashboardView: View {
 
                 AIInsightRow(
                     icon: "sparkles",
-                    iconColor: .furgMint,
-                    message: "Great job! You're on track to save $500 more this month.",
+                    iconColor: .furgNeonGreen,
+                    message: "Wow, you're actually saving money. $500 extra this month. Don't spend it all in one place.",
                     actionText: nil
                 ) { }
 
                 AIInsightRow(
                     icon: "lightbulb.fill",
-                    iconColor: .yellow,
-                    message: "I found 3 subscriptions you might not need. Want to review?",
+                    iconColor: .furgNeonAmber,
+                    message: "Found 3 subscriptions you forgot about. Shocking.",
                     actionText: "Review"
                 ) {
                     showTransactions = true
@@ -455,13 +477,21 @@ struct DashboardView: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.03))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.furgOffBlack)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.furgIndigo.opacity(0.4), Color.clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
                 )
         )
+        .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 
     // MARK: - Recent Activity
@@ -470,8 +500,8 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Recent Activity")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.6))
+                    .font(.furgSubheadline)
+                    .foregroundColor(.furgSecondaryLabel)
 
                 Spacer()
 
@@ -479,8 +509,8 @@ struct DashboardView: View {
                     showTransactions = true
                 } label: {
                     Text("See All")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.furgMint)
+                        .font(.furgCaption)
+                        .foregroundColor(.furgIndigo)
                 }
             }
 
@@ -541,14 +571,14 @@ private struct QuickInsightCard: View {
                 }
 
                 Text(title)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.furgCaption2)
+                    .foregroundColor(.furgTertiaryLabel)
 
                 Text(value)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .font(.furgTitle2)
+                    .foregroundColor(.furgPrimaryLabel)
 
-                // Progress bar
+                // Progress bar with gradient
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 2)
@@ -563,18 +593,26 @@ private struct QuickInsightCard: View {
                 .frame(height: 4)
 
                 Text(subtitle)
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.4))
+                    .font(.furgCaption2)
+                    .foregroundColor(.furgTertiaryLabel)
             }
             .padding(14)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.03))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.furgOffBlack)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [color.opacity(0.4), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
                     )
             )
+            .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(.plain)
     }
@@ -593,6 +631,10 @@ private struct DashboardQuickActionButton: View {
                     Circle()
                         .fill(color.opacity(0.2))
                         .frame(width: 48, height: 48)
+                        .overlay(
+                            Circle()
+                                .stroke(color.opacity(0.3), lineWidth: 1)
+                        )
 
                     Image(systemName: icon)
                         .font(.system(size: 20))
@@ -600,8 +642,8 @@ private struct DashboardQuickActionButton: View {
                 }
 
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(.furgCaption)
+                    .foregroundColor(.furgSecondaryLabel)
             }
         }
         .buttonStyle(.plain)
@@ -624,15 +666,15 @@ private struct AIInsightRow: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(message)
-                    .font(.system(size: 13))
-                    .foregroundColor(.white.opacity(0.8))
+                    .font(.furgCaption)
+                    .foregroundColor(.furgSecondaryLabel)
                     .lineLimit(2)
 
                 if let actionText = actionText {
                     Button(action: action) {
                         Text(actionText)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.furgMint)
+                            .font(.furgCaption)
+                            .foregroundColor(.furgIndigo)
                     }
                 }
             }
@@ -657,40 +699,48 @@ private struct RecentTransactionRow: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(amount > 0 ? Color.furgSuccess.opacity(0.2) : Color.white.opacity(0.1))
+                    .fill(amount > 0 ? Color.furgNeonGreen.opacity(0.2) : Color.furgOffBlack)
                     .frame(width: 40, height: 40)
+                    .overlay(
+                        Circle()
+                            .stroke(amount > 0 ? Color.furgNeonGreen.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+                    )
 
                 Image(systemName: amount > 0 ? "arrow.down.left" : "arrow.up.right")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(amount > 0 ? .furgSuccess : .white.opacity(0.6))
+                    .foregroundColor(amount > 0 ? .furgNeonGreen : .furgSecondaryLabel)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(merchant)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
+                    .font(.furgSubheadline)
+                    .foregroundColor(.furgPrimaryLabel)
 
                 Text(category)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.furgCaption)
+                    .foregroundColor(.furgTertiaryLabel)
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(formatAmount(amount))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(amount > 0 ? .furgSuccess : .white)
+                    .font(.furgSubheadline)
+                    .foregroundColor(amount > 0 ? .furgNeonGreen : .furgPrimaryLabel)
 
                 Text(time)
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.4))
+                    .font(.furgCaption2)
+                    .foregroundColor(.furgTertiaryLabel)
             }
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.03))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.furgOffBlack)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
         )
     }
 
@@ -715,7 +765,7 @@ private struct MiniSparklineView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.furgMint, .furgSeafoam],
+                        colors: [.furgIndigo, .furgViolet],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -728,7 +778,7 @@ private struct MiniSparklineView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.furgMint.opacity(0.3), .clear],
+                        colors: [.furgIndigo.opacity(0.3), .clear],
                         startPoint: .top,
                         endPoint: .bottom
                     )

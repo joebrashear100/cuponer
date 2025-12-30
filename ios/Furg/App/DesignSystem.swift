@@ -2,33 +2,58 @@
 //  DesignSystem.swift
 //  Furg
 //
-//  Modern glassmorphism design system with pastel green palette
+//  FURG Design System - Cyber-Premium Dark Mode
+//  True Black backgrounds with Electric Indigo accents
 //
 
 import SwiftUI
 
-// MARK: - Color Palette
+// MARK: - FURG Color Palette
 
 extension Color {
-    // Primary pastel greens
-    static let furgMint = Color(red: 0.6, green: 0.95, blue: 0.85)           // #99F2D9 - Main accent
-    static let furgSage = Color(red: 0.68, green: 0.88, blue: 0.76)          // #AEE1C2 - Secondary
-    static let furgSeafoam = Color(red: 0.5, green: 0.9, blue: 0.8)          // #80E6CC - Vibrant accent
-    static let furgPistachio = Color(red: 0.75, green: 0.93, blue: 0.73)     // #BFEDBA - Light accent
+    // MARK: Primary Colors
+    /// True Black - Main app background. Maximizes OLED contrast.
+    static let furgTrueBlack = Color(red: 0, green: 0, blue: 0)              // #000000
+    /// Off-Black - Secondary backgrounds, cards, and sheets.
+    static let furgOffBlack = Color(red: 0.071, green: 0.071, blue: 0.071)   // #121212
+    /// Electric Indigo - Primary Brand Color. Buttons, active states, focus.
+    static let furgIndigo = Color(red: 0.369, green: 0.361, blue: 0.902)     // #5E5CE6
+    /// Cyber Violet - Secondary accent. Used in gradients with Indigo.
+    static let furgViolet = Color(red: 0.749, green: 0.353, blue: 0.949)     // #BF5AF2
 
-    // Supporting colors
-    static let furgCream = Color(red: 0.98, green: 1.0, blue: 0.96)          // #FAFFF5 - Light background
-    static let furgCharcoal = Color(red: 0.12, green: 0.14, blue: 0.16)      // #1F2429 - Dark background
-    static let furgSlate = Color(red: 0.18, green: 0.22, blue: 0.26)         // #2E3842 - Cards dark
-    static let furgMist = Color(red: 0.94, green: 0.97, blue: 0.95)          // #F0F8F2 - Light cards
+    // MARK: Semantic Colors
+    /// Neon Green - Income, positive trends, success states.
+    static let furgNeonGreen = Color(red: 0.196, green: 0.843, blue: 0.294)  // #32D74B
+    /// Neon Red - Expenses, debt, error states.
+    static let furgNeonRed = Color(red: 1.0, green: 0.271, blue: 0.227)      // #FF453A
+    /// Neon Amber - Warnings, cautions.
+    static let furgNeonAmber = Color(red: 1.0, green: 0.839, blue: 0.039)    // #FFD60A
 
-    // Semantic colors
-    static let furgSuccess = Color(red: 0.4, green: 0.85, blue: 0.6)         // #66D999
-    static let furgWarning = Color(red: 1.0, green: 0.8, blue: 0.4)          // #FFCC66
-    static let furgDanger = Color(red: 1.0, green: 0.5, blue: 0.5)           // #FF8080
-    static let furgError = Color.furgDanger                                   // Alias for danger/error
-    static let furgInfo = Color(red: 0.5, green: 0.8, blue: 1.0)             // #80CCFF
-    static let furgAccent = Color.furgMint                                    // Alias for accent color
+    // MARK: Text Colors
+    /// Primary Label - High emphasis text
+    static let furgPrimaryLabel = Color.white
+    /// Secondary Label - Subtitles, captions
+    static let furgSecondaryLabel = Color.white.opacity(0.6)
+    /// Tertiary Label - Placeholders, disabled text
+    static let furgTertiaryLabel = Color.white.opacity(0.3)
+
+    // MARK: Legacy Aliases (for backward compatibility)
+    static let furgMint = furgIndigo                                          // Map to new primary
+    static let furgSage = furgViolet                                          // Map to new secondary
+    static let furgSeafoam = furgIndigo.opacity(0.8)                          // Lighter indigo
+    static let furgPistachio = furgViolet.opacity(0.7)                        // Lighter violet
+    static let furgCream = Color(red: 0.98, green: 1.0, blue: 0.96)          // Keep for light mode
+    static let furgCharcoal = furgOffBlack                                    // Map to Off-Black
+    static let furgSlate = Color(red: 0.1, green: 0.1, blue: 0.12)           // Slightly lighter than Off-Black
+    static let furgMist = Color(red: 0.94, green: 0.97, blue: 0.95)          // Keep for light mode
+
+    // Semantic color aliases
+    static let furgSuccess = furgNeonGreen
+    static let furgWarning = furgNeonAmber
+    static let furgDanger = furgNeonRed
+    static let furgError = furgNeonRed
+    static let furgInfo = furgIndigo
+    static let furgAccent = furgIndigo
 
     // MARK: - Budget Status Colors (Copilot-inspired)
     // These colors indicate spending pace relative to budget
@@ -45,83 +70,110 @@ extension Color {
     // MARK: - Chart Colors
 
     /// Chart semantic colors for consistent data visualization
-    static let chartIncome = Color(red: 0.4, green: 0.85, blue: 0.6)         // Green - money in
-    static let chartSpending = Color(red: 1.0, green: 0.5, blue: 0.5)        // Red - money out
-    static let chartNetPositive = Color(red: 0.4, green: 0.75, blue: 1.0)    // Blue - positive net
-    static let chartNetNegative = Color(red: 1.0, green: 0.55, blue: 0.55)   // Light red - negative net
+    static let chartIncome = furgNeonGreen                                    // Green - money in
+    static let chartSpending = furgNeonRed                                    // Red - money out
+    static let chartNetPositive = furgIndigo                                  // Indigo - positive net
+    static let chartNetNegative = furgNeonRed.opacity(0.8)                    // Light red - negative net
     static let chartIdealLine = Color.white.opacity(0.4)                      // Dashed ideal line
-    static let chartActualLine = Color.furgMint                               // Actual spending line
+    static let chartActualLine = furgIndigo                                   // Actual spending line
 
-    // Chart category colors for pie/bar charts
-    static let chartCategory1 = Color(red: 0.6, green: 0.95, blue: 0.85)     // Mint
-    static let chartCategory2 = Color(red: 0.5, green: 0.75, blue: 1.0)      // Blue
-    static let chartCategory3 = Color(red: 1.0, green: 0.7, blue: 0.5)       // Peach
-    static let chartCategory4 = Color(red: 0.85, green: 0.65, blue: 0.95)    // Purple
-    static let chartCategory5 = Color(red: 1.0, green: 0.85, blue: 0.5)      // Yellow
-    static let chartCategory6 = Color(red: 0.6, green: 0.85, blue: 0.7)      // Seafoam
+    // Chart category colors for pie/bar charts (using FURG palette)
+    static let chartCategory1 = furgIndigo                                    // Electric Indigo
+    static let chartCategory2 = furgViolet                                    // Cyber Violet
+    static let chartCategory3 = furgNeonGreen                                 // Neon Green
+    static let chartCategory4 = furgNeonAmber                                 // Neon Amber
+    static let chartCategory5 = Color(red: 0.4, green: 0.85, blue: 0.95)      // Cyan
+    static let chartCategory6 = Color(red: 0.95, green: 0.45, blue: 0.65)     // Pink
 
     // MARK: - Financial Indicator Colors
 
     /// Positive change indicator (e.g., balance increase)
-    static let positiveChange = Color(red: 0.4, green: 0.85, blue: 0.6)
+    static let positiveChange = furgNeonGreen
     /// Negative change indicator (e.g., balance decrease)
-    static let negativeChange = Color(red: 1.0, green: 0.5, blue: 0.5)
-    /// Unreviewed transaction indicator (light blue dot)
-    static let unreviewedBadge = Color(red: 0.5, green: 0.7, blue: 1.0).opacity(0.7)
+    static let negativeChange = furgNeonRed
+    /// Unreviewed transaction indicator
+    static let unreviewedBadge = furgIndigo.opacity(0.7)
 
-    // Glass colors
+    // Glass colors (updated for Indigo accent)
     static let glassWhite = Color.white.opacity(0.15)
-    static let glassBorder = Color.white.opacity(0.25)
+    static let glassBorder = furgIndigo.opacity(0.3)
     static let glassDark = Color.black.opacity(0.2)
 
     // Background aliases
-    static let furgDarkBg = Color.furgCharcoal
+    static let furgDarkBg = furgTrueBlack
 }
 
 // MARK: - Gradients
 
 struct FurgGradients {
-    // Main background gradient
+    // MARK: Primary Gradients
+
+    /// Main background - True Black for OLED
     static let mainBackground = LinearGradient(
-        colors: [
-            Color(red: 0.08, green: 0.1, blue: 0.14),    // Deep dark
-            Color(red: 0.12, green: 0.16, blue: 0.2),    // Slightly lighter
-            Color(red: 0.1, green: 0.18, blue: 0.2)      // Hint of teal
-        ],
+        colors: [Color.furgTrueBlack, Color.furgTrueBlack],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    /// Primary accent gradient - Electric Indigo to Cyber Violet
+    static let indigoVioletGradient = LinearGradient(
+        colors: [Color.furgIndigo, Color.furgViolet],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    // Accent gradient
-    static let mintGradient = LinearGradient(
-        colors: [Color.furgMint, Color.furgSeafoam],
+    /// Accent gradient (alias for backward compatibility)
+    static let mintGradient = indigoVioletGradient
+
+    /// Card border gradient - Indigo to transparent
+    static let cardBorderGradient = LinearGradient(
+        colors: [Color.furgIndigo.opacity(0.6), Color.furgIndigo.opacity(0.1), Color.clear],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    // Glass gradient
+    /// Glass gradient for glassmorphism effects
     static let glassGradient = LinearGradient(
         colors: [
-            Color.white.opacity(0.2),
+            Color.white.opacity(0.15),
             Color.white.opacity(0.05)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    // Mesh-like background
+    /// Balance Hero glow gradient
+    static let balanceGlow = RadialGradient(
+        colors: [Color.furgIndigo.opacity(0.4), Color.furgIndigo.opacity(0.1), Color.clear],
+        center: .center,
+        startRadius: 0,
+        endRadius: 200
+    )
+
+    /// Mesh-like background with subtle Indigo tint
     static let meshBackground = LinearGradient(
         colors: [
-            Color(red: 0.06, green: 0.08, blue: 0.12),
-            Color(red: 0.1, green: 0.14, blue: 0.18),
-            Color(red: 0.08, green: 0.12, blue: 0.16)
+            Color.furgTrueBlack,
+            Color(red: 0.02, green: 0.02, blue: 0.04),
+            Color.furgTrueBlack
         ],
         startPoint: .top,
         endPoint: .bottom
     )
+
+    /// FAB gradient - Electric Indigo to Cyber Violet
+    static let fabGradient = LinearGradient(
+        colors: [Color.furgIndigo, Color.furgViolet],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 }
 
-// MARK: - Glass Card Modifier
+// MARK: - Glass Card Modifier (FURG Design System)
+// Background: .regularMaterial (Blur) over Off-Black
+// Border: 1px Gradient Stroke (Indigo -> Transparent)
+// Shadow: Soft black drop shadow (y: 5, radius: 10)
+// Corner Radius: 24pt
 
 struct GlassCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 24
@@ -131,10 +183,10 @@ struct GlassCardModifier: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(Color.white.opacity(opacity))
+                    .fill(Color.furgOffBlack)
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(.ultraThinMaterial)
+                            .fill(.regularMaterial)
                     )
             )
             .overlay(
@@ -142,9 +194,9 @@ struct GlassCardModifier: ViewModifier {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.3),
-                                Color.white.opacity(0.1),
-                                Color.white.opacity(0.05)
+                                Color.furgIndigo.opacity(0.6),
+                                Color.furgIndigo.opacity(0.2),
+                                Color.clear
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -153,6 +205,7 @@ struct GlassCardModifier: ViewModifier {
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -166,11 +219,7 @@ struct GlassButton: ViewModifier {
             .background(
                 Group {
                     if isAccent {
-                        LinearGradient(
-                            colors: [Color.furgMint, Color.furgSeafoam],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        FurgGradients.indigoVioletGradient
                     } else {
                         Color.white.opacity(0.1)
                     }
@@ -179,7 +228,10 @@ struct GlassButton: ViewModifier {
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.white.opacity(isAccent ? 0.3 : 0.15), lineWidth: 1)
+                    .stroke(
+                        isAccent ? Color.furgIndigo.opacity(0.5) : Color.white.opacity(0.15),
+                        lineWidth: 1
+                    )
             )
     }
 }
@@ -207,7 +259,7 @@ extension View {
 // MARK: - Custom Components
 
 struct GlowingOrb: View {
-    var color: Color = .furgMint
+    var color: Color = .furgIndigo
     var size: CGFloat = 200
 
     var body: some View {
@@ -246,13 +298,13 @@ struct FloatingCard<Content: View>: View {
     }
 }
 
-// GlassCard as a container view (not just modifier)
+// GlassCard as a container view (FURG Design System)
 struct GlassCard<Content: View>: View {
     let content: Content
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat = 24
     var padding: CGFloat = 16
 
-    init(cornerRadius: CGFloat = 16, padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
+    init(cornerRadius: CGFloat = 24, padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.cornerRadius = cornerRadius
         self.padding = padding
@@ -263,10 +315,10 @@ struct GlassCard<Content: View>: View {
             .padding(padding)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(Color.white.opacity(0.12))
+                    .fill(Color.furgOffBlack)
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius)
-                            .fill(.ultraThinMaterial)
+                            .fill(.regularMaterial)
                     )
             )
             .overlay(
@@ -274,9 +326,9 @@ struct GlassCard<Content: View>: View {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.3),
-                                Color.white.opacity(0.1),
-                                Color.white.opacity(0.05)
+                                Color.furgIndigo.opacity(0.6),
+                                Color.furgIndigo.opacity(0.2),
+                                Color.clear
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -285,17 +337,18 @@ struct GlassCard<Content: View>: View {
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
 struct AccentBadge: View {
     let text: String
-    var color: Color = .furgMint
+    var color: Color = .furgIndigo
 
     var body: some View {
         Text(text)
-            .font(.caption.weight(.semibold))
-            .foregroundColor(.furgCharcoal)
+            .font(.furgCaption)
+            .foregroundColor(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(color)
@@ -315,7 +368,7 @@ struct StatCard: View {
             HStack {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(.furgMint)
+                    .foregroundColor(.furgIndigo)
 
                 Spacer()
 
@@ -324,22 +377,22 @@ struct StatCard: View {
                         Image(systemName: trendUp ? "arrow.up.right" : "arrow.down.right")
                             .font(.caption2)
                         Text(trend)
-                            .font(.caption2.weight(.medium))
+                            .font(.furgCaption)
                     }
-                    .foregroundColor(trendUp ? .furgSuccess : .furgDanger)
+                    .foregroundColor(trendUp ? .furgNeonGreen : .furgNeonRed)
                 }
             }
 
             Text(value)
-                .font(.title.weight(.bold))
-                .foregroundColor(.white)
+                .font(.furgTitle)
+                .foregroundColor(.furgPrimaryLabel)
 
             Text(title)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.6))
+                .font(.furgSubheadline)
+                .foregroundColor(.furgSecondaryLabel)
         }
         .padding(20)
-        .glassCard(cornerRadius: 20)
+        .glassCard(cornerRadius: 24)
     }
 }
 
@@ -356,14 +409,14 @@ struct LegacyPillTabBar: View {
                     }
                 } label: {
                     Text(tabs[index])
-                        .font(.subheadline.weight(.medium))
-                        .foregroundColor(selectedIndex == index ? .furgCharcoal : .white.opacity(0.6))
+                        .font(.furgSubheadline)
+                        .foregroundColor(selectedIndex == index ? .white : .furgSecondaryLabel)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(
                             Group {
                                 if selectedIndex == index {
-                                    Capsule().fill(Color.furgMint)
+                                    Capsule().fill(Color.furgIndigo)
                                 } else {
                                     Capsule().fill(Color.white.opacity(0.08))
                                 }
@@ -378,15 +431,43 @@ struct LegacyPillTabBar: View {
     }
 }
 
-// MARK: - Text Styles
+// MARK: - Typography (SF Pro Rounded)
+// FURG uses SF Pro Rounded for a softer, modern feel that contrasts with sharp financial data
 
 extension Font {
+    // MARK: Display & Titles
+    /// Large Title - Rounded, Bold. Used for Balance amounts.
     static let furgLargeTitle = Font.system(size: 34, weight: .bold, design: .rounded)
+    /// Title - Rounded, Bold. Primary headers.
     static let furgTitle = Font.system(size: 28, weight: .bold, design: .rounded)
+    /// Title 2 - Rounded, Semibold. Secondary headers.
     static let furgTitle2 = Font.system(size: 22, weight: .semibold, design: .rounded)
+    /// Headline - Rounded, Semibold. Section headers.
     static let furgHeadline = Font.system(size: 17, weight: .semibold, design: .rounded)
-    static let furgBody = Font.system(size: 17, weight: .regular, design: .rounded)
+
+    // MARK: Body & Captions
+    /// Body - Rounded, Medium. Standard text.
+    static let furgBody = Font.system(size: 17, weight: .medium, design: .rounded)
+    /// Body Regular - Rounded, Regular weight.
+    static let furgBodyRegular = Font.system(size: 17, weight: .regular, design: .rounded)
+    /// Subheadline - Rounded, Medium.
+    static let furgSubheadline = Font.system(size: 15, weight: .medium, design: .rounded)
+    /// Caption - Rounded, Medium.
     static let furgCaption = Font.system(size: 12, weight: .medium, design: .rounded)
+    /// Caption 2 - Rounded, Regular. Smaller captions.
+    static let furgCaption2 = Font.system(size: 11, weight: .regular, design: .rounded)
+
+    // MARK: Numeric (Monospaced for alignment)
+    /// Monospaced numbers for transaction lists and aligned data
+    static let furgMonoLarge = Font.system(size: 34, weight: .bold, design: .monospaced)
+    static let furgMonoMedium = Font.system(size: 20, weight: .semibold, design: .monospaced)
+    static let furgMonoSmall = Font.system(size: 14, weight: .medium, design: .monospaced)
+
+    // MARK: Balance Display
+    /// Extra large for hero balance amounts
+    static let furgBalanceHero = Font.system(size: 42, weight: .bold, design: .rounded)
+    /// Currency symbol size
+    static let furgCurrencySymbol = Font.system(size: 24, weight: .medium, design: .rounded)
 }
 
 // MARK: - Animated Background
@@ -396,24 +477,25 @@ struct AnimatedMeshBackground: View {
 
     var body: some View {
         ZStack {
-            FurgGradients.mainBackground
+            // True Black background for OLED
+            Color.furgTrueBlack
 
-            // Floating orbs
-            GlowingOrb(color: .furgMint, size: 300)
+            // Floating orbs with Indigo/Violet glow
+            GlowingOrb(color: .furgIndigo, size: 300)
                 .offset(x: animate ? -50 : -100, y: animate ? -100 : -50)
                 .animation(
                     .easeInOut(duration: 8).repeatForever(autoreverses: true),
                     value: animate
                 )
 
-            GlowingOrb(color: .furgSeafoam, size: 250)
+            GlowingOrb(color: .furgViolet, size: 250)
                 .offset(x: animate ? 150 : 100, y: animate ? 200 : 250)
                 .animation(
                     .easeInOut(duration: 10).repeatForever(autoreverses: true),
                     value: animate
                 )
 
-            GlowingOrb(color: .furgPistachio.opacity(0.5), size: 200)
+            GlowingOrb(color: .furgIndigo.opacity(0.5), size: 200)
                 .offset(x: animate ? -100 : -150, y: animate ? 400 : 350)
                 .animation(
                     .easeInOut(duration: 12).repeatForever(autoreverses: true),
@@ -551,7 +633,7 @@ struct TrendBadge: View {
 struct ProgressRing: View {
     let progress: Double
     let lineWidth: CGFloat
-    var gradientColors: [Color] = [.furgMint, .furgSeafoam]
+    var gradientColors: [Color] = [.furgIndigo, .furgViolet]
 
     var body: some View {
         ZStack {
@@ -611,28 +693,21 @@ struct SpendingPaceIndicator: View {
 
 // MARK: - Copilot Money Aesthetic Components
 
-/// Clean dark gradient background - replaces AnimatedMeshBackground
+/// Clean True Black background - FURG Design System
 struct CopilotBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.05, green: 0.05, blue: 0.08),
-                Color(red: 0.08, green: 0.08, blue: 0.12)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        Color.furgTrueBlack
+            .ignoresSafeArea()
     }
 }
 
-/// Clean card component with subtle border - replaces GlassCard and FloatingCard
+/// Clean card component with Indigo gradient border - FURG Design System
 struct CopilotCard<Content: View>: View {
     let content: Content
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat = 24
     var padding: CGFloat = 20
 
-    init(cornerRadius: CGFloat = 16, padding: CGFloat = 20, @ViewBuilder content: () -> Content) {
+    init(cornerRadius: CGFloat = 24, padding: CGFloat = 20, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.cornerRadius = cornerRadius
         self.padding = padding
@@ -641,25 +716,41 @@ struct CopilotCard<Content: View>: View {
     var body: some View {
         content
             .padding(padding)
-            .background(Color.white.opacity(0.03))
+            .background(Color.furgOffBlack)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.furgIndigo.opacity(0.5), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
+            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
-/// View modifier extension for copilotCard
+/// View modifier extension for copilotCard - FURG Design System
 extension View {
-    func copilotCard(cornerRadius: CGFloat = 16, padding: CGFloat = 20, opacity: CGFloat = 0.03) -> some View {
+    func copilotCard(cornerRadius: CGFloat = 24, padding: CGFloat = 20, opacity: CGFloat = 0.03) -> some View {
         self.padding(padding)
-            .background(Color.white.opacity(opacity))
+            .background(Color.furgOffBlack)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.furgIndigo.opacity(0.5), Color.clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
+            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -728,22 +819,17 @@ struct CopilotChartStyles {
     static var axisLabelColor: Color { .white.opacity(0.4) }
 }
 
-/// Primary button style for Copilot aesthetic
+/// Primary button style - FURG Design System (Indigo to Violet gradient)
 struct CopilotPrimaryButton: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.system(size: 16, weight: .semibold))
+            .font(.furgHeadline)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(
-                LinearGradient(
-                    colors: [.chartIncome, Color(red: 0.35, green: 0.75, blue: 0.55)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .background(FurgGradients.indigoVioletGradient)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: Color.furgIndigo.opacity(0.4), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -767,6 +853,160 @@ extension View {
 
     func copilotSecondaryButton() -> some View {
         modifier(CopilotSecondaryButton())
+    }
+}
+
+// MARK: - Balance Hero Component (FURG Design System)
+// The centerpiece of the Dashboard with subtle Indigo glow behind the card
+
+struct BalanceHeroCard: View {
+    let balance: Double
+    let change: Double
+    let changePercentage: Double
+    var onTap: (() -> Void)? = nil
+
+    var body: some View {
+        Button(action: { onTap?() }) {
+            ZStack {
+                // Subtle Indigo glow background
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.furgIndigo.opacity(0.3), Color.furgIndigo.opacity(0.1), Color.clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 200
+                        )
+                    )
+                    .frame(width: 400, height: 400)
+                    .blur(radius: 60)
+                    .offset(y: -50)
+
+                VStack(spacing: 16) {
+                    // Header
+                    HStack {
+                        Text("NET WORTH")
+                            .font(.furgCaption)
+                            .foregroundColor(.furgTertiaryLabel)
+                            .tracking(1.5)
+
+                        Spacer()
+
+                        // Change indicator
+                        HStack(spacing: 4) {
+                            Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(String(format: "%@$%.0f", change >= 0 ? "+" : "", abs(change)))
+                                .font(.furgCaption)
+                        }
+                        .foregroundColor(change >= 0 ? .furgNeonGreen : .furgNeonRed)
+                    }
+
+                    // Balance amount
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("$")
+                            .font(.furgCurrencySymbol)
+                            .foregroundColor(.furgIndigo)
+
+                        Text(formatBalance(balance))
+                            .font(.furgBalanceHero)
+                            .foregroundColor(.furgPrimaryLabel)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.furgTertiaryLabel)
+                    }
+
+                    // Sparkline placeholder
+                    BalanceSparkline()
+                        .frame(height: 40)
+                }
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color.furgOffBlack)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.furgIndigo.opacity(0.6), Color.furgIndigo.opacity(0.1), Color.clear],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func formatBalance(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: amount)) ?? "0"
+    }
+}
+
+/// Sparkline chart with Indigo gradient tint
+struct BalanceSparkline: View {
+    var body: some View {
+        GeometryReader { geometry in
+            let data: [Double] = [280000, 282500, 285000, 283000, 290000, 288000, 292000, 295000, 293000, 296000, 294000, 298264]
+            let minValue = data.min() ?? 0
+            let maxValue = data.max() ?? 1
+            let range = maxValue - minValue
+
+            Path { path in
+                for (index, value) in data.enumerated() {
+                    let x = CGFloat(index) / CGFloat(data.count - 1) * geometry.size.width
+                    let y = (1 - CGFloat((value - minValue) / range)) * geometry.size.height
+
+                    if index == 0 {
+                        path.move(to: CGPoint(x: x, y: y))
+                    } else {
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    }
+                }
+            }
+            .stroke(
+                LinearGradient(
+                    colors: [.furgIndigo, .furgViolet],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)
+            )
+
+            // Area fill
+            Path { path in
+                for (index, value) in data.enumerated() {
+                    let x = CGFloat(index) / CGFloat(data.count - 1) * geometry.size.width
+                    let y = (1 - CGFloat((value - minValue) / range)) * geometry.size.height
+
+                    if index == 0 {
+                        path.move(to: CGPoint(x: x, y: geometry.size.height))
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    } else {
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    }
+                }
+                path.addLine(to: CGPoint(x: geometry.size.width, y: geometry.size.height))
+                path.closeSubpath()
+            }
+            .fill(
+                LinearGradient(
+                    colors: [Color.furgIndigo.opacity(0.3), Color.furgIndigo.opacity(0.05)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
     }
 }
 
@@ -800,12 +1040,12 @@ class NavigationState: ObservableObject {
 
         var color: Color {
             switch self {
-            case .dashboard: return Color(red: 0.45, green: 0.85, blue: 0.65)
-            case .chat: return Color(red: 0.35, green: 0.75, blue: 0.95)
-            case .activity: return Color(red: 0.95, green: 0.65, blue: 0.35)
-            case .accounts: return Color(red: 0.75, green: 0.55, blue: 0.95)
-            case .tools: return Color(red: 0.85, green: 0.45, blue: 0.85)
-            case .settings: return Color(red: 0.55, green: 0.65, blue: 0.75)
+            case .dashboard: return Color.furgIndigo
+            case .chat: return Color.furgViolet
+            case .activity: return Color.furgNeonAmber
+            case .accounts: return Color.furgViolet
+            case .tools: return Color.furgIndigo
+            case .settings: return Color.furgSecondaryLabel
             }
         }
     }
@@ -1086,7 +1326,8 @@ struct PillNavigation: View {
     }
 }
 
-/// Expandable floating action button with menu items
+/// Expandable floating action button - FURG Design System
+/// Shape: 60pt Circle, Fill: Linear Gradient (Indigo -> Violet)
 struct FloatingActionButton: View {
     @State private var isExpanded = false
     @State private var showReceiptScan = false
@@ -1100,7 +1341,7 @@ struct FloatingActionButton: View {
                     FABMenuItem(
                         icon: "plus.circle.fill",
                         label: "Add Transaction",
-                        color: Color(red: 0.45, green: 0.85, blue: 0.65)
+                        color: .furgIndigo
                     ) {
                         // TODO: Show add transaction sheet
                         isExpanded = false
@@ -1109,7 +1350,7 @@ struct FloatingActionButton: View {
                     FABMenuItem(
                         icon: "message.fill",
                         label: "Ask AI",
-                        color: Color(red: 0.35, green: 0.75, blue: 0.95)
+                        color: .furgViolet
                     ) {
                         navigationState.navigateTo(.chat)
                         isExpanded = false
@@ -1118,7 +1359,7 @@ struct FloatingActionButton: View {
                     FABMenuItem(
                         icon: "doc.text.viewfinder",
                         label: "Scan Receipt",
-                        color: Color(red: 0.4, green: 0.85, blue: 0.75)
+                        color: .furgIndigo
                     ) {
                         showReceiptScan = true
                         isExpanded = false
@@ -1127,7 +1368,7 @@ struct FloatingActionButton: View {
                     FABMenuItem(
                         icon: "creditcard.fill",
                         label: "Pay Debt",
-                        color: Color(red: 0.95, green: 0.4, blue: 0.4)
+                        color: .furgNeonRed
                     ) {
                         showQuickDebtPayment = true
                         isExpanded = false
@@ -1136,16 +1377,19 @@ struct FloatingActionButton: View {
                     FABMenuItem(
                         icon: "tag.fill",
                         label: "Deals",
-                        color: Color(red: 0.85, green: 0.45, blue: 0.85)
+                        color: .furgViolet
                     ) {
                         navigationState.navigateTo(.tools)
                         isExpanded = false
                     }
                 }
                 .padding(12)
-                .background(Color.white.opacity(0.08))
+                .background(Color.furgOffBlack)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.furgIndigo.opacity(0.3), lineWidth: 1)
+                )
                 .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
 
@@ -1158,27 +1402,21 @@ struct FloatingActionButton: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(width: 60, height: 60)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(red: 0.45, green: 0.85, blue: 0.65), Color(red: 0.35, green: 0.75, blue: 0.95)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .background(FurgGradients.indigoVioletGradient)
                     .clipShape(Circle())
-                    .shadow(color: Color(red: 0.45, green: 0.85, blue: 0.65).opacity(0.5), radius: 12, y: 6)
+                    .shadow(color: Color.furgIndigo.opacity(0.5), radius: 12, y: 6)
             }
             .rotationEffect(.degrees(isExpanded ? 45 : 0))
         }
         .sheet(isPresented: $showReceiptScan) {
             ZStack {
-                Color.furgCharcoal.ignoresSafeArea()
+                Color.furgTrueBlack.ignoresSafeArea()
                 VStack {
                     HStack {
                         Button("Close") {
                             showReceiptScan = false
                         }
-                        .foregroundColor(.furgMint)
+                        .foregroundColor(.furgIndigo)
                         Spacer()
                     }
                     .padding()
@@ -1186,15 +1424,15 @@ struct FloatingActionButton: View {
                     VStack(spacing: 16) {
                         Image(systemName: "doc.text.viewfinder")
                             .font(.system(size: 48, weight: .semibold))
-                            .foregroundColor(.furgSeafoam)
+                            .foregroundColor(.furgIndigo)
 
                         Text("Receipt Scan")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
+                            .font(.furgTitle2)
+                            .foregroundColor(.furgPrimaryLabel)
 
                         Text("Coming Soon")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.6))
+                            .font(.furgBody)
+                            .foregroundColor(.furgSecondaryLabel)
                     }
 
                     Spacer()

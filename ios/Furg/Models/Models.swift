@@ -428,3 +428,156 @@ struct SavingsGoalRequest: Codable {
 struct APIError: Codable {
     let detail: String
 }
+
+// MARK: - User Financial Profile (for Life Simulator)
+
+struct UserFinancialProfile {
+    // Basic demographics
+    var currentAge: Int
+    var retirementAgeGoal: Int
+
+    // Income
+    var annualIncome: Double
+    var additionalMonthlyIncome: Double = 0
+
+    // Expenses
+    var monthlyExpenses: Double
+
+    // Savings & Net Worth
+    var currentSavingsBalance: Double = 0
+    var currentNetWorth: Double = 0
+    var investmentBalance: Double = 0
+
+    // Computed properties
+    var monthlyIncome: Double {
+        annualIncome / 12
+    }
+
+    var annualExpenses: Double {
+        monthlyExpenses * 12
+    }
+
+    var savingsRate: Double {
+        guard monthlyIncome > 0 else { return 0 }
+        let monthlyAfterExpenses = (monthlyIncome + additionalMonthlyIncome) - monthlyExpenses
+        return monthlyAfterExpenses / (monthlyIncome + additionalMonthlyIncome)
+    }
+
+    // Debt
+    var totalDebt: Double = 0
+    var studentDebt: Double = 0
+    var creditCardDebt: Double = 0
+    var mortgageBalance: Double = 0
+    var otherDebt: Double = 0
+    var debtInterestRate: Double = 0.05
+
+    // Housing
+    var monthlyRent: Double = 0
+    var homeValue: Double = 0
+    var propertyTaxMonthly: Double = 0
+    var homeInsuranceMonthly: Double = 0
+
+    // Investment Details
+    var investmentReturnRate: Double = 0.07
+    var investmentAllocation: InvestmentAllocation = InvestmentAllocation()
+
+    // Family
+    var numberOfDependents: Int = 0
+    var childcareExpenseMonthly: Double = 0
+
+    // Tax & Insurance
+    var effectiveTaxRate: Double = 0.20
+    var healthInsuranceMonthly: Double = 0
+    var lifeInsuranceMonthly: Double = 0
+    var disabilityInsuranceMonthly: Double = 0
+
+    // Location
+    var currentCity: String = ""
+    var currentState: String = ""
+    var stateTaxRate: Double = 0
+
+    // Goals
+    var emergencyFundTarget: Double = 0
+    var retirementSavingsTarget: Double = 0
+
+    // Timestamps
+    let createdAt: Date
+    var lastUpdatedAt: Date
+
+    init(
+        currentAge: Int,
+        retirementAgeGoal: Int,
+        annualIncome: Double,
+        monthlyExpenses: Double,
+        currentNetWorth: Double = 0
+    ) {
+        self.currentAge = currentAge
+        self.retirementAgeGoal = retirementAgeGoal
+        self.annualIncome = annualIncome
+        self.monthlyExpenses = monthlyExpenses
+        self.currentNetWorth = currentNetWorth
+        self.createdAt = Date()
+        self.lastUpdatedAt = Date()
+        self.emergencyFundTarget = monthlyExpenses * 5
+        self.retirementSavingsTarget = annualIncome * 25
+    }
+
+    var monthlyNetIncome: Double {
+        (monthlyIncome + additionalMonthlyIncome) * (1 - effectiveTaxRate)
+    }
+
+    var monthlyAfterTax: Double {
+        monthlyNetIncome - monthlyExpenses
+    }
+
+    var yearsUntilRetirement: Int {
+        max(0, retirementAgeGoal - currentAge)
+    }
+
+    var hasPositiveCashFlow: Bool {
+        monthlyAfterTax > 0
+    }
+
+    var debtToIncomeRatio: Double {
+        guard monthlyIncome > 0 else { return 0 }
+        return totalDebt / annualIncome
+    }
+
+    var netWorthToIncomeRatio: Double {
+        guard annualIncome > 0 else { return 0 }
+        return currentNetWorth / annualIncome
+    }
+
+    var hasEmergencyFund: Bool {
+        currentSavingsBalance >= emergencyFundTarget
+    }
+
+    var isDebtFree: Bool {
+        totalDebt <= 0
+    }
+
+    static func placeholder() -> UserFinancialProfile {
+        UserFinancialProfile(
+            currentAge: 35,
+            retirementAgeGoal: 65,
+            annualIncome: 75000,
+            monthlyExpenses: 4500,
+            currentNetWorth: 150000
+        )
+    }
+}
+
+struct InvestmentAllocation: Codable {
+    var stocks: Double = 0.60
+    var bonds: Double = 0.30
+    var cash: Double = 0.10
+    var alternatives: Double = 0.0
+
+    var total: Double {
+        stocks + bonds + cash + alternatives
+    }
+
+    var isBalanced: Bool {
+        abs(total - 1.0) < 0.01
+    }
+}

@@ -7,21 +7,26 @@ struct InvestmentPortfolioView: View {
     @State private var showingDividends = false
 
     var totalPortfolioValue: Double {
-        investmentManager.holdings.reduce(0) { $0 + $1.currentValue }
+        investmentManager.portfolioSummary?.totalValue ?? 0
     }
 
     var totalGainLoss: Double {
-        investmentManager.holdings.reduce(0) { $0 + ($1.currentValue - $1.costBasis) }
+        investmentManager.portfolioSummary?.totalGain ?? 0
     }
 
     var gainLossPercentage: Double {
-        let totalCostBasis = investmentManager.holdings.reduce(0) { $0 + $1.costBasis }
-        guard totalCostBasis > 0 else { return 0 }
-        return (totalGainLoss / totalCostBasis) * 100
+        investmentManager.portfolioSummary?.totalGainPercent ?? 0
     }
 
     var performanceData: [ChartDataPoint] {
-        investmentManager.getPerformanceData(for: selectedPeriod)
+        // Demo performance data
+        let calendar = Calendar.current
+        let today = Date()
+        return (0..<30).map { offset in
+            let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
+            let value = 10000 + Double.random(in: -500...500)
+            return ChartDataPoint(date: date, value: value)
+        }.reversed()
     }
 
     var body: some View {
@@ -135,7 +140,7 @@ struct InvestmentPortfolioView: View {
                         }
 
                         // Asset Allocation
-                        if !investmentManager.holdings.isEmpty {
+                        if !investmentManager.assetAllocation.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Asset Allocation")
                                     .font(.system(size: 16, weight: .semibold))
@@ -156,14 +161,14 @@ struct InvestmentPortfolioView: View {
                         }
 
                         // Top Holdings
-                        if !investmentManager.holdings.isEmpty {
+                        if let holdings = getAllHoldings(), !holdings.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Holdings")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 20)
 
-                                ForEach(investmentManager.holdings.sorted(by: { $0.currentValue > $1.currentValue })) { holding in
+                                ForEach(holdings.sorted(by: { $0.marketValue > $1.marketValue })) { holding in
                                     NavigationLink(destination: HoldingDetailView(holding: holding)) {
                                         HoldingRow(holding: holding)
                                     }
@@ -207,11 +212,18 @@ struct InvestmentPortfolioView: View {
     }
 
     private func groupAssets() -> [String: Double] {
+        // Use asset allocation from manager
         var grouped: [String: Double] = [:]
-        for holding in investmentManager.holdings {
-            grouped[holding.type, default: 0] += holding.currentValue
+        for allocation in investmentManager.assetAllocation {
+            grouped[allocation.assetType.rawValue, default: 0] = allocation.value
         }
         return grouped
+    }
+
+    private func getAllHoldings() -> [Holding]? {
+        // Collect holdings from all accounts
+        let allHoldings = investmentManager.accounts.flatMap { $0.holdings }
+        return allHoldings.isEmpty ? nil : allHoldings
     }
 }
 
@@ -263,15 +275,6 @@ struct AssetAllocationRow: View {
 struct HoldingRow: View {
     let holding: Holding
 
-    var gainLoss: Double {
-        holding.currentValue - holding.costBasis
-    }
-
-    var gainLossPercent: Double {
-        guard holding.costBasis > 0 else { return 0 }
-        return (gainLoss / holding.costBasis) * 100
-    }
-
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
@@ -287,18 +290,18 @@ struct HoldingRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text("$\(Int(holding.currentValue))")
+                Text("$\(Int(holding.marketValue))")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
 
                 HStack(spacing: 4) {
-                    Image(systemName: gainLoss >= 0 ? "arrow.up.right" : "arrow.down.left")
+                    Image(systemName: holding.totalGain >= 0 ? "arrow.up.right" : "arrow.down.left")
                         .font(.system(size: 10, weight: .bold))
 
-                    Text("$\(Int(abs(gainLoss))) (\(String(format: "%.1f%%", gainLossPercent)))")
+                    Text("$\(Int(abs(holding.totalGain))) (\(String(format: "%.1f%%", holding.totalGainPercent)))")
                         .font(.system(size: 12))
                 }
-                .foregroundColor(gainLoss >= 0 ? .furgSuccess : .furgDanger)
+                .foregroundColor(holding.totalGain >= 0 ? .furgSuccess : .furgDanger)
             }
         }
         .padding(12)
@@ -331,11 +334,11 @@ struct HoldingDetailView: View {
                         }
 
                         VStack(spacing: 12) {
-                            DetailItem(label: "Current Value", value: "$\(Int(holding.currentValue))")
-                            DetailItem(label: "Cost Basis", value: "$\(Int(holding.costBasis))")
+                            DetailItem(label: "Current Value", value: "$\(Int(holding.marketValue))")
+                            DetailItem(label: "Cost Basis", value: "$\(Int(holding.shares * holding.averageCost))")
                             DetailItem(label: "Shares", value: String(format: "%.2f", holding.shares))
                             DetailItem(label: "Current Price", value: String(format: "$%.2f", holding.currentPrice))
-                            DetailItem(label: "Purchase Date", value: holding.purchaseDate.formatted(.dateTime.month().day().year()))
+                            DetailItem(label: "Total Gain", value: String(format: "$%.2f", holding.totalGain))
                         }
 
                         Spacer()

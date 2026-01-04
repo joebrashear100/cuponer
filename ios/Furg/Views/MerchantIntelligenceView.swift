@@ -54,6 +54,48 @@ struct MerchantIntelligenceView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
 
+                        // Grocery Coupons Feature Card
+                        NavigationLink(destination: GroceryCouponsView()) {
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.green.opacity(0.2))
+                                        .frame(width: 50, height: 50)
+                                    Image(systemName: "tag.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.green)
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Grocery Coupons")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                    Text("Find coupons at nearby stores")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+                            .padding(16)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.green.opacity(0.15), Color.green.opacity(0.05)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 20)
+
                         // Search bar
                         HStack(spacing: 10) {
                             Image(systemName: "magnifyingglass")

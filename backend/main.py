@@ -30,6 +30,7 @@ from services.gemini_service import gemini_service
 from services.grok_service import grok_service
 from services.openai_shopping import ShoppingAssistant, quick_shop
 from services.deals_service import DealsService, PriceTracker
+from services.grocery_coupon_service import GroceryCouponService
 from ml.categorizer import get_categorizer
 
 # Feature flag for multi-model chat
@@ -2346,6 +2347,111 @@ async def deals_get_stats(user_id: str = Depends(get_current_user)):
             if stats['products_tracked'] > 0 else
             "Start tracking products and I'll help you save money!"
         )
+    }
+
+
+# ==================== GROCERY COUPONS ====================
+
+
+class GroceryCouponSearchRequest(BaseModel):
+    latitude: float
+    longitude: float
+    radius_miles: float = 10.0
+    preferred_stores: Optional[list] = None
+    excluded_stores: Optional[list] = None
+    categories: Optional[list] = None
+    dietary_preferences: Optional[list] = None
+    sort_by: str = "relevance"
+    page: int = 1
+    limit: int = 20
+
+
+class CouponClipRequest(BaseModel):
+    coupon_id: str
+    store_id: str
+
+
+@app.post("/api/v1/grocery-coupons/search")
+async def search_grocery_coupons(
+    request: GroceryCouponSearchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Search for grocery coupons near a location.
+
+    Filters by:
+    - Location (radius from lat/lng)
+    - Preferred/excluded store chains
+    - Product categories
+    - Dietary preferences (vegan, gluten-free, etc.)
+
+    Sort options:
+    - relevance (default): Matches user preferences
+    - distance: Nearest stores first
+    - savings: Highest discount first
+    - expiring_soon: Soonest expiration first
+    """
+    result = await GroceryCouponService.search_coupons(
+        latitude=request.latitude,
+        longitude=request.longitude,
+        radius_miles=request.radius_miles,
+        preferred_stores=request.preferred_stores,
+        excluded_stores=request.excluded_stores,
+        categories=request.categories,
+        dietary_preferences=request.dietary_preferences,
+        sort_by=request.sort_by,
+        page=request.page,
+        limit=request.limit
+    )
+
+    return result
+
+
+@app.get("/api/v1/grocery-coupons/stores")
+async def get_nearby_grocery_stores(
+    latitude: float,
+    longitude: float,
+    radius_miles: float = 10.0,
+    user_id: str = Depends(get_current_user)
+):
+    """Get nearby grocery stores with coupon availability."""
+    stores = GroceryCouponService.find_nearby_stores(
+        latitude=latitude,
+        longitude=longitude,
+        radius_miles=radius_miles
+    )
+
+    return {
+        "stores": [s.to_dict() for s in stores],
+        "total": len(stores)
+    }
+
+
+@app.post("/api/v1/grocery-coupons/clip")
+async def clip_grocery_coupon(
+    request: CouponClipRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Clip a coupon to user's loyalty account."""
+    result = await GroceryCouponService.clip_coupon(
+        user_id=user_id,
+        coupon_id=request.coupon_id,
+        store_id=request.store_id
+    )
+
+    return result
+
+
+@app.get("/api/v1/grocery-coupons/stats")
+async def get_grocery_coupon_stats(
+    user_id: str = Depends(get_current_user)
+):
+    """Get user's grocery coupon usage statistics."""
+    stats = await GroceryCouponService.get_user_stats(user_id)
+
+    return {
+        "stats": stats,
+        "message": f"You've saved ${stats['total_savings']:.2f} with coupons!"
     }
 
 
